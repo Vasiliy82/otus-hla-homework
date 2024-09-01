@@ -6,8 +6,6 @@ else ifeq ($(ARCH),aarch64)
 	ARCH := arm64 
 endif
 
-
-
 define github_url
     https://github.com/$(GITHUB)/releases/download/v$(VERSION)/$(ARCHIVE)
 endef
@@ -18,17 +16,17 @@ bin:
 
 # ~~~ Tools ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# ~~ [migrate] ~~~ https://github.com/golang-migrate/migrate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~ [ goose ] ~~~ https://github.com/pressly/goose ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MIGRATE := $(shell command -v migrate || echo "bin/migrate")
-migrate: bin/migrate ## Install migrate (database migration)
+GOOSE := $(shell command -v goose || echo "bin/goose")
+goose: bin/goose ## Install goose (database migration)
 
-bin/migrate: VERSION := 4.17.0
-bin/migrate: GITHUB  := golang-migrate/migrate
-bin/migrate: ARCHIVE := migrate.$(OSTYPE)-$(ARCH).tar.gz
-bin/migrate: bin
-	@ printf "Install migrate... "
-	@ curl -Ls $(shell echo $(call github_url) | tr A-Z a-z) | tar -zOxf - ./migrate > $@ && chmod +x $@
+bin/goose: VERSION := 3.12.0
+bin/goose: GITHUB  := pressly/goose
+bin/goose: ARCHIVE := goose_$(VERSION)_$(OSTYPE)_$(ARCH).tar.gz
+bin/goose: bin
+	@ printf "Install goose... "
+	@ curl -Ls $(shell echo $(call github_url) | tr A-Z a-z) | tar -zOxf - goose > $@ && chmod +x $@
 	@ echo "done."
 
 # ~~ [ air ] ~~~ https://github.com/cosmtrek/air ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,7 +41,6 @@ bin/air: bin
 	@ printf "Install air... "
 	@ curl -Ls $(shell echo $(call github_url) | tr A-Z a-z) | tar -zOxf - air > $@ && chmod +x $@
 	@ echo "done."
-
 
 # ~~ [ gotestsum ] ~~~ https://github.com/gotestyourself/gotestsum ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -63,7 +60,6 @@ bin/gotestsum: bin
 TPARSE := $(shell command -v tparse || echo "bin/tparse")
 tparse: bin/tparse ## Installs tparse (testing go code)
 
-# eg https://github.com/mfridman/tparse/releases/download/v0.13.2/tparse_darwin_arm64
 bin/tparse: VERSION := 0.13.2
 bin/tparse: GITHUB  := mfridman/tparse
 bin/tparse: ARCHIVE := tparse_$(OSTYPE)_$(ARCH)

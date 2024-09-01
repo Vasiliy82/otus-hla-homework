@@ -1,30 +1,26 @@
-version: "3.7"
 services:
   web:
-    image: go-clean-arch
-    container_name: article_management_api
+    image: otus-hla-homework
+    container_name: hw_api
     ports:
       - 9090:9090
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     volumes:
       - ./config.json:/app/config.json
 
-  mysql:
-    image: mysql:8.3
-    container_name: go_clean_arch_mysql
-    command: mysqld --user=root
-    volumes:
-      - ./article.sql:/docker-entrypoint-initdb.d/init.sql
+  postgres:
+    image: postgres:16
+    container_name: hw_pg
     ports:
-      - 3306:3306
+      - 5432:5432
     environment:
-      - MYSQL_DATABASE=article
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
-      - MYSQL_ROOT_PASSWORD=root
+      - POSTGRES_DB=hw
+      - POSTGRES_USER=app_hw
+      - POSTGRES_PASSWORD=Passw0rd
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
