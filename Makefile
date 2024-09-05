@@ -1,8 +1,8 @@
 # Database
-POSTGRES_USER ?= user
-POSTGRES_PASSWORD ?= password
+POSTGRES_USER ?= app_hw
+POSTGRES_PASSWORD ?= Passw0rd
 POSTGRES_ADDRESS ?= 127.0.0.1:5432
-POSTGRES_DATABASE ?= article
+POSTGRES_DATABASE ?= hw
 
 # Exporting bin folder to the path for makefile
 export PATH   := $(PWD)/bin:$(PATH)
@@ -18,7 +18,7 @@ include ./misc/make/help.Makefile
 
 # ~~~ Development Environment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-up: dev-env dev-air             ## Startup / Spinup Docker Compose and air
+up: dev-env wait-for-postgres migrate-up dev-air              ## Startup / Spinup Docker Compose and air
 down: docker-stop               ## Stop Docker
 destroy: docker-teardown clean  ## Teardown (removes volumes, tmp files, etc...)
 
@@ -36,6 +36,15 @@ dev-env-test: dev-env ## Run application (with Docker-Compose help)
 
 dev-air: $(AIR) ## Starts AIR (Continuous Development app).
 	air
+
+wait-for-postgres: ## Wait for PostgreSQL to be ready
+	@echo "Waiting for PostgreSQL to be ready..."
+	
+	@until docker exec -i $(shell docker-compose ps -q postgres) pg_isready -U $(POSTGRES_USER); do \
+		echo "PostgreSQL is unavailable - sleeping"; \
+		sleep 2; \
+	done
+	@echo "PostgreSQL is up - executing command"
 
 docker-stop:
 	@ docker-compose down
@@ -98,7 +107,7 @@ image-build:
 
 # ~~~ Database Migrations using Goose ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-GOOSE := $(shell which goose)
+# GOOSE := $(shell which goose)
 MIGRATIONS_PATH := $(PWD)/migrations
 POSTGRES_DSN := "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_ADDRESS)/$(POSTGRES_DATABASE)?sslmode=disable"
 
@@ -111,6 +120,7 @@ migrate-down: $(GOOSE) ## Apply all migrations down.
 
 .PHONY: migrate-status
 migrate-status: $(GOOSE) ## Display current migration status.
+	@ echo $(GOOSE) -dir $(MIGRATIONS_PATH) postgres $(POSTGRES_DSN) status
 	@ $(GOOSE) -dir $(MIGRATIONS_PATH) postgres $(POSTGRES_DSN) status
 
 .PHONY: migrate-create
