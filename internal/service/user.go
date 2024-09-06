@@ -6,15 +6,30 @@ import (
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/repository/postgres"
 )
 
-type UserService struct {
-	userRepo *postgres.UserRepository
+//go:generate mockery --name UserRepository
+type UserRepository interface {
+	RegisterUser(domain.User) (string, error)
+	GetUserByID(string) (domain.User, error)
+	CheckUserPasswordHash(string, string) (string, error)
 }
 
-func NewUserService(userRepo *postgres.UserRepository) *UserService {
-	return &UserService{userRepo: userRepo}
+//go:generate mockery --name SessionRepository
+type SessionRepository interface {
+	CreateSession(string, string, time.Time) error
+}
+
+type UserService struct {
+	userRepo    UserRepository
+	sessionRepo SessionRepository
+}
+
+func NewUserService(ur UserRepository, sr SessionRepository) *UserService {
+	return &UserService{
+		userRepo:    ur,
+		sessionRepo: sr,
+	}
 }
 
 func (s *UserService) RegisterUser(user domain.User) (string, error) {
@@ -44,7 +59,7 @@ func (s *UserService) Login(username, password string) (string, error) {
 	expiresAt := time.Now().Add(24 * time.Hour)
 
 	// Сохранение токена в таблицу сессий
-	err = s.userRepo.CreateSession(id, token, expiresAt)
+	err = s.sessionRepo.CreateSession(id, token, expiresAt)
 	if err != nil {
 		return "", fmt.Errorf("failed to create session: %v", err)
 	}

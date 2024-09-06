@@ -10,7 +10,10 @@ require (
 	github.com/stretchr/testify v1.9.0
 )
 
-require github.com/rogpeppe/go-internal v1.11.0 // indirect
+require (
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

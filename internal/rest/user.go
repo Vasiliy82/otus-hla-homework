@@ -7,16 +7,22 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/internal/mappers"
-	"github.com/Vasiliy82/otus-hla-homework/internal/service"
 	"github.com/Vasiliy82/otus-hla-homework/internal/validators"
 	"github.com/labstack/echo/v4"
 )
 
-type UserHandler struct {
-	userService *service.UserService
+//go:generate mockery --name UserService
+type UserService interface {
+	RegisterUser(user domain.User) (string, error)
+	GetById(id string) (domain.User, error)
+	Login(username, password string) (string, error)
 }
 
-func NewUserHandler(userService *service.UserService) *UserHandler {
+type UserHandler struct {
+	userService UserService
+}
+
+func NewUserHandler(userService UserService) *UserHandler {
 	return &UserHandler{userService: userService}
 }
 

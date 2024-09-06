@@ -60,8 +60,7 @@ func main() {
 		}
 	}()
 
-	userRepo := pgRepo.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(pgRepo.NewUserRepository(db), pgRepo.NewSessionRepository(db))
 	userHandler := rest.NewUserHandler(userService)
 
 	// Start Server
