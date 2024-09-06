@@ -10,14 +10,14 @@ import (
 
 //go:generate mockery --name UserRepository
 type UserRepository interface {
-	RegisterUser(domain.User) (string, error)
-	GetUserByID(string) (domain.User, error)
-	CheckUserPasswordHash(string, string) (string, error)
+	RegisterUser(user domain.User) (string, error)
+	GetUserByID(id string) (domain.User, error)
+	CheckUserPasswordHash(username string, passwordHash string) (string, error)
 }
 
 //go:generate mockery --name SessionRepository
 type SessionRepository interface {
-	CreateSession(string, string, time.Time) error
+	CreateSession(userID, token string, expiresAt time.Time) error
 }
 
 type UserService struct {
