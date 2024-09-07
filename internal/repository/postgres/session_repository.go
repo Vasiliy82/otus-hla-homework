@@ -19,7 +19,7 @@ func (r *SessionRepository) CreateSession(userID, token string, expiresAt time.T
 		"INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)",
 		userID, token, expiresAt)
 	if err != nil {
-		return fmt.Errorf("failed to create session: %v", err)
+		return fmt.Errorf("SessionRepository.CreateSession: r.db.Exec returned error %w", err)
 	}
 	return nil
 }

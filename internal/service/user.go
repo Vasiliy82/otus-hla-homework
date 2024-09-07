@@ -1,18 +1,21 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/lib/pq"
 )
 
 //go:generate mockery --name UserRepository
 type UserRepository interface {
 	RegisterUser(user domain.User) (string, error)
-	GetUserByID(id string) (domain.User, error)
-	CheckUserPasswordHash(username string, passwordHash string) (string, error)
+	GetByID(id string) (domain.User, error)
+	GetByUsername(username string) (domain.User, error)
 }
 
 //go:generate mockery --name SessionRepository
@@ -33,23 +36,46 @@ func NewUserService(ur UserRepository, sr SessionRepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user domain.User) (string, error) {
-	return s.userRepo.RegisterUser(user)
+	var id string
+	var err error
+
+	if id, err = s.userRepo.RegisterUser(user); err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" { // duplicate key value violates unique constraint
+				return "", apperrors.NewConflictError("Login already used")
+			}
+		}
+		// Если ошибка не является *pq.Error, оборачиваем её в InternalServerError
+		return "", apperrors.NewInternalServerError("UserService.RegisterUser, s.userRepo.RegisterUser returned unknown error", err)
+	}
+	return id, nil
 }
 
 func (s *UserService) GetById(id string) (domain.User, error) {
-	return s.userRepo.GetUserByID(id)
+	var user domain.User
+	var err error
+	if user, err = s.userRepo.GetByID(id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.User{}, apperrors.NewNotFoundError("User not found")
+		}
+		return domain.User{}, apperrors.NewInternalServerError("UserService.GetById: s.userRepo.GetByID returned unknown error", err)
+	}
+	return user, nil
+
 }
 
 func (s *UserService) Login(username, password string) (string, error) {
-	passwordHash := domain.HashPassword(password)
-
 	// Проверка пароля
-	id, err := s.userRepo.CheckUserPasswordHash(username, passwordHash)
+	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
-		return "", errors.New("Auth error")
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", apperrors.NewNotFoundError("User not found")
+		}
+		return "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
 	}
-	if id == "" {
-		return "", errors.New("Auth error")
+	if !user.CheckPassword(password) {
+		return "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
 	// Генерация токена
@@ -59,9 +85,9 @@ func (s *UserService) Login(username, password string) (string, error) {
 	expiresAt := time.Now().Add(24 * time.Hour)
 
 	// Сохранение токена в таблицу сессий
-	err = s.sessionRepo.CreateSession(id, token, expiresAt)
+	err = s.sessionRepo.CreateSession(user.ID, token, expiresAt)
 	if err != nil {
-		return "", fmt.Errorf("failed to create session: %v", err)
+		return "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}
 
 	return token, nil

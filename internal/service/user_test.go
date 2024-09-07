@@ -1,12 +1,16 @@
 package service_test
 
 import (
+	"database/sql"
 	"errors"
+	errors_ "errors"
 	"testing"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/service"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,14 +28,13 @@ func (m *MockUserRepository) RegisterUser(user domain.User) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserByID(id string) (domain.User, error) {
+func (m *MockUserRepository) GetByID(id string) (domain.User, error) {
 	args := m.Called(id)
 	return args.Get(0).(domain.User), args.Error(1)
 }
-
-func (m *MockUserRepository) CheckUserPasswordHash(username string, passwordHash string) (string, error) {
-	args := m.Called(username, passwordHash)
-	return args.String(0), args.Error(1)
+func (m *MockUserRepository) GetByUsername(username string) (domain.User, error) {
+	args := m.Called(username)
+	return args.Get(0).(domain.User), args.Error(1)
 }
 
 func (m *MockSessionRepository) CreateSession(userID, token string, expiresAt time.Time) error {
@@ -44,10 +47,11 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	userService := service.NewUserService(mockRepo, nil)
 	testUser := domain.User{
+		ID:           "123",
 		FirstName:    "John",
 		SecondName:   "Doe",
 		Username:     "johndoe",
-		PasswordHash: "hashedpassword",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
 
 	// Мокаем успешную регистрацию
@@ -66,19 +70,27 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	userService := service.NewUserService(mockRepo, nil)
 	testUser := domain.User{
+		ID:           "123",
 		FirstName:    "John",
 		SecondName:   "Doe",
 		Username:     "johndoe",
-		PasswordHash: "hashedpassword",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
 
 	// Мокаем ошибку дублирования логина
-	mockRepo.On("RegisterUser", testUser).Return("", domain.ErrConflict)
+	mockRepo.On("RegisterUser", testUser).Return("", &pq.Error{Code: "23505"})
 
 	userID, err := userService.RegisterUser(testUser)
 
 	// Проверяем, что вернулась ошибка конфликта и ID не сгенерирован
-	assert.ErrorIs(t, err, domain.ErrConflict)
+	var apperr *apperrors.AppError
+	if errors.As(err, &apperr) {
+		assert.Equal(t, 409, apperr.Code)
+		assert.Equal(t, "Login already used", apperr.Message)
+	} else {
+		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
+	}
+
 	assert.Equal(t, "", userID)
 
 	mockRepo.AssertExpectations(t)
@@ -88,14 +100,15 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	userService := service.NewUserService(mockRepo, nil)
 	testUser := domain.User{
+		ID:           "123",
 		FirstName:    "John",
 		SecondName:   "Doe",
 		Username:     "johndoe",
-		PasswordHash: "hashedpassword",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
 
 	// Мокаем ошибку базы данных
-	mockRepo.On("RegisterUser", testUser).Return("", errors.New("db error"))
+	mockRepo.On("RegisterUser", testUser).Return("", apperrors.NewInternalServerError("db error", errors_.New("db error")))
 
 	userID, err := userService.RegisterUser(testUser)
 
@@ -111,9 +124,16 @@ func TestUserService_Login_Success(t *testing.T) {
 	mockSessionRepo := new(MockSessionRepository)
 	userService := service.NewUserService(mockRepo, mockSessionRepo)
 
-	// Мокаем успешную проверку пароля
-	mockRepo.On("CheckUserPasswordHash", "johndoe", mock.Anything).Return("123", nil)
+	testUser := domain.User{
+		ID:           "123",
+		FirstName:    "John",
+		SecondName:   "Doe",
+		Username:     "johndoe",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
+	}
 
+	// Мокаем
+	mockRepo.On("GetByUsername", "johndoe").Return(testUser, nil)
 	// Мокаем успешное создание сессии
 	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(nil)
 
@@ -127,23 +147,55 @@ func TestUserService_Login_Success(t *testing.T) {
 	mockSessionRepo.AssertExpectations(t)
 }
 
-func TestUserService_CreateSession_DBError(t *testing.T) {
+func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	mockSessionRepo := new(MockSessionRepository)
 	userService := service.NewUserService(mockRepo, mockSessionRepo)
 
-	// Мокаем успешную проверку пароля
-	mockRepo.On("CheckUserPasswordHash", "johndoe", mock.Anything).Return("123", nil)
+	// Мокаем
+	mockRepo.On("GetByUsername", "johndoe").Return(domain.User{}, errors.New("database error"))
 
-	// Мокаем ошибку при создании сессии
-	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(errors.New("db error"))
+	_, err := userService.Login("johndoe", "correctpassword")
+
+	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
+	var apperr *apperrors.AppError
+	if errors.As(err, &apperr) {
+		assert.Equal(t, 500, apperr.Code)
+		assert.Equal(t, "Internal server error", apperr.Message)
+	} else {
+		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
+	}
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_Login_CreateSession_DBError(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	mockSessionRepo := new(MockSessionRepository)
+	userService := service.NewUserService(mockRepo, mockSessionRepo)
+
+	testUser := domain.User{
+		ID:           "123",
+		FirstName:    "John",
+		SecondName:   "Doe",
+		Username:     "johndoe",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
+	}
+
+	// Мокаем
+	mockRepo.On("GetByUsername", "johndoe").Return(testUser, nil)
+	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(errors.New("database error"))
 
 	token, err := userService.Login("johndoe", "correctpassword")
 
 	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
-	assert.Error(t, err)
+	var apperr *apperrors.AppError
+	if errors.As(err, &apperr) {
+		assert.Equal(t, 500, apperr.Code)
+		assert.Equal(t, "Internal server error", apperr.Message)
+	} else {
+		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
+	}
 	assert.Equal(t, "", token)
-
 	mockRepo.AssertExpectations(t)
 	mockSessionRepo.AssertExpectations(t)
 }
@@ -152,13 +204,27 @@ func TestUserService_Login_Failed(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	userService := service.NewUserService(mockRepo, nil)
 
-	// Мокаем ошибку аутентификации
-	mockRepo.On("CheckUserPasswordHash", "johndoe", mock.Anything).Return("", errors.New("Auth error"))
+	testUser := domain.User{
+		ID:           "123",
+		FirstName:    "John",
+		SecondName:   "Doe",
+		Username:     "johndoe",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
+	}
+
+	// Мокаем
+	mockRepo.On("GetByUsername", "johndoe").Return(testUser, nil)
 
 	token, err := userService.Login("johndoe", "wrongpassword")
 
 	// Проверяем, что вернулась ошибка и токен не был сгенерирован
-	assert.Error(t, err)
+	var apperr *apperrors.AppError
+	if errors.As(err, &apperr) {
+		assert.Equal(t, 401, apperr.Code)
+		assert.Equal(t, "Wrong password", apperr.Message)
+	} else {
+		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
+	}
 	assert.Equal(t, "", token)
 
 	mockRepo.AssertExpectations(t)
@@ -169,14 +235,15 @@ func TestUserService_GetById_Success(t *testing.T) {
 	userService := service.NewUserService(mockRepo, nil)
 
 	testUser := domain.User{
-		ID:         "123",
-		FirstName:  "John",
-		SecondName: "Doe",
-		Username:   "johndoe",
+		ID:           "123",
+		FirstName:    "John",
+		SecondName:   "Doe",
+		Username:     "johndoe",
+		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
 
 	// Мокаем успешное получение пользователя
-	mockRepo.On("GetUserByID", "123").Return(testUser, nil)
+	mockRepo.On("GetByID", "123").Return(testUser, nil)
 
 	user, err := userService.GetById("123")
 
@@ -192,12 +259,18 @@ func TestUserService_GetById_NotFound(t *testing.T) {
 	userService := service.NewUserService(mockRepo, nil)
 
 	// Мокаем ошибку получения пользователя
-	mockRepo.On("GetUserByID", "123").Return(domain.User{}, errors.New("user not found"))
+	mockRepo.On("GetByID", "123").Return(domain.User{}, sql.ErrNoRows)
 
 	user, err := userService.GetById("123")
 
 	// Проверяем, что вернулась ошибка и пользователь не был найден
-	assert.Error(t, err)
+	var apperr *apperrors.AppError
+	if errors.As(err, &apperr) {
+		assert.Equal(t, 404, apperr.Code)
+		assert.Equal(t, "User not found", apperr.Message)
+	} else {
+		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
+	}
 	assert.Equal(t, domain.User{}, user)
 
 	mockRepo.AssertExpectations(t)

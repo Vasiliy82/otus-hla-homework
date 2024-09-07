@@ -23,6 +23,9 @@ type User struct {
 func (u *User) SetPassword(password string) {
 	u.PasswordHash = HashPassword(password)
 }
+func (u *User) CheckPassword(password string) bool {
+	return u.PasswordHash == HashPassword(password)
+}
 
 func HashPassword(password string) string {
 	h := md5.New()
