@@ -1,30 +1,22 @@
 package validators
 
 import (
+	"fmt"
+
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 )
 
 func ValidateRegisterUserRequest(request dto.RegisterUserRequest) error {
-	if request.FirstName == "" {
-		return apperrors.NewBadRequestError("first name cannot be empty")
-	} else if request.SecondName == "" {
-		return apperrors.NewBadRequestError("second name cannot be empty")
-	} else if request.Birthdate == "" {
-		return apperrors.NewBadRequestError("birth date cannot be empty")
-	} else if request.Password == "" {
-		return apperrors.NewBadRequestError("password cannot be empty")
-	} else if request.Username == "" {
-		return apperrors.NewBadRequestError("username cannot be empty")
+	if err := request.Validate(); err != nil {
+		return apperrors.NewBadRequestError(fmt.Sprintf("validation failed: %s", err.Error()))
 	}
 	return nil
 }
 
 func ValidateLoginRequest(request dto.LoginRequest) error {
-	if request.Username == "" {
-		return apperrors.NewBadRequestError("username cannot be empty")
-	} else if request.Password == "" {
-		return apperrors.NewBadRequestError("password cannot be empty")
+	if err := request.Validate(); err != nil {
+		return apperrors.NewBadRequestError(fmt.Sprintf("validation failed: %s", err.Error()))
 	}
 	return nil
 }

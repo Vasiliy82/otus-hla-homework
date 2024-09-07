@@ -1,12 +1,14 @@
 package rest
 
 import (
-	"log"
+	"errors"
 	"net/http"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/internal/mappers"
+	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/internal/validators"
 	"github.com/labstack/echo/v4"
 )
@@ -30,8 +32,7 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 	var userReq dto.RegisterUserRequest
 	var user domain.User
 	var err error
-
-	log.Println("RegisterUser")
+	log.Logger().Debug("UserHandler.RegisterUser")
 
 	if err = c.Bind(&userReq); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -47,6 +48,10 @@ func (h *UserHandler) RegisterUser(c echo.Context) error {
 
 	userId, err := h.userService.RegisterUser(user)
 	if err != nil {
+		var apperr *apperrors.AppError
+		if errors.As(err, &apperr) {
+			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"user_id": userId})
@@ -57,7 +62,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 	var req dto.LoginRequest
 	var err error
 
-	log.Println("Login")
+	log.Logger().Debug("UserHandler.Login")
 
 	if err = c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -67,7 +72,12 @@ func (h *UserHandler) Login(c echo.Context) error {
 	}
 
 	token, err := h.userService.Login(req.Username, req.Password)
+
 	if err != nil {
+		var apperr *apperrors.AppError
+		if errors.As(err, &apperr) {
+			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, map[string]string{"token": token})
@@ -75,6 +85,8 @@ func (h *UserHandler) Login(c echo.Context) error {
 
 func (h *UserHandler) Get(c echo.Context) error {
 	var err error
+
+	log.Logger().Debug("UserHandler.Get")
 
 	id := c.Param("id")
 
@@ -84,7 +96,11 @@ func (h *UserHandler) Get(c echo.Context) error {
 
 	user, err := h.userService.GetById(id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
+		var apperr *apperrors.AppError
+		if errors.As(err, &apperr) {
+			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, user)
 }

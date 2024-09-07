@@ -1,23 +1,25 @@
 package logger
 
 import (
-	"fmt"
 	"io"
+	"os"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func NewLogger(level string, writer io.Writer, _ ...zap.Option) (*zap.Logger, error) {
-	var atomicLevel zap.AtomicLevel
-	if level == "" {
-		atomicLevel = zap.NewAtomicLevelAt(zap.ErrorLevel)
-	} else {
-		parsedLevel, errParse := zap.ParseAtomicLevel(level)
-		if errParse != nil {
-			return nil, fmt.Errorf("zap.ParseAtomicLevel: %writer", errParse)
-		}
-		atomicLevel = parsedLevel
+var (
+	global       *zap.SugaredLogger
+	defaultLevel = zap.NewAtomicLevelAt(zap.ErrorLevel)
+)
+
+func init() {
+	SetLogger(NewStdOut(defaultLevel))
+}
+
+func New(level zapcore.LevelEnabler, w io.Writer, options ...zap.Option) *zap.SugaredLogger {
+	if level == nil {
+		level = defaultLevel
 	}
 
 	cfg := zapcore.EncoderConfig{
@@ -34,6 +36,22 @@ func NewLogger(level string, writer io.Writer, _ ...zap.Option) (*zap.Logger, er
 	}
 
 	enc := zapcore.NewJSONEncoder(cfg)
+	return zap.New(zapcore.NewCore(enc, zapcore.AddSync(w), level),
+		options...).Sugar()
+}
 
-	return zap.New(zapcore.NewCore(enc, zapcore.AddSync(writer), atomicLevel)), nil
+func NewStdOut(level zapcore.LevelEnabler, options ...zap.Option) *zap.SugaredLogger {
+	return New(level, os.Stdout, options...)
+}
+
+func SetLogger(l *zap.SugaredLogger) {
+	global = l
+}
+
+func Logger() *zap.SugaredLogger {
+	return global
+}
+
+func SetLevel(l zapcore.Level) {
+	defaultLevel.SetLevel(l)
 }

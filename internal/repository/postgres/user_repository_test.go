@@ -25,7 +25,7 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	testUser := domain.User{
 		FirstName:    "John",
 		SecondName:   "Doe",
-		Username:     "johndoe",
+		Username:     "johndoe@gmail.com",
 		PasswordHash: "hashedpassword",
 	}
 
@@ -56,7 +56,7 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 	testUser := domain.User{
 		FirstName:    "John",
 		SecondName:   "Doe",
-		Username:     "johndoe",
+		Username:     "johndoe@gmail.com",
 		PasswordHash: "hashedpassword",
 	}
 
@@ -86,7 +86,7 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 		ID:         "123",
 		FirstName:  "John",
 		SecondName: "Doe",
-		Username:   "johndoe",
+		Username:   "johndoe@gmail.com",
 	}
 
 	// Эмулируем успешный результат SELECT
@@ -99,7 +99,7 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 
 	// Проверяем, что ошибок нет и пользователь получен
 	assert.NoError(t, err)
-	assert.Equal(t, "johndoe", user.Username)
+	assert.Equal(t, "johndoe@gmail.com", user.Username)
 
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
@@ -138,20 +138,20 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 		ID:         "123",
 		FirstName:  "John",
 		SecondName: "Doe",
-		Username:   "johndoe",
+		Username:   "johndoe@gmail.com",
 	}
 
 	// Эмулируем успешный результат SELECT
 	mock.ExpectQuery("^SELECT").
-		WithArgs("johndoe").
+		WithArgs("johndoe@gmail.com").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "second_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
 			AddRow(testUser.ID, testUser.FirstName, testUser.SecondName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
 
-	user, err := userRepo.GetByUsername("johndoe")
+	user, err := userRepo.GetByUsername("johndoe@gmail.com")
 
 	// Проверяем, что ошибок нет и пользователь получен
 	assert.NoError(t, err)
-	assert.Equal(t, "johndoe", user.Username)
+	assert.Equal(t, "johndoe@gmail.com", user.Username)
 
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
