@@ -75,7 +75,11 @@ func main() {
 
 	// prepare echo
 	e := echo.New()
-	e.Use(middleware.CORS)
+
+	// Настройка middleware CORS
+	middleware.CORSConfig(e)
+
+	// e.Use(middleware.CORS)
 	timeoutStr := os.Getenv("CONTEXT_TIMEOUT")
 	timeout, err := strconv.Atoi(timeoutStr)
 	if err != nil {

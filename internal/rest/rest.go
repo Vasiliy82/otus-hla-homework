@@ -17,7 +17,7 @@ import (
 type UserService interface {
 	RegisterUser(user domain.User) (string, error)
 	GetById(id string) (domain.User, error)
-	Login(username, password string) (string, error)
+	Login(username, password string) (string, string, error)
 }
 
 type UserHandler struct {
@@ -71,7 +71,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	token, err := h.userService.Login(req.Username, req.Password)
+	user_id, token, err := h.userService.Login(req.Username, req.Password)
 
 	if err != nil {
 		var apperr *apperrors.AppError
@@ -80,7 +80,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"token": token})
+	return c.JSON(http.StatusOK, map[string]string{"user_id": user_id, "token": token})
 }
 
 func (h *UserHandler) Get(c echo.Context) error {

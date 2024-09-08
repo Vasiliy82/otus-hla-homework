@@ -29,9 +29,9 @@ func (m *MockUserService) RegisterUser(user domain.User) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserService) Login(username, password string) (string, error) {
+func (m *MockUserService) Login(username, password string) (string, string, error) {
 	args := m.Called(username, password)
-	return args.String(0), args.Error(1)
+	return args.String(0), args.String(1), args.Error(2)
 }
 
 func (m *MockUserService) GetById(id string) (domain.User, error) {
@@ -74,7 +74,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	}
 
 	// Мокаем успешную регистрацию
-	mockUserService.On("RegisterUser", mockUser).Return("123", nil)
+	mockUserService.On("RegisterUser", mockUser).Return("bb49a7d7-3e85-4935-9afd-570ec8ea318b", nil)
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)
@@ -93,7 +93,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	// Проверяем ответ
 	var resp map[string]string
 	json.Unmarshal(rec.Body.Bytes(), &resp)
-	assert.Equal(t, "123", resp["user_id"])
+	assert.Equal(t, "bb49a7d7-3e85-4935-9afd-570ec8ea318b", resp["user_id"])
 
 	mockUserService.AssertExpectations(t)
 }
@@ -435,7 +435,7 @@ func TestUserHandler_Login_Success(t *testing.T) {
 	}
 
 	// Мокаем успешный логин
-	mockUserService.On("Login", "johndoe@gmail.com", "password123").Return("token123", nil)
+	mockUserService.On("Login", "johndoe@gmail.com", "password123").Return("bb49a7d7-3e85-4935-9afd-570ec8ea318b", "token123", nil)
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)
@@ -454,6 +454,7 @@ func TestUserHandler_Login_Success(t *testing.T) {
 	// Проверяем ответ
 	var resp map[string]string
 	json.Unmarshal(rec.Body.Bytes(), &resp)
+	assert.Equal(t, "bb49a7d7-3e85-4935-9afd-570ec8ea318b", resp["user_id"])
 	assert.Equal(t, "token123", resp["token"])
 
 	mockUserService.AssertExpectations(t)
@@ -472,7 +473,7 @@ func TestUserHandler_Login_Failure(t *testing.T) {
 	}
 
 	// Мокаем ошибку логина
-	mockUserService.On("Login", "johndoe@gmail.com", "wrongpassword").Return("", errors.New("invalid credentials"))
+	mockUserService.On("Login", "johndoe@gmail.com", "wrongpassword").Return("", "", errors.New("invalid credentials"))
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)

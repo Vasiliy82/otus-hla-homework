@@ -65,17 +65,17 @@ func (s *UserService) GetById(id string) (domain.User, error) {
 
 }
 
-func (s *UserService) Login(username, password string) (string, error) {
+func (s *UserService) Login(username, password string) (string, string, error) {
 	// Проверка пароля
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", apperrors.NewNotFoundError("User not found")
+			return "", "", apperrors.NewNotFoundError("User not found")
 		}
-		return "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
+		return "", "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
 	}
 	if !user.CheckPassword(password) {
-		return "", apperrors.NewUnauthorizedError("Wrong password")
+		return "", "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
 	// Генерация токена
@@ -87,10 +87,10 @@ func (s *UserService) Login(username, password string) (string, error) {
 	// Сохранение токена в таблицу сессий
 	err = s.sessionRepo.CreateSession(user.ID, token, expiresAt)
 	if err != nil {
-		return "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
+		return "", "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}
 
-	return token, nil
+	return user.ID, token, nil
 }
 
 func generateToken(username string) string {

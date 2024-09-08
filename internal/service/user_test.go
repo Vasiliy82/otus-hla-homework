@@ -137,10 +137,11 @@ func TestUserService_Login_Success(t *testing.T) {
 	// Мокаем успешное создание сессии
 	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(nil)
 
-	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
 	// Проверяем, что ошибок нет и токен сгенерирован
 	assert.NoError(t, err)
+	assert.NotEmpty(t, user_id)
 	assert.NotEmpty(t, token)
 
 	mockRepo.AssertExpectations(t)
@@ -155,7 +156,10 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(domain.User{}, errors.New("database error"))
 
-	_, err := userService.Login("johndoe@gmail.com", "correctpassword")
+	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+
+	assert.Equal(t, "", user_id)
+	assert.Equal(t, "", token)
 
 	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
 	var apperr *apperrors.AppError
@@ -185,7 +189,10 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
 	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(errors.New("database error"))
 
-	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+
+	assert.Equal(t, "", user_id)
+	assert.Equal(t, "", token)
 
 	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
 	var apperr *apperrors.AppError
@@ -215,7 +222,10 @@ func TestUserService_Login_Failed(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
 
-	token, err := userService.Login("johndoe@gmail.com", "wrongpassword")
+	user_id, token, err := userService.Login("johndoe@gmail.com", "wrongpassword")
+
+	assert.Equal(t, "", user_id)
+	assert.Equal(t, "", token)
 
 	// Проверяем, что вернулась ошибка и токен не был сгенерирован
 	var apperr *apperrors.AppError

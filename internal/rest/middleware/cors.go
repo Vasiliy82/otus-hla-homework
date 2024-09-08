@@ -1,6 +1,9 @@
 package middleware
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+)
 
 // CORS will handle the CORS middleware
 func CORS(next echo.HandlerFunc) echo.HandlerFunc {
@@ -8,4 +11,13 @@ func CORS(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		return next(c)
 	}
+}
+
+// CORSConfig will configure CORS properly
+func CORSConfig(e *echo.Echo) {
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"}, // Разрешить все источники
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		AllowMethods: []string{echo.GET, echo.HEAD, echo.PUT, echo.PATCH, echo.POST, echo.DELETE},
+	}))
 }
