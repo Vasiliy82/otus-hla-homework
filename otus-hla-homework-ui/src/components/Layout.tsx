@@ -18,9 +18,9 @@ const Layout: React.FC = () => {
     <div className="wrapper">
       <header className="header">
         <div className="header-content">
-          <div className="logo">MySocialNetwork</div>
-          <input type="text" placeholder="Search..." className="search-bar" />
-          {isAuthenticated && <div>Welcome, {authService.getProfile()?.username}</div>}
+          <div className="logo">OTUS-HLA-Homework</div>
+          <input type="text" placeholder="Искать..." className="search-bar" />
+          {isAuthenticated && <div>Привет, {authService.getProfile()?.username}</div>}
         </div>
       </header>
 

@@ -48,19 +48,19 @@ const AuthForm: React.FC = () => {
       <form onSubmit={handleLogin}>
         <input
           type="text"
-          placeholder="Login"
+          placeholder="Имя пользователя"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit">Login</button>
+        <button type="submit">Авторизация</button>
       </form>
       <div className="auth-links">
         <a href="/register">Регистрация</a>
