@@ -1,0 +1,54 @@
+/* Стили для формы авторизации */
+.auth-block {
+    padding: 20px;
+    background-color: #c1e1c1; /* Светло-зеленый тон */
+    border: 1px solid #4d8b4d; /* Средне-зеленый */
+    border-radius: 5px;
+  }
+  
+  .auth-block form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .auth-block input {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #4d8b4d;
+    border-radius: 5px;
+  }
+  
+  .auth-block button {
+    padding: 10px;
+    background-color: #4d8b4d; /* Средний зеленый */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .auth-block button:hover {
+    background-color: #3b6e3b; /* Более темный зеленый при наведении */
+  }
+  
+  .auth-links {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .auth-links a {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #a0d4a0; /* Светлый зеленый тон */
+    border-radius: 5px;
+    color: #1f4d1f; /* Темно-зеленый */
+    text-decoration: none;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .auth-links a:hover {
+    background-color: #8cb88c; /* Темнее при наведении */
+  }

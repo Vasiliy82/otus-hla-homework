@@ -1,0 +1,92 @@
+  /* Основная структура */
+  .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+  
+  /* Шапка */
+  .header {
+    width: 100%;
+    background-color: #a0d4a0; /* Светло-зеленый фон */
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .header-content {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f4d1f; /* Темно-зеленый */
+    margin-left: 10px;
+  }
+  
+  .search-bar {
+    width: 300px;
+    padding: 5px;
+    border: 1px solid #4d8b4d; /* Средний зеленый */
+    border-radius: 5px;
+    margin-right: 10px;
+  }
+  
+  /* Основная часть */
+  .content {
+    display: flex;
+    margin-top: 20px;
+  }
+  
+  /* Левая колонка (меню) */
+  .left-column {
+    width: 200px;
+    margin-right: 20px;
+  }
+  
+  .menu ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .menu ul li {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #c1e1c1; /* Светло-зеленый тон */
+    border-radius: 5px;
+    color: #1f4d1f; /* Темно-зеленый */
+    cursor: pointer;
+  }
+  
+  .menu ul li:hover {
+    background-color: #a0d4a0; /* Нежный зеленый при наведении */
+  }
+
+    /* Основной контент */
+  .main-content {
+      flex-grow: 1;
+      background-color: #f5fff5; /* Очень светлый зеленый */
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+  }
+  
+  .logout-button {
+    display: block;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #ff4d4f; /* Красный для кнопки выхода */
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .logout-button:hover {
+    background-color: #d43535; /* Темнее при наведении */
+  }
