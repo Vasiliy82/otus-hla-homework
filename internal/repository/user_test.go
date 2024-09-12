@@ -1,4 +1,4 @@
-package postgres_test
+package repository_test
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/repository/postgres"
+	repository "github.com/Vasiliy82/otus-hla-homework/internal/repository"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	defer db.Close()
 
 	// Создаем экземпляр репозитория
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	// Создаем тестового пользователя
 	testUser := domain.User{
@@ -51,7 +51,7 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	testUser := domain.User{
 		FirstName:    "John",
@@ -80,7 +80,7 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	testUser := domain.User{
 		ID:         "123",
@@ -110,7 +110,7 @@ func TestUserRepository_GetUserByID_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	// Эмулируем ошибку, что пользователь не найден
 	mock.ExpectQuery("^SELECT").
@@ -132,7 +132,7 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	testUser := domain.User{
 		ID:         "123",
@@ -162,7 +162,7 @@ func TestUserRepository_GetUserByUsername_NotFound(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	userRepo := postgres.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(db)
 
 	// Эмулируем ошибку, что пользователь не найден
 	mock.ExpectQuery("^SELECT").

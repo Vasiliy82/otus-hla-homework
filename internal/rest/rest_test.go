@@ -11,14 +11,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+
+	// "github.com/stretchr/testify/mock"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
+	"github.com/Vasiliy82/otus-hla-homework/internal/rest/mocks"
 )
 
+/*
 // Mock для UserService
 type MockUserService struct {
 	mock.Mock
@@ -37,14 +40,14 @@ func (m *MockUserService) Login(username, password string) (string, string, erro
 func (m *MockUserService) GetById(id string) (domain.User, error) {
 	return domain.User{}, nil
 }
-
+*/
 // 1. Тест на успешный ответ при регистрации
 func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	// Создаем инстанс Echo
 	e := echo.New()
 
 	// Создаем mock для UserService
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -93,7 +96,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	// Проверяем ответ
 	var resp map[string]string
 	json.Unmarshal(rec.Body.Bytes(), &resp)
-	assert.Equal(t, "bb49a7d7-3e85-4935-9afd-570ec8ea318b", resp["user_id"])
+	assert.Equal(t, "bb49a7d7-3e85-4935-9afd-570ec8ea318b", resp["id"])
 
 	mockUserService.AssertExpectations(t)
 }
@@ -101,7 +104,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoPassword(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -135,7 +138,7 @@ func TestUserHandler_RegisterUser_BadRequest_NoPassword(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoCity(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -169,7 +172,7 @@ func TestUserHandler_RegisterUser_BadRequest_NoCity(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoBirthDate(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	// Формируем HTTP-запрос с неполными данными (нет поля BirthDate)
@@ -201,10 +204,11 @@ func TestUserHandler_RegisterUser_BadRequest_NoBirthDate(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-13-01"
+	// birthdateStr := ""
 
 	// Формируем HTTP-запрос с неполными данными (нет поля Password)
 	reqBody := dto.RegisterUserRequest{
@@ -228,7 +232,7 @@ func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
+	// Проверяем, что вернулась ошибка и статус-код 400
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	mockUserService.AssertExpectations(t)
 }
@@ -236,7 +240,7 @@ func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoSecondName(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -270,7 +274,7 @@ func TestUserHandler_RegisterUser_BadRequest_NoSecondName(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoFirstName(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -304,7 +308,7 @@ func TestUserHandler_RegisterUser_BadRequest_NoFirstName(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoUsername(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -338,7 +342,7 @@ func TestUserHandler_RegisterUser_BadRequest_NoUsername(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_WrongUsername(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -376,7 +380,7 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 	e := echo.New()
 
 	// Создаем mock для UserService
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	birthdateStr := "2020-01-01"
@@ -425,7 +429,7 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 // 3. Тест на успешный ответ при аутентификации
 func TestUserHandler_Login_Success(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	// Тестовые данные для успешного логина
@@ -463,7 +467,7 @@ func TestUserHandler_Login_Success(t *testing.T) {
 // 4. Тест на ошибку при неверных данных (неверный пароль)
 func TestUserHandler_Login_Failure(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(MockUserService)
+	mockUserService := new(mocks.UserService)
 	handler := rest.NewUserHandler(mockUserService)
 
 	// Тестовые данные для логина с неправильным паролем

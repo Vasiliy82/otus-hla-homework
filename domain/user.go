@@ -20,6 +20,8 @@ type User struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type Token string
+
 func (u *User) SetPassword(password string) {
 	u.PasswordHash = HashPassword(password)
 }

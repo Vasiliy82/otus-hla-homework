@@ -1,41 +1,37 @@
-package service
+package user
 
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
 )
 
-//go:generate mockery --name UserRepository
-type UserRepository interface {
-	RegisterUser(user domain.User) (string, error)
-	GetByID(id string) (domain.User, error)
-	GetByUsername(username string) (domain.User, error)
+type UserHandler interface {
+	RegisterUser(c echo.Context) error
+	Login(c echo.Context) error
+	Get(c echo.Context) error
 }
 
-//go:generate mockery --name SessionRepository
-type SessionRepository interface {
-	CreateSession(userID, token string, expiresAt time.Time) error
+type userService struct {
+	userRepo    domain.UserRepository
+	sessionRepo domain.SessionRepository
+	jwtService  domain.JWTService
 }
 
-type UserService struct {
-	userRepo    UserRepository
-	sessionRepo SessionRepository
-}
-
-func NewUserService(ur UserRepository, sr SessionRepository) *UserService {
-	return &UserService{
+func NewUserService(ur domain.UserRepository, sr domain.SessionRepository, jwts domain.JWTService) domain.UserService {
+	return &userService{
 		userRepo:    ur,
 		sessionRepo: sr,
+		jwtService:  jwts,
 	}
 }
 
-func (s *UserService) RegisterUser(user domain.User) (string, error) {
+func (s *userService) RegisterUser(user domain.User) (string, error) {
 	var id string
 	var err error
 
@@ -52,7 +48,7 @@ func (s *UserService) RegisterUser(user domain.User) (string, error) {
 	return id, nil
 }
 
-func (s *UserService) GetById(id string) (domain.User, error) {
+func (s *userService) GetById(id string) (domain.User, error) {
 	var user domain.User
 	var err error
 	if user, err = s.userRepo.GetByID(id); err != nil {
@@ -65,7 +61,7 @@ func (s *UserService) GetById(id string) (domain.User, error) {
 
 }
 
-func (s *UserService) Login(username, password string) (string, string, error) {
+func (s *userService) Login(username, password string) (string, string, error) {
 	// Проверка пароля
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
@@ -78,23 +74,14 @@ func (s *UserService) Login(username, password string) (string, string, error) {
 		return "", "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
-	// Генерация токена
-	token := generateToken(username)
-
 	// Установка срока действия токена (например, на 24 часа)
 	expiresAt := time.Now().Add(24 * time.Hour)
 
 	// Сохранение токена в таблицу сессий
-	err = s.sessionRepo.CreateSession(user.ID, token, expiresAt)
+	token, err := s.sessionRepo.CreateSession(user.ID, expiresAt)
 	if err != nil {
 		return "", "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}
 
 	return user.ID, token, nil
-}
-
-func generateToken(username string) string {
-	timestamp := time.Now().UnixNano()
-	data := fmt.Sprintf("%s:%d", username, timestamp)
-	return domain.HashPassword(data)
 }

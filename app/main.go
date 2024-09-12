@@ -1,28 +1,32 @@
 package main
 
 import (
-	"database/sql"
+	"context"
+	"flag"
 	"fmt"
-	"net/url"
 	"os"
-	"strconv"
-	"time"
+	"os/signal"
+	"syscall"
 
+	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
-	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
-	pgRepo "github.com/Vasiliy82/otus-hla-homework/internal/repository/postgres"
+	"github.com/Vasiliy82/otus-hla-homework/internal/repository"
 
+	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/httpserver"
+	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
-	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
-	"github.com/Vasiliy82/otus-hla-homework/internal/service"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
+	service "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
 	"github.com/joho/godotenv"
 )
 
 const (
-	defaultTimeout = 30
-	defaultAddress = ":9090"
+	defaultTimeout        = 30
+	defaultAddress        = ":9090"
+	defaultConfigFilename = "app.yaml"
 )
 
 func init() {
@@ -33,72 +37,58 @@ func init() {
 }
 
 func main() {
+	var jwtService domain.JWTService
+	var err error
 
-	// Prepare database
-	dbHost := os.Getenv("DATABASE_HOST")
-	dbPort := os.Getenv("DATABASE_PORT")
-	dbUser := os.Getenv("DATABASE_USER")
-	dbPass := os.Getenv("DATABASE_PASS")
-	dbName := os.Getenv("DATABASE_NAME")
+	// Создание основного контекста с возможностью отмены
+	ctx, cancel := context.WithCancel(context.Background())
 
-	connection := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbUser, dbPass, dbHost, dbPort, dbName)
-	val := url.Values{}
-	val.Add("sslmode", "disable")
-	dsn := fmt.Sprintf("%s?%s", connection, val.Encode())
-	db, err := sql.Open(`postgres`, dsn)
+	// Создаем канал для получения системных сигналов
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// Горутинa для обработки системных сигналов
+	go func() {
+		sig := <-sigs
+		fmt.Printf("Received signal: %s, shutting down...\n", sig)
+		cancel() // Отмена контекста при получении сигнала
+	}()
+
+	// Флаг для указания пути к файлу конфигурации
+	configPath := flag.String("config", defaultConfigFilename, "path to the configuration file")
+	flag.Parse()
+
+	cfg, err := config.LoadConfig(*configPath)
 	if err != nil {
-		log.Logger().Errorf("failed to open connection to database: %v", err)
-		return
+		log.Logger().Fatalf("Error loading config: %v", err)
 	}
-	err = db.Ping()
+
+	db, err := postgresqldb.InitDB(ctx, cfg.SQLServer)
 	if err != nil {
-		log.Logger().Errorf("failed to ping database: %v", err)
+		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
 		return
 	}
 
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			log.Logger().Errorf("got error when closing the DB connection: %v", err)
+			log.Logger().Errorf("main: db.Close() returned error: %v", err)
 		}
 	}()
 
 	// Инициализация сервисов
-	userService := service.NewUserService(pgRepo.NewUserRepository(db), pgRepo.NewSessionRepository(db))
+	if jwtService, err = jwt.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
+		log.Logger().Fatalf("Error: %v", err)
+	}
+	userRepo := repository.NewUserRepository(db)
+	sessionRepo := repository.NewSessionRepository(db)
+	userService := service.NewUserService(userRepo, sessionRepo, jwtService)
 	userHandler := rest.NewUserHandler(userService)
 
-	// Start Server
-	address := os.Getenv("SERVER_ADDRESS")
-	if address == "" {
-		address = defaultAddress
-	}
+	_ = jwtService
 
-	// prepare echo
-	e := echo.New()
-
-	// Настройка middleware CORS
-	middleware.CORSConfig(e)
-
-	// e.Use(middleware.CORS)
-	timeoutStr := os.Getenv("CONTEXT_TIMEOUT")
-	timeout, err := strconv.Atoi(timeoutStr)
+	err = httpserver.Start(ctx, cfg.API, userHandler)
 	if err != nil {
-		log.Logger().Warnf("failed to parse timeout, using default timeout: %v", err)
-		timeout = defaultTimeout
-	}
-	timeoutContext := time.Duration(timeout) * time.Second
-	e.Use(middleware.SetRequestContextWithTimeout(timeoutContext))
-
-	// Роуты
-	e.POST("/api/login", userHandler.Login)
-	e.POST("/api/user/register", userHandler.RegisterUser)
-	e.GET("/api/user/get/:id", userHandler.Get)
-
-	log.Logger().Infof("Otus HLA Homework server starting at %s", address)
-
-	// Запуск сервера
-	err = e.Start(address)
-	if err != nil {
-		log.Logger().Errorf("Error while starting server: %v", err)
+		log.Logger().Fatalf("Error: %v", err)
 	}
 }

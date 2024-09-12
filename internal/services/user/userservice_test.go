@@ -1,51 +1,25 @@
-package service_test
+package user_test
 
 import (
 	"database/sql"
 	"errors"
 	errors_ "errors"
 	"testing"
-	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
-	"github.com/Vasiliy82/otus-hla-homework/internal/service"
+	user "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-type MockUserRepository struct {
-	mock.Mock
-}
-
-type MockSessionRepository struct {
-	mock.Mock
-}
-
-func (m *MockUserRepository) RegisterUser(user domain.User) (string, error) {
-	args := m.Called(user)
-	return args.String(0), args.Error(1)
-}
-
-func (m *MockUserRepository) GetByID(id string) (domain.User, error) {
-	args := m.Called(id)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-func (m *MockUserRepository) GetByUsername(username string) (domain.User, error) {
-	args := m.Called(username)
-	return args.Get(0).(domain.User), args.Error(1)
-}
-
-func (m *MockSessionRepository) CreateSession(userID, token string, expiresAt time.Time) error {
-	args := m.Called(userID, token, expiresAt)
-	return args.Error(0)
-
-}
-
 func TestUserService_RegisterUser_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -67,8 +41,10 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 }
 
 func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -97,8 +73,10 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 }
 
 func TestUserService_RegisterUser_DBError(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -120,9 +98,10 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 }
 
 func TestUserService_Login_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
-	userService := service.NewUserService(mockRepo, mockSessionRepo)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -135,7 +114,7 @@ func TestUserService_Login_Success(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
 	// Мокаем успешное создание сессии
-	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(nil)
+	mockSess.On("CreateSession", "123", mock.Anything).Return("cf2df81324491ec70e6cd2e922b06929", nil)
 
 	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
@@ -145,13 +124,13 @@ func TestUserService_Login_Success(t *testing.T) {
 	assert.NotEmpty(t, token)
 
 	mockRepo.AssertExpectations(t)
-	mockSessionRepo.AssertExpectations(t)
 }
 
 func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
-	userService := service.NewUserService(mockRepo, mockSessionRepo)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(domain.User{}, errors.New("database error"))
@@ -173,9 +152,10 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 }
 
 func TestUserService_Login_CreateSession_DBError(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
-	userService := service.NewUserService(mockRepo, mockSessionRepo)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -187,7 +167,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
-	mockSessionRepo.On("CreateSession", "123", mock.Anything, mock.Anything).Return(errors.New("database error"))
+	mockSess.On("CreateSession", "123", mock.Anything, mock.Anything).Return("", errors.New("database error"))
 
 	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
@@ -204,12 +184,13 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	}
 	assert.Equal(t, "", token)
 	mockRepo.AssertExpectations(t)
-	mockSessionRepo.AssertExpectations(t)
 }
 
 func TestUserService_Login_Failed(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -241,8 +222,10 @@ func TestUserService_Login_Failed(t *testing.T) {
 }
 
 func TestUserService_GetById_Success(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -265,8 +248,10 @@ func TestUserService_GetById_Success(t *testing.T) {
 }
 
 func TestUserService_GetById_NotFound(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userService := service.NewUserService(mockRepo, nil)
+	mockRepo := mocks.NewUserRepository(t)
+	mockSess := mocks.NewSessionRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockSess, mockJwt)
 
 	// Мокаем ошибку получения пользователя
 	mockRepo.On("GetByID", "123").Return(domain.User{}, sql.ErrNoRows)
