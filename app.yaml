@@ -47,3 +47,7 @@ jwt:
     il0e0Zc2edzV6wl3S8BOlejU3kBKl3Sm+Mj0uaA8qjxU4t/R38e4XhnwaJX9xTSe
     GwIDAQAB
     -----END PUBLIC KEY-----
+  token_expiry: 1440m
+  permissions_claim: "permissions"
+  serial_claim: "serial"
+

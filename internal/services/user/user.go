@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
@@ -61,27 +60,23 @@ func (s *userService) GetById(id string) (domain.User, error) {
 
 }
 
-func (s *userService) Login(username, password string) (string, string, error) {
+func (s *userService) Login(username, password string) (domain.TokenString, error) {
 	// Проверка пароля
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", apperrors.NewNotFoundError("User not found")
+			return "", apperrors.NewNotFoundError("User not found")
 		}
-		return "", "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
+		return "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
 	}
 	if !user.CheckPassword(password) {
-		return "", "", apperrors.NewUnauthorizedError("Wrong password")
+		return "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
-	// Установка срока действия токена (например, на 24 часа)
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	// Сохранение токена в таблицу сессий
-	token, err := s.sessionRepo.CreateSession(user.ID, expiresAt)
+	token, err := s.jwtService.GenerateToken(user.ID, []domain.Permission{})
 	if err != nil {
-		return "", "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
+		return "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}
 
-	return user.ID, token, nil
+	return token, nil
 }

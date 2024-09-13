@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	jwt "github.com/golang-jwt/jwt/v5"
+	domain "github.com/Vasiliy82/otus-hla-homework/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -13,25 +13,25 @@ type JWTService struct {
 }
 
 // GenerateToken provides a mock function with given fields: userID, permissions
-func (_m *JWTService) GenerateToken(userID string, permissions []string) (string, error) {
+func (_m *JWTService) GenerateToken(userID string, permissions []domain.Permission) (domain.TokenString, error) {
 	ret := _m.Called(userID, permissions)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GenerateToken")
 	}
 
-	var r0 string
+	var r0 domain.TokenString
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, []string) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, []domain.Permission) (domain.TokenString, error)); ok {
 		return rf(userID, permissions)
 	}
-	if rf, ok := ret.Get(0).(func(string, []string) string); ok {
+	if rf, ok := ret.Get(0).(func(string, []domain.Permission) domain.TokenString); ok {
 		r0 = rf(userID, permissions)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(domain.TokenString)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, []string) error); ok {
+	if rf, ok := ret.Get(1).(func(string, []domain.Permission) error); ok {
 		r1 = rf(userID, permissions)
 	} else {
 		r1 = ret.Error(1)
@@ -40,29 +40,47 @@ func (_m *JWTService) GenerateToken(userID string, permissions []string) (string
 	return r0, r1
 }
 
-// ValidateToken provides a mock function with given fields: token
-func (_m *JWTService) ValidateToken(token string) (*jwt.Token, error) {
-	ret := _m.Called(token)
+// RevokeToken provides a mock function with given fields: tokenString
+func (_m *JWTService) RevokeToken(tokenString domain.TokenString) error {
+	ret := _m.Called(tokenString)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeToken")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(domain.TokenString) error); ok {
+		r0 = rf(tokenString)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ValidateToken provides a mock function with given fields: tokenString
+func (_m *JWTService) ValidateToken(tokenString domain.TokenString) (*domain.Token, error) {
+	ret := _m.Called(tokenString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ValidateToken")
 	}
 
-	var r0 *jwt.Token
+	var r0 *domain.Token
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (*jwt.Token, error)); ok {
-		return rf(token)
+	if rf, ok := ret.Get(0).(func(domain.TokenString) (*domain.Token, error)); ok {
+		return rf(tokenString)
 	}
-	if rf, ok := ret.Get(0).(func(string) *jwt.Token); ok {
-		r0 = rf(token)
+	if rf, ok := ret.Get(0).(func(domain.TokenString) *domain.Token); ok {
+		r0 = rf(tokenString)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*jwt.Token)
+			r0 = ret.Get(0).(*domain.Token)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(token)
+	if rf, ok := ret.Get(1).(func(domain.TokenString) error); ok {
+		r1 = rf(tokenString)
 	} else {
 		r1 = ret.Error(1)
 	}

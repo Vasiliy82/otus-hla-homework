@@ -85,8 +85,6 @@ func main() {
 	userService := service.NewUserService(userRepo, sessionRepo, jwtService)
 	userHandler := rest.NewUserHandler(userService)
 
-	_ = jwtService
-
 	err = httpserver.Start(ctx, cfg.API, userHandler)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)

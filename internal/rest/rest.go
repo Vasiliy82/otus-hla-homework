@@ -71,7 +71,7 @@ func (h *userHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	user_id, token, err := h.userService.Login(req.Username, req.Password)
+	token, err := h.userService.Login(req.Username, req.Password)
 
 	if err != nil {
 		var apperr *apperrors.AppError
@@ -80,7 +80,7 @@ func (h *userHandler) Login(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, map[string]string{"user_id": user_id, "token": token})
+	return c.JSON(http.StatusOK, map[string]string{"token": string(token)})
 }
 
 func (h *userHandler) Get(c echo.Context) error {

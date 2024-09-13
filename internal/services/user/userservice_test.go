@@ -114,13 +114,14 @@ func TestUserService_Login_Success(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
 	// Мокаем успешное создание сессии
-	mockSess.On("CreateSession", "123", mock.Anything).Return("cf2df81324491ec70e6cd2e922b06929", nil)
+	// mockSess.On("CreateSession", "123", mock.Anything).Return("cf2df81324491ec70e6cd2e922b06929", nil)
 
-	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+	mockJwt.On("GenerateToken", "123", mock.Anything).Return(domain.TokenString("jwt_token"), nil)
+
+	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
 	// Проверяем, что ошибок нет и токен сгенерирован
 	assert.NoError(t, err)
-	assert.NotEmpty(t, user_id)
 	assert.NotEmpty(t, token)
 
 	mockRepo.AssertExpectations(t)
@@ -135,10 +136,9 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(domain.User{}, errors.New("database error"))
 
-	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
+	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
-	assert.Equal(t, "", user_id)
-	assert.Equal(t, "", token)
+	assert.Equal(t, domain.TokenString(""), token)
 
 	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
 	var apperr *apperrors.AppError
@@ -167,12 +167,10 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
-	mockSess.On("CreateSession", "123", mock.Anything, mock.Anything).Return("", errors.New("database error"))
+	// mockSess.On("CreateSession", "123", mock.Anything, mock.Anything).Return("", errors.New("database error"))
+	mockJwt.On("GenerateToken", "123", mock.Anything).Return(domain.TokenString(""), errors.New("database error"))
 
-	user_id, token, err := userService.Login("johndoe@gmail.com", "correctpassword")
-
-	assert.Equal(t, "", user_id)
-	assert.Equal(t, "", token)
+	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
 	// Проверяем, что вернулась ошибка создания сессии и токен не был сгенерирован
 	var apperr *apperrors.AppError
@@ -182,7 +180,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	} else {
 		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
 	}
-	assert.Equal(t, "", token)
+	assert.Equal(t, domain.TokenString(""), token)
 	mockRepo.AssertExpectations(t)
 }
 
@@ -203,10 +201,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
 
-	user_id, token, err := userService.Login("johndoe@gmail.com", "wrongpassword")
-
-	assert.Equal(t, "", user_id)
-	assert.Equal(t, "", token)
+	token, err := userService.Login("johndoe@gmail.com", "wrongpassword")
 
 	// Проверяем, что вернулась ошибка и токен не был сгенерирован
 	var apperr *apperrors.AppError
@@ -216,7 +211,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 	} else {
 		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
 	}
-	assert.Equal(t, "", token)
+	assert.Equal(t, domain.TokenString(""), token)
 
 	mockRepo.AssertExpectations(t)
 }

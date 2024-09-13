@@ -41,38 +41,31 @@ func (_m *UserService) GetById(id string) (domain.User, error) {
 }
 
 // Login provides a mock function with given fields: username, password
-func (_m *UserService) Login(username string, password string) (string, string, error) {
+func (_m *UserService) Login(username string, password string) (domain.TokenString, error) {
 	ret := _m.Called(username, password)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Login")
 	}
 
-	var r0 string
-	var r1 string
-	var r2 error
-	if rf, ok := ret.Get(0).(func(string, string) (string, string, error)); ok {
+	var r0 domain.TokenString
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) (domain.TokenString, error)); ok {
 		return rf(username, password)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) string); ok {
+	if rf, ok := ret.Get(0).(func(string, string) domain.TokenString); ok {
 		r0 = rf(username, password)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(domain.TokenString)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) string); ok {
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
 		r1 = rf(username, password)
 	} else {
-		r1 = ret.Get(1).(string)
+		r1 = ret.Error(1)
 	}
 
-	if rf, ok := ret.Get(2).(func(string, string) error); ok {
-		r2 = rf(username, password)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // RegisterUser provides a mock function with given fields: user
