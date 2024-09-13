@@ -18,7 +18,7 @@ func TestCORS(t *testing.T) {
 	res := test.NewRecorder()
 	c := e.NewContext(req, res)
 
-	h := middleware.CORS(echo.HandlerFunc(func(c echo.Context) error {
+	h := middleware.CORSMiddleware(echo.HandlerFunc(func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	}))
 

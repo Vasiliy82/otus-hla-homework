@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
@@ -12,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHandler) error {
+func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHandler, jwtSvc domain.JWTService) error {
 
 	// Start Server
 	address := cfg.ServerAddress
@@ -27,11 +28,16 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 
 	timeoutContext := time.Duration(timeout) * time.Second
 	e.Use(middleware.SetRequestContextWithTimeout(timeoutContext))
+	// e.Use(middleware.JWTMiddleware(jwtSvc))
 
 	// Роуты
 	e.POST("/api/login", userHandler.Login)
 	e.POST("/api/user/register", userHandler.RegisterUser)
-	e.GET("/api/user/get/:id", userHandler.Get)
+
+	// protected routes
+	apiGroup := e.Group("/api")
+	apiGroup.Use(middleware.JWTMiddleware(jwtSvc))
+	apiGroup.GET("/user/get/:id", userHandler.Get)
 
 	logger.Logger().Infof("Otus HLA Homework server starting at %s", address)
 

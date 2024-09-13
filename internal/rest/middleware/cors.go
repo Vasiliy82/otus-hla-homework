@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-// CORS will handle the CORS middleware
-func CORS(next echo.HandlerFunc) echo.HandlerFunc {
+// CORSMiddleware will handle the CORSMiddleware middleware
+func CORSMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		return next(c)

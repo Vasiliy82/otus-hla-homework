@@ -6,6 +6,10 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	PermissionUserGet Permission = "USER_GET"
+)
+
 type TokenString string
 
 type Permission string

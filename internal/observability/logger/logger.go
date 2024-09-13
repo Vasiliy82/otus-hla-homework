@@ -10,7 +10,7 @@ import (
 
 var (
 	global       *zap.SugaredLogger
-	defaultLevel = zap.NewAtomicLevelAt(zap.ErrorLevel)
+	defaultLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
 )
 
 func init() {

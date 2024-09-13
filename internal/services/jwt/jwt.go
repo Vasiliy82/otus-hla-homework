@@ -63,23 +63,48 @@ func (s *jwtService) GenerateToken(userID string, permissions []domain.Permissio
 }
 
 func (s *jwtService) toToken(token *jwt.Token) (*domain.Token, error) {
-
 	var ok bool
 	result := domain.Token{}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, errors.New("toToken: invalid token claims")
 	}
-	result.Serial, ok = claims[s.cfg.SerialClaim].(int64)
+
+	strSubject, ok := claims["sub"].(string)
+	if !ok {
+		return nil, errors.New("toToken: claim not found: sub")
+	}
+	result.Subject = strSubject
+
+	// Приведение к типу int64
+	serialFloat, ok := claims[s.cfg.SerialClaim].(float64)
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("toToken: claim not found: %s", s.cfg.SerialClaim))
 	}
-	result.Expire, ok = claims["exp"].(time.Time)
+	result.Serial = int64(serialFloat)
+
+	// Приведение времени истечения токена
+	expFloat, ok := claims["exp"].(float64)
 	if !ok {
 		return nil, errors.New("toToken: claim not found: exp")
 	}
-	permStr, ok := claims[s.cfg.PermissionsClaim]
-	_ = permStr
+	result.Expire = time.Unix(int64(expFloat), 0)
+
+	// Дальнейшая обработка прав доступа и других полей
+	permIf, ok := claims[s.cfg.PermissionsClaim].([]interface{})
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("toToken: claim not found: %s", s.cfg.PermissionsClaim))
+	}
+
+	var permissions []domain.Permission
+	for _, perm := range permIf {
+		permStr, ok := perm.(string)
+		if !ok {
+			return nil, errors.New("toToken: invalid permission type")
+		}
+		permissions = append(permissions, domain.Permission(permStr))
+	}
+	result.Permissions = permissions
 
 	return &result, nil
 }

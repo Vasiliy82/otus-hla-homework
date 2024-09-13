@@ -1,0 +1,34 @@
+package middleware
+
+import (
+	"net/http"
+	"strings"
+
+	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/labstack/echo/v4"
+)
+
+func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			authHeader := c.Request().Header.Get("Authorization")
+			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid Authorization header"))
+			}
+
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+			// Валидация токена
+			token, err := jwtService.ValidateToken(domain.TokenString(tokenString))
+			if err != nil {
+				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
+			}
+
+			// Сохранение токена в контексте
+			c.Set("token", token)
+
+			return next(c)
+		}
+	}
+}

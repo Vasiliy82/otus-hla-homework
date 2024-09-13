@@ -73,7 +73,7 @@ func (s *userService) Login(username, password string) (domain.TokenString, erro
 		return "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
-	token, err := s.jwtService.GenerateToken(user.ID, []domain.Permission{})
+	token, err := s.jwtService.GenerateToken(user.ID, []domain.Permission{domain.PermissionUserGet})
 	if err != nil {
 		return "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}

@@ -88,6 +88,15 @@ func (h *userHandler) Get(c echo.Context) error {
 
 	log.Logger().Debug("UserHandler.Get")
 
+	// Извлекаем токен из контекста
+	token, ok := c.Get("token").(*domain.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
+	}
+
+	// Используем информацию из токена
+	log.Logger().Infof("Request made by user: %s with permissions: %v", token.Subject, token.Permissions)
+
 	id := c.Param("id")
 
 	if err = validators.ValidateUserId(id); err != nil {
@@ -98,7 +107,7 @@ func (h *userHandler) Get(c echo.Context) error {
 	if err != nil {
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
-			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
+			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
