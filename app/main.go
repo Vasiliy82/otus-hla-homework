@@ -81,8 +81,7 @@ func main() {
 		log.Logger().Fatalf("Error: %v", err)
 	}
 	userRepo := repository.NewUserRepository(db)
-	sessionRepo := repository.NewSessionRepository(db)
-	userService := service.NewUserService(userRepo, sessionRepo, jwtService)
+	userService := service.NewUserService(userRepo, jwtService)
 	userHandler := rest.NewUserHandler(userService)
 
 	err = httpserver.Start(ctx, cfg.API, userHandler, jwtService)

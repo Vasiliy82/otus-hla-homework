@@ -29,11 +29,7 @@ type UserRepository interface {
 	GetByUsername(username string) (User, error)
 }
 
-//go:generate mockery --name SessionRepository
-type SessionRepository interface {
-	CreateSession(userID string, expiresAt time.Time) (string, error)
-}
-
+//go:generate mockery --name BlacklistRepository
 type BlacklistRepository interface {
 	NewSerial() (int64, error)
 	AddToBlacklist(serial int64, expireDate time.Time) error

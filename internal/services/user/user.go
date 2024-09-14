@@ -18,16 +18,14 @@ type UserHandler interface {
 }
 
 type userService struct {
-	userRepo    domain.UserRepository
-	sessionRepo domain.SessionRepository
-	jwtService  domain.JWTService
+	userRepo   domain.UserRepository
+	jwtService domain.JWTService
 }
 
-func NewUserService(ur domain.UserRepository, sr domain.SessionRepository, jwts domain.JWTService) domain.UserService {
+func NewUserService(ur domain.UserRepository, jwts domain.JWTService) domain.UserService {
 	return &userService{
-		userRepo:    ur,
-		sessionRepo: sr,
-		jwtService:  jwts,
+		userRepo:   ur,
+		jwtService: jwts,
 	}
 }
 
