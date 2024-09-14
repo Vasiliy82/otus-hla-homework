@@ -2,7 +2,7 @@ api:
   server_address: ":9090"
   context_timeout: 2
 database: 
-  host: localhost
+  host: postgres
   port: 5432
   user: app_hw
   password: Passw0rd

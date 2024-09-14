@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "hw"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_hw"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  devbackend:
+    build:
+      context: ./backend
+      dockerfile: ./../misc/devbackend/Dockerfile
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "hw"
+      POSTGRES_ADDRESS: postgres:5432
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./backend:/app
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+
+  devfrontend:
+    build:
+      context: ./frontend
+      dockerfile: ./../misc/devfrontend/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+
+volumes:
+  db-data:
