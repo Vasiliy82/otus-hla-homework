@@ -15,22 +15,24 @@ type UserService struct {
 }
 
 // GetById provides a mock function with given fields: id
-func (_m *UserService) GetById(id string) (domain.User, error) {
+func (_m *UserService) GetById(id string) (*domain.User, error) {
 	ret := _m.Called(id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetById")
 	}
 
-	var r0 domain.User
+	var r0 *domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (domain.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(string) (*domain.User, error)); ok {
 		return rf(id)
 	}
-	if rf, ok := ret.Get(0).(func(string) domain.User); ok {
+	if rf, ok := ret.Get(0).(func(string) *domain.User); ok {
 		r0 = rf(id)
 	} else {
-		r0 = ret.Get(0).(domain.User)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
 	}
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
@@ -89,7 +91,7 @@ func (_m *UserService) Logout(token *jwt.Token) error {
 }
 
 // RegisterUser provides a mock function with given fields: user
-func (_m *UserService) RegisterUser(user domain.User) (string, error) {
+func (_m *UserService) RegisterUser(user *domain.User) (string, error) {
 	ret := _m.Called(user)
 
 	if len(ret) == 0 {
@@ -98,16 +100,16 @@ func (_m *UserService) RegisterUser(user domain.User) (string, error) {
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(domain.User) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(*domain.User) (string, error)); ok {
 		return rf(user)
 	}
-	if rf, ok := ret.Get(0).(func(domain.User) string); ok {
+	if rf, ok := ret.Get(0).(func(*domain.User) string); ok {
 		r0 = rf(user)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(domain.User) error); ok {
+	if rf, ok := ret.Get(1).(func(*domain.User) error); ok {
 		r1 = rf(user)
 	} else {
 		r1 = ret.Error(1)

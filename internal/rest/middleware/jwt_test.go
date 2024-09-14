@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 // Создаем валидный токен с кастомными claims
@@ -110,6 +111,7 @@ func TestJWTMiddleware_ValidToken(t *testing.T) {
 	mockJWTService := mocks.NewJWTService(t)
 	validToken := createValidToken() // Пример валидного токена с кастомными claims
 	mockJWTService.On("ValidateToken", domain.TokenString("validToken")).Return(validToken, nil)
+	mockJWTService.On("ExtractClaims", mock.Anything).Return(validToken.Claims, nil)
 
 	// Применяем middleware
 	middlewareFunc := middleware.JWTMiddleware(mockJWTService)

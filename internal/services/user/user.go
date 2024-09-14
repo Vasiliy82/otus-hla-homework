@@ -30,7 +30,7 @@ func NewUserService(ur domain.UserRepository, jwts domain.JWTService) domain.Use
 	}
 }
 
-func (s *userService) RegisterUser(user domain.User) (string, error) {
+func (s *userService) RegisterUser(user *domain.User) (string, error) {
 	var id string
 	var err error
 
@@ -47,14 +47,14 @@ func (s *userService) RegisterUser(user domain.User) (string, error) {
 	return id, nil
 }
 
-func (s *userService) GetById(id string) (domain.User, error) {
-	var user domain.User
+func (s *userService) GetById(id string) (*domain.User, error) {
+	var user *domain.User
 	var err error
 	if user, err = s.userRepo.GetByID(id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.User{}, apperrors.NewNotFoundError("User not found")
+			return &domain.User{}, apperrors.NewNotFoundError("User not found")
 		}
-		return domain.User{}, apperrors.NewInternalServerError("UserService.GetById: s.userRepo.GetByID returned unknown error", err)
+		return &domain.User{}, apperrors.NewInternalServerError("UserService.GetById: s.userRepo.GetByID returned unknown error", err)
 	}
 	return user, nil
 

@@ -14,6 +14,36 @@ type JWTService struct {
 	mock.Mock
 }
 
+// ExtractClaims provides a mock function with given fields: token
+func (_m *JWTService) ExtractClaims(token *jwt.Token) (*domain.UserClaims, error) {
+	ret := _m.Called(token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ExtractClaims")
+	}
+
+	var r0 *domain.UserClaims
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*jwt.Token) (*domain.UserClaims, error)); ok {
+		return rf(token)
+	}
+	if rf, ok := ret.Get(0).(func(*jwt.Token) *domain.UserClaims); ok {
+		r0 = rf(token)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.UserClaims)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*jwt.Token) error); ok {
+		r1 = rf(token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GenerateToken provides a mock function with given fields: userID, permissions
 func (_m *JWTService) GenerateToken(userID string, permissions []domain.Permission) (domain.TokenString, error) {
 	ret := _m.Called(userID, permissions)

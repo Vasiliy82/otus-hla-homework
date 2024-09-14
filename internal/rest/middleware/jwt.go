@@ -6,6 +6,7 @@ import (
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,6 +25,10 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
 			}
+
+			claims, err := jwtService.ExtractClaims(token)
+
+			logger.Logger().Debugf("Token successfully validated", "token", token, "user_id", claims.Subject)
 
 			// Сохранение токена в контексте
 			c.Set("token", token)

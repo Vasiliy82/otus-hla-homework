@@ -35,7 +35,7 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("123"))
 
 	// Вызываем метод репозитория
-	userID, err := userRepo.RegisterUser(testUser)
+	userID, err := userRepo.RegisterUser(&testUser)
 
 	// Проверяем, что ошибок нет и ID пользователя вернулся
 	assert.NoError(t, err)
@@ -65,7 +65,7 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 		WithArgs(testUser.FirstName, testUser.SecondName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
 		WillReturnError(errors.New("db error")) // Код ошибки уникального ограничения
 
-	userID, err := userRepo.RegisterUser(testUser)
+	userID, err := userRepo.RegisterUser(&testUser)
 
 	// Проверяем, что вернулась ошибка конфликта и ID не был сгенерирован
 	assert.Error(t, err)
@@ -121,7 +121,7 @@ func TestUserRepository_GetUserByID_NotFound(t *testing.T) {
 
 	// Проверяем, что вернулась ошибка и пользователь не был найден
 	assert.Error(t, err)
-	assert.Equal(t, domain.User{}, user)
+	assert.Equal(t, &domain.User{}, user)
 
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
@@ -173,7 +173,7 @@ func TestUserRepository_GetUserByUsername_NotFound(t *testing.T) {
 
 	// Проверяем, что вернулась ошибка и пользователь не был найден
 	assert.Error(t, err)
-	assert.Equal(t, domain.User{}, user)
+	assert.Equal(t, &domain.User{}, user)
 
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)

@@ -45,7 +45,7 @@ func (h *userHandler) RegisterUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
-	userId, err := h.userService.RegisterUser(user)
+	userId, err := h.userService.RegisterUser(&user)
 	if err != nil {
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
@@ -88,16 +88,6 @@ func (h *userHandler) Get(c echo.Context) error {
 	var err error
 
 	log.Logger().Debug("UserHandler.Get")
-
-	// Извлекаем токен из контекста
-	/* token, ok := c.Get("token").(*jwt.Token)
-	if !ok {
-		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
-	}
-
-	Используем информацию из токена
-	log.Logger().Infof("Request made by user: %s with permissions: %v", token.)
-	*/
 
 	id := c.Param("id")
 

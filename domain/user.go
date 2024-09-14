@@ -9,6 +9,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	PermissionUserGet Permission = "USER_GET"
+)
+
+type Permission string
+
 type User struct {
 	ID           string    `json:"id"`
 	FirstName    string    `json:"first_name"`

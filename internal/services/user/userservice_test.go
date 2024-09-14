@@ -29,9 +29,9 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	}
 
 	// Мокаем успешную регистрацию
-	mockRepo.On("RegisterUser", testUser).Return("123", nil)
+	mockRepo.On("RegisterUser", &testUser).Return("123", nil)
 
-	userID, err := userService.RegisterUser(testUser)
+	userID, err := userService.RegisterUser(&testUser)
 
 	// Проверяем, что ошибок нет и ID пользователя возвращен
 	assert.NoError(t, err)
@@ -54,9 +54,9 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	}
 
 	// Мокаем ошибку дублирования логина
-	mockRepo.On("RegisterUser", testUser).Return("", &pq.Error{Code: "23505"})
+	mockRepo.On("RegisterUser", &testUser).Return("", &pq.Error{Code: "23505"})
 
-	userID, err := userService.RegisterUser(testUser)
+	userID, err := userService.RegisterUser(&testUser)
 
 	// Проверяем, что вернулась ошибка конфликта и ID не сгенерирован
 	var apperr *apperrors.AppError
@@ -86,9 +86,9 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	}
 
 	// Мокаем ошибку базы данных
-	mockRepo.On("RegisterUser", testUser).Return("", apperrors.NewInternalServerError("db error", errors_.New("db error")))
+	mockRepo.On("RegisterUser", &testUser).Return("", apperrors.NewInternalServerError("db error", errors_.New("db error")))
 
-	userID, err := userService.RegisterUser(testUser)
+	userID, err := userService.RegisterUser(&testUser)
 
 	// Проверяем, что вернулась ошибка базы данных и ID не сгенерирован
 	assert.Error(t, err)
@@ -112,7 +112,7 @@ func TestUserService_Login_Success(t *testing.T) {
 	}
 
 	// Мокаем
-	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
+	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(&testUser, nil)
 	// Мокаем успешное создание сессии
 	// mockSess.On("CreateSession", "123", mock.Anything).Return("cf2df81324491ec70e6cd2e922b06929", nil)
 
@@ -134,7 +134,7 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 	userService := user.NewUserService(mockRepo, mockJwt)
 
 	// Мокаем
-	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(domain.User{}, errors.New("database error"))
+	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(&domain.User{}, errors.New("database error"))
 
 	token, err := userService.Login("johndoe@gmail.com", "correctpassword")
 
@@ -166,7 +166,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	}
 
 	// Мокаем
-	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
+	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(&testUser, nil)
 	// mockSess.On("CreateSession", "123", mock.Anything, mock.Anything).Return("", errors.New("database error"))
 	mockJwt.On("GenerateToken", "123", mock.Anything).Return(domain.TokenString(""), errors.New("database error"))
 
@@ -199,7 +199,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 	}
 
 	// Мокаем
-	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(testUser, nil)
+	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(&testUser, nil)
 
 	token, err := userService.Login("johndoe@gmail.com", "wrongpassword")
 
@@ -231,7 +231,7 @@ func TestUserService_GetById_Success(t *testing.T) {
 	}
 
 	// Мокаем успешное получение пользователя
-	mockRepo.On("GetByID", "123").Return(testUser, nil)
+	mockRepo.On("GetByID", "123").Return(&testUser, nil)
 
 	user, err := userService.GetById("123")
 
@@ -249,7 +249,7 @@ func TestUserService_GetById_NotFound(t *testing.T) {
 	userService := user.NewUserService(mockRepo, mockJwt)
 
 	// Мокаем ошибку получения пользователя
-	mockRepo.On("GetByID", "123").Return(domain.User{}, sql.ErrNoRows)
+	mockRepo.On("GetByID", "123").Return(&domain.User{}, sql.ErrNoRows)
 
 	user, err := userService.GetById("123")
 
@@ -261,7 +261,7 @@ func TestUserService_GetById_NotFound(t *testing.T) {
 	} else {
 		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
 	}
-	assert.Equal(t, domain.User{}, user)
+	assert.Equal(t, &domain.User{}, user)
 
 	mockRepo.AssertExpectations(t)
 	mockJwt.AssertExpectations(t)
