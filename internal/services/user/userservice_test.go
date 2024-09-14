@@ -37,6 +37,7 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	assert.Equal(t, "123", userID)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
@@ -68,6 +69,7 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	assert.Equal(t, "", userID)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_RegisterUser_DBError(t *testing.T) {
@@ -92,6 +94,7 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	assert.Equal(t, "", userID)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_Login_Success(t *testing.T) {
@@ -121,6 +124,7 @@ func TestUserService_Login_Success(t *testing.T) {
 	assert.NotEmpty(t, token)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
@@ -144,6 +148,7 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 		t.Fatalf("expected error of type *apperrors.AppError, got %T", err)
 	}
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_Login_CreateSession_DBError(t *testing.T) {
@@ -176,6 +181,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	}
 	assert.Equal(t, domain.TokenString(""), token)
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_Login_Failed(t *testing.T) {
@@ -207,6 +213,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 	assert.Equal(t, domain.TokenString(""), token)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_GetById_Success(t *testing.T) {
@@ -232,6 +239,7 @@ func TestUserService_GetById_Success(t *testing.T) {
 	assert.Equal(t, "johndoe@gmail.com", user.Username)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_GetById_NotFound(t *testing.T) {
@@ -255,4 +263,37 @@ func TestUserService_GetById_NotFound(t *testing.T) {
 	assert.Equal(t, domain.User{}, user)
 
 	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
+}
+
+func TestUserService_Logout_Success(t *testing.T) {
+	mockRepo := mocks.NewUserRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockJwt)
+
+	mockJwt.On("RevokeToken", mock.Anything).Return(nil)
+
+	err := userService.Logout(&domain.Token{Serial: 1232})
+
+	// Проверяем, что ошибок нет и токен сгенерирован
+	assert.NoError(t, err)
+
+	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
+}
+
+func TestUserService_Logout_Failed(t *testing.T) {
+	mockRepo := mocks.NewUserRepository(t)
+	mockJwt := mocks.NewJWTService(t)
+	userService := user.NewUserService(mockRepo, mockJwt)
+
+	mockJwt.On("RevokeToken", mock.Anything).Return(errors.New("Database error"))
+
+	err := userService.Logout(&domain.Token{Serial: 1232})
+
+	// Проверяем, что ошибок нет и токен сгенерирован
+	assert.Error(t, err)
+
+	mockRepo.AssertExpectations(t)
+	mockJwt.AssertExpectations(t)
 }

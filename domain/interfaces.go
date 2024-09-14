@@ -41,7 +41,7 @@ type UserService interface {
 	RegisterUser(user User) (string, error)
 	GetById(id string) (User, error)
 	Login(username, password string) (TokenString, error)
-	Logout(tokenStr *Token) error
+	Logout(token *Token) error
 }
 
 //go:generate mockery --name JWTService

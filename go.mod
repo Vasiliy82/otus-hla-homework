@@ -25,6 +25,7 @@ require (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/agiledragon/gomonkey/v2 v2.12.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/kr/pretty v0.3.1 // indirect
