@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -64,7 +65,7 @@ func (s *jwtService) GenerateToken(userID string, permissions []domain.Permissio
 
 func (s *jwtService) toToken(token *jwt.Token) (*domain.Token, error) {
 	var ok bool
-	result := domain.Token{}
+	result := domain.Token{JWTToken: token}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, errors.New("toToken: invalid token claims")
@@ -139,14 +140,11 @@ func (s *jwtService) ValidateToken(tokenString domain.TokenString) (*domain.Toke
 	return token, nil
 }
 
-func (s *jwtService) RevokeToken(tokenString domain.TokenString) error {
-	var err error
-
-	err = errors.New("Metod not implemented")
-	// if err = s.blacklist.AddToBlacklist(serial); err != nil {
-
-	// }
-	return err
+func (s *jwtService) RevokeToken(token *domain.Token) error {
+	if err := s.blacklist.AddToBlacklist(token.Serial, token.Expire); err != nil {
+		return apperrors.NewInternalServerError("Internal server error", err)
+	}
+	return nil
 }
 
 func parsePermissions(permStr string) ([]domain.Permission, error) {

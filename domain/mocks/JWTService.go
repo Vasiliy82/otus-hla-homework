@@ -40,17 +40,17 @@ func (_m *JWTService) GenerateToken(userID string, permissions []domain.Permissi
 	return r0, r1
 }
 
-// RevokeToken provides a mock function with given fields: tokenString
-func (_m *JWTService) RevokeToken(tokenString domain.TokenString) error {
-	ret := _m.Called(tokenString)
+// RevokeToken provides a mock function with given fields: token
+func (_m *JWTService) RevokeToken(token *domain.Token) error {
+	ret := _m.Called(token)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RevokeToken")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(domain.TokenString) error); ok {
-		r0 = rf(tokenString)
+	if rf, ok := ret.Get(0).(func(*domain.Token) error); ok {
+		r0 = rf(token)
 	} else {
 		r0 = ret.Error(0)
 	}

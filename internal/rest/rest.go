@@ -113,3 +113,18 @@ func (h *userHandler) Get(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, user)
 }
+
+func (h *userHandler) Logout(c echo.Context) error {
+	log.Logger().Debug("UserHandler.Logout")
+	// Извлекаем токен из контекста
+	token, ok := c.Get("token").(*domain.Token)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
+	}
+
+	if err := h.userService.Logout(token); err != nil {
+		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
+	}
+
+	return c.JSON(http.StatusOK, dto.LoginResponse{})
+}

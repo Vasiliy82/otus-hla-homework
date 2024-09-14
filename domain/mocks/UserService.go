@@ -68,6 +68,24 @@ func (_m *UserService) Login(username string, password string) (domain.TokenStri
 	return r0, r1
 }
 
+// Logout provides a mock function with given fields: tokenStr
+func (_m *UserService) Logout(tokenStr *domain.Token) error {
+	ret := _m.Called(tokenStr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Logout")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*domain.Token) error); ok {
+		r0 = rf(tokenStr)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RegisterUser provides a mock function with given fields: user
 func (_m *UserService) RegisterUser(user domain.User) (string, error) {
 	ret := _m.Called(user)

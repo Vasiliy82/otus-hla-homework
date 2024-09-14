@@ -14,6 +14,7 @@ type UserHandler interface {
 	RegisterUser(c echo.Context) error
 	Login(c echo.Context) error
 	Get(c echo.Context) error
+	Logout(c echo.Context) error
 }
 
 type userService struct {
@@ -79,4 +80,12 @@ func (s *userService) Login(username, password string) (domain.TokenString, erro
 	}
 
 	return token, nil
+}
+
+func (s *userService) Logout(token *domain.Token) error {
+
+	if err := s.jwtService.RevokeToken(token); err != nil {
+		return apperrors.NewInternalServerError("Internal server error", err)
+	}
+	return nil
 }

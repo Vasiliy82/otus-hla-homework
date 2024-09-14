@@ -45,11 +45,12 @@ type UserService interface {
 	RegisterUser(user User) (string, error)
 	GetById(id string) (User, error)
 	Login(username, password string) (TokenString, error)
+	Logout(tokenStr *Token) error
 }
 
 //go:generate mockery --name JWTService
 type JWTService interface {
 	GenerateToken(userID string, permissions []Permission) (TokenString, error)
 	ValidateToken(tokenString TokenString) (*Token, error)
-	RevokeToken(tokenString TokenString) error
+	RevokeToken(token *Token) error
 }
