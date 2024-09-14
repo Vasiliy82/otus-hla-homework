@@ -118,5 +118,5 @@ func (h *userHandler) Logout(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
-	return c.JSON(http.StatusOK, dto.LoginResponse{})
+	return c.JSON(http.StatusOK, nil)
 }
