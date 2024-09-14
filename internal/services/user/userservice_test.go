@@ -10,6 +10,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	user "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -270,10 +271,11 @@ func TestUserService_Logout_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
 	userService := user.NewUserService(mockRepo, mockJwt)
+	mockToken := jwt.Token{} // Token{Serial: 1232}
 
 	mockJwt.On("RevokeToken", mock.Anything).Return(nil)
 
-	err := userService.Logout(&domain.Token{Serial: 1232})
+	err := userService.Logout(&mockToken)
 
 	// Проверяем, что ошибок нет и токен сгенерирован
 	assert.NoError(t, err)
@@ -286,10 +288,11 @@ func TestUserService_Logout_Failed(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
 	userService := user.NewUserService(mockRepo, mockJwt)
+	mockToken := jwt.Token{} // &domain.Token{Serial: 1232}
 
 	mockJwt.On("RevokeToken", mock.Anything).Return(errors.New("Database error"))
 
-	err := userService.Logout(&domain.Token{Serial: 1232})
+	err := userService.Logout(&mockToken)
 
 	// Проверяем, что ошибок нет и токен сгенерирован
 	assert.Error(t, err)

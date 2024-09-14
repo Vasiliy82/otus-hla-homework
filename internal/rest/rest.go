@@ -11,6 +11,7 @@ import (
 	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/internal/services/user"
 	"github.com/Vasiliy82/otus-hla-homework/internal/validators"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -89,13 +90,14 @@ func (h *userHandler) Get(c echo.Context) error {
 	log.Logger().Debug("UserHandler.Get")
 
 	// Извлекаем токен из контекста
-	token, ok := c.Get("token").(*domain.Token)
+	/* token, ok := c.Get("token").(*jwt.Token)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
 	}
 
-	// Используем информацию из токена
-	log.Logger().Infof("Request made by user: %s with permissions: %v", token.Subject, token.Permissions)
+	Используем информацию из токена
+	log.Logger().Infof("Request made by user: %s with permissions: %v", token.)
+	*/
 
 	id := c.Param("id")
 
@@ -117,7 +119,7 @@ func (h *userHandler) Get(c echo.Context) error {
 func (h *userHandler) Logout(c echo.Context) error {
 	log.Logger().Debug("UserHandler.Logout")
 	// Извлекаем токен из контекста
-	token, ok := c.Get("token").(*domain.Token)
+	token, ok := c.Get("token").(*jwt.Token)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
 	}

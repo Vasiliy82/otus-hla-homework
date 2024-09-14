@@ -4,6 +4,8 @@ package mocks
 
 import (
 	domain "github.com/Vasiliy82/otus-hla-homework/domain"
+	jwt "github.com/golang-jwt/jwt/v5"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -69,7 +71,7 @@ func (_m *UserService) Login(username string, password string) (domain.TokenStri
 }
 
 // Logout provides a mock function with given fields: token
-func (_m *UserService) Logout(token *domain.Token) error {
+func (_m *UserService) Logout(token *jwt.Token) error {
 	ret := _m.Called(token)
 
 	if len(ret) == 0 {
@@ -77,7 +79,7 @@ func (_m *UserService) Logout(token *domain.Token) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.Token) error); ok {
+	if rf, ok := ret.Get(0).(func(*jwt.Token) error); ok {
 		r0 = rf(token)
 	} else {
 		r0 = ret.Error(0)

@@ -15,7 +15,7 @@ func NewBlacklistRepository(db *sql.DB) *blacklistRepository {
 	return &blacklistRepository{db: db}
 }
 
-func (r *blacklistRepository) AddToBlacklist(serial int64, expireDate time.Time) error {
+func (r *blacklistRepository) AddToBlacklist(serial string, expireDate time.Time) error {
 
 	if _, err := r.db.Exec("INSERT INTO blacklisted (serial, expire_date) VALUES($1, $2)", serial, expireDate); err != nil {
 		return fmt.Errorf("BlackListRepository.AddToBlacklist: r.db.Exec returned error: %w", err)
@@ -25,7 +25,7 @@ func (r *blacklistRepository) AddToBlacklist(serial int64, expireDate time.Time)
 
 }
 
-func (r *blacklistRepository) IsBlacklisted(serial int64) (bool, error) {
+func (r *blacklistRepository) IsBlacklisted(serial string) (bool, error) {
 	var result int
 
 	err := r.db.QueryRow("SELECT 1 FROM blacklisted WHERE serial = $1", serial).Scan(&result)

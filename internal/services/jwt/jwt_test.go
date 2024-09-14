@@ -8,8 +8,9 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
+	jwtsvc "github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -57,7 +58,7 @@ GwIDAQAB
 
 func TestJWTService_GenerateToken_Success(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -69,7 +70,7 @@ func TestJWTService_GenerateToken_Success(t *testing.T) {
 }
 func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -82,7 +83,7 @@ func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 
 func TestJWTService_ValidateToken_Success(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -101,7 +102,7 @@ func TestJWTService_ValidateToken_Expired(t *testing.T) {
 	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -114,7 +115,7 @@ func TestJWTService_ValidateToken_Expired(t *testing.T) {
 
 func TestJWTService_ValidateToken_Blacklisted(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -127,24 +128,26 @@ func TestJWTService_ValidateToken_Blacklisted(t *testing.T) {
 
 func TestJWTService_RevokeToken_Success(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
 	mockBL.On("AddToBlacklist", mock.Anything, mock.Anything).Return(nil)
-	err = swtService.RevokeToken(&domain.Token{Serial: 403, Expire: time.Now().Add(time.Hour)})
+	token := jwt.Token{}
+	err = swtService.RevokeToken(&token)
 	assert.NoError(t, err)
 	mockBL.AssertExpectations(t)
 }
 
 func TestJWTService_RevokeToken_Error(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwt.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
 	mockBL.On("AddToBlacklist", mock.Anything, mock.Anything).Return(errors.New("Database error"))
-	err = swtService.RevokeToken(&domain.Token{Serial: 403, Expire: time.Now().Add(time.Hour)})
+	token := jwt.Token{}
+	err = swtService.RevokeToken(&token)
 	assert.Error(t, err)
 	mockBL.AssertExpectations(t)
 }

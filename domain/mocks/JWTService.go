@@ -4,6 +4,8 @@ package mocks
 
 import (
 	domain "github.com/Vasiliy82/otus-hla-homework/domain"
+	jwt "github.com/golang-jwt/jwt/v5"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -41,7 +43,7 @@ func (_m *JWTService) GenerateToken(userID string, permissions []domain.Permissi
 }
 
 // RevokeToken provides a mock function with given fields: token
-func (_m *JWTService) RevokeToken(token *domain.Token) error {
+func (_m *JWTService) RevokeToken(token *jwt.Token) error {
 	ret := _m.Called(token)
 
 	if len(ret) == 0 {
@@ -49,7 +51,7 @@ func (_m *JWTService) RevokeToken(token *domain.Token) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.Token) error); ok {
+	if rf, ok := ret.Get(0).(func(*jwt.Token) error); ok {
 		r0 = rf(token)
 	} else {
 		r0 = ret.Error(0)
@@ -59,23 +61,23 @@ func (_m *JWTService) RevokeToken(token *domain.Token) error {
 }
 
 // ValidateToken provides a mock function with given fields: tokenString
-func (_m *JWTService) ValidateToken(tokenString domain.TokenString) (*domain.Token, error) {
+func (_m *JWTService) ValidateToken(tokenString domain.TokenString) (*jwt.Token, error) {
 	ret := _m.Called(tokenString)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ValidateToken")
 	}
 
-	var r0 *domain.Token
+	var r0 *jwt.Token
 	var r1 error
-	if rf, ok := ret.Get(0).(func(domain.TokenString) (*domain.Token, error)); ok {
+	if rf, ok := ret.Get(0).(func(domain.TokenString) (*jwt.Token, error)); ok {
 		return rf(tokenString)
 	}
-	if rf, ok := ret.Get(0).(func(domain.TokenString) *domain.Token); ok {
+	if rf, ok := ret.Get(0).(func(domain.TokenString) *jwt.Token); ok {
 		r0 = rf(tokenString)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Token)
+			r0 = ret.Get(0).(*jwt.Token)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
 )
@@ -80,7 +81,7 @@ func (s *userService) Login(username, password string) (domain.TokenString, erro
 	return token, nil
 }
 
-func (s *userService) Logout(token *domain.Token) error {
+func (s *userService) Logout(token *jwt.Token) error {
 
 	if err := s.jwtService.RevokeToken(token); err != nil {
 		return apperrors.NewInternalServerError("Internal server error", err)

@@ -14,7 +14,7 @@ type BlacklistRepository struct {
 }
 
 // AddToBlacklist provides a mock function with given fields: serial, expireDate
-func (_m *BlacklistRepository) AddToBlacklist(serial int64, expireDate time.Time) error {
+func (_m *BlacklistRepository) AddToBlacklist(serial string, expireDate time.Time) error {
 	ret := _m.Called(serial, expireDate)
 
 	if len(ret) == 0 {
@@ -22,7 +22,7 @@ func (_m *BlacklistRepository) AddToBlacklist(serial int64, expireDate time.Time
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(int64, time.Time) error); ok {
+	if rf, ok := ret.Get(0).(func(string, time.Time) error); ok {
 		r0 = rf(serial, expireDate)
 	} else {
 		r0 = ret.Error(0)
@@ -32,7 +32,7 @@ func (_m *BlacklistRepository) AddToBlacklist(serial int64, expireDate time.Time
 }
 
 // IsBlacklisted provides a mock function with given fields: serial
-func (_m *BlacklistRepository) IsBlacklisted(serial int64) (bool, error) {
+func (_m *BlacklistRepository) IsBlacklisted(serial string) (bool, error) {
 	ret := _m.Called(serial)
 
 	if len(ret) == 0 {
@@ -41,16 +41,16 @@ func (_m *BlacklistRepository) IsBlacklisted(serial int64) (bool, error) {
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int64) (bool, error)); ok {
+	if rf, ok := ret.Get(0).(func(string) (bool, error)); ok {
 		return rf(serial)
 	}
-	if rf, ok := ret.Get(0).(func(int64) bool); ok {
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
 		r0 = rf(serial)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(int64) error); ok {
+	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(serial)
 	} else {
 		r1 = ret.Error(1)

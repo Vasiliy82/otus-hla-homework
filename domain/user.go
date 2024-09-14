@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type User struct {
@@ -18,6 +20,12 @@ type User struct {
 	PasswordHash string    `json:"-"` // Не экспортируем пароль через API
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// UserClaims - структура для хранения кастомных claims
+type UserClaims struct {
+	Permissions []Permission `json:"permissions"`
+	jwt.RegisteredClaims
 }
 
 func (u *User) SetPassword(password string) {
