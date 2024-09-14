@@ -160,8 +160,18 @@ func TestJWTService_RevokeToken_Success(t *testing.T) {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
 	mockBL.On("AddToBlacklist", mock.Anything, mock.Anything).Return(nil)
-	token := jwt.Token{}
-	err = swtService.RevokeToken(&token)
+
+	mockClaims := &domain.UserClaims{
+		Permissions: []domain.Permission{domain.PermissionUserGet}, // Пример кастомных claims
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "123",                                             // ID пользователя
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)), // Действителен на 1 час
+			ID:        "400",                                             // jti
+		},
+	}
+	mockToken := jwt.Token{Claims: mockClaims}
+
+	err = swtService.RevokeToken(&mockToken)
 	assert.NoError(t, err)
 	mockBL.AssertExpectations(t)
 }
@@ -181,8 +191,18 @@ func TestJWTService_RevokeToken_Error(t *testing.T) {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
 	mockBL.On("AddToBlacklist", mock.Anything, mock.Anything).Return(errors.New("Database error"))
-	token := jwt.Token{}
-	err = swtService.RevokeToken(&token)
+
+	mockClaims := &domain.UserClaims{
+		Permissions: []domain.Permission{domain.PermissionUserGet}, // Пример кастомных claims
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "123",                                             // ID пользователя
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)), // Действителен на 1 час
+			ID:        "400",                                             // jti
+		},
+	}
+	mockToken := jwt.Token{Claims: mockClaims}
+
+	err = swtService.RevokeToken(&mockToken)
 	assert.Error(t, err)
 	mockBL.AssertExpectations(t)
 }
