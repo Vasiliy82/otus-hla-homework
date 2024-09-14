@@ -23,7 +23,7 @@ type UserRepository interface {
 
 //go:generate mockery --name BlacklistRepository
 type BlacklistRepository interface {
-	NewSerial() (int64, error)
+	NewSerial() (string, error)
 	AddToBlacklist(serial string, expireDate time.Time) error
 	IsBlacklisted(serial string) (bool, error)
 }

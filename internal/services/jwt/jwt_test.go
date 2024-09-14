@@ -63,7 +63,7 @@ func TestJWTService_GenerateToken_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
-	mockBL.On("NewSerial").Return(int64(123), nil)
+	mockBL.On("NewSerial").Return("123", nil)
 	token, err := swtService.GenerateToken("26339c2a-7f77-4787-af6c-daf14d637dc2", []domain.Permission{domain.PermissionUserGet})
 	assert.NotEqual(t, domain.TokenString(""), token)
 	assert.NoError(t, err)
@@ -75,7 +75,7 @@ func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
-	mockBL.On("NewSerial").Return(int64(0), errors.New("Database error"))
+	mockBL.On("NewSerial").Return("", errors.New("Database error"))
 	token, err := swtService.GenerateToken("26339c2a-7f77-4787-af6c-daf14d637dc2", []domain.Permission{domain.PermissionUserGet})
 	assert.Equal(t, domain.TokenString(""), token)
 	assert.Error(t, err)

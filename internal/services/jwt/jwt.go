@@ -48,7 +48,7 @@ func (s *jwtService) GenerateToken(userID string, permissions []domain.Permissio
 	claims := domain.UserClaims{
 		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        fmt.Sprintf("%d", serial),
+			ID:        serial,
 			Subject:   userID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.cfg.TokenExpiry)),
 			Issuer:    "myApp", // Это можно настроить через cfg, если нужно

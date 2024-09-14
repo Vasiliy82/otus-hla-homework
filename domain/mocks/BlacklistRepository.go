@@ -60,22 +60,22 @@ func (_m *BlacklistRepository) IsBlacklisted(serial string) (bool, error) {
 }
 
 // NewSerial provides a mock function with given fields:
-func (_m *BlacklistRepository) NewSerial() (int64, error) {
+func (_m *BlacklistRepository) NewSerial() (string, error) {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewSerial")
 	}
 
-	var r0 int64
+	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (int64, error)); ok {
+	if rf, ok := ret.Get(0).(func() (string, error)); ok {
 		return rf()
 	}
-	if rf, ok := ret.Get(0).(func() int64); ok {
+	if rf, ok := ret.Get(0).(func() string); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(int64)
+		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func() error); ok {

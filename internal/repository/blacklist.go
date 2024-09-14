@@ -39,13 +39,13 @@ func (r *blacklistRepository) IsBlacklisted(serial string) (bool, error) {
 	return true, nil
 }
 
-func (r *blacklistRepository) NewSerial() (int64, error) {
+func (r *blacklistRepository) NewSerial() (string, error) {
 
-	var result int64
+	var result string
 
 	err := r.db.QueryRow("SELECT nextval('jwt_token')").Scan(&result)
 	if err != nil {
-		return 0, fmt.Errorf("blacklistRepository.NewSerial: r.db.QueryRow returned error %w", err)
+		return "", fmt.Errorf("blacklistRepository.NewSerial: r.db.QueryRow returned error %w", err)
 	}
 	return result, nil
 }
