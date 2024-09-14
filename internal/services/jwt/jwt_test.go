@@ -2,6 +2,7 @@ package jwt_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -58,7 +59,7 @@ GwIDAQAB
 
 func TestJWTService_GenerateToken_Success(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -70,7 +71,7 @@ func TestJWTService_GenerateToken_Success(t *testing.T) {
 }
 func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "p", SerialClaim: "s"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -82,8 +83,16 @@ func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 }
 
 func TestJWTService_ValidateToken_Success(t *testing.T) {
+	// Мокаем time.Now() с помощью gomonkey
+	patches := gomonkey.ApplyFunc(time.Now, func() time.Time {
+		return time.Unix(1726358840, 0) // замена текущего времени на нужное значение
+	})
+	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
+
+	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -101,12 +110,14 @@ func TestJWTService_ValidateToken_Expired(t *testing.T) {
 	})
 	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
 
+	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
-	mockBL.On("IsBlacklisted", mock.Anything).Return(false, nil)
+	// mockBL.On("IsBlacklisted", mock.Anything).Return(false, nil)
 	token, err := swtService.ValidateToken(test_token)
 	assert.Nil(t, token)
 	assert.Error(t, err)
@@ -114,8 +125,16 @@ func TestJWTService_ValidateToken_Expired(t *testing.T) {
 }
 
 func TestJWTService_ValidateToken_Blacklisted(t *testing.T) {
+	// Мокаем time.Now() с помощью gomonkey
+	patches := gomonkey.ApplyFunc(time.Now, func() time.Time {
+		return time.Unix(1726358840, 0) // замена текущего времени на нужное значение
+	})
+	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
+
+	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -127,8 +146,16 @@ func TestJWTService_ValidateToken_Blacklisted(t *testing.T) {
 }
 
 func TestJWTService_RevokeToken_Success(t *testing.T) {
+	// Мокаем time.Now() с помощью gomonkey
+	patches := gomonkey.ApplyFunc(time.Now, func() time.Time {
+		return time.Unix(1726358840, 0) // замена текущего времени на нужное значение
+	})
+	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
+
+	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -140,8 +167,16 @@ func TestJWTService_RevokeToken_Success(t *testing.T) {
 }
 
 func TestJWTService_RevokeToken_Error(t *testing.T) {
+	// Мокаем time.Now() с помощью gomonkey
+	patches := gomonkey.ApplyFunc(time.Now, func() time.Time {
+		return time.Unix(1726358840, 0) // замена текущего времени на нужное значение
+	})
+	defer patches.Reset() // восстанавливаем оригинальное поведение после теста
+
+	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
+
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second, PermissionsClaim: "permissions", SerialClaim: "serial"}, mockBL)
+	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
