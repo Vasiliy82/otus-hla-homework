@@ -10,7 +10,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app_hw"]
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,14 +23,16 @@ services:
       POSTGRES_USER: "app_hw"
       POSTGRES_PASSWORD: "Passw0rd"
       POSTGRES_DB: "hw"
-      POSTGRES_ADDRESS: postgres:5432
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
     ports:
       - "9090:9090"
+      - "2345:2345"
     volumes:
       - ./backend:/app
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   devfrontend:
     build:

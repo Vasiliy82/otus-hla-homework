@@ -11,7 +11,8 @@ cmd = "go build -o ./tmp_app/app/engine ./app/."
 # Binary file yields from `cmd`.
 bin = "tmp_app/app"
 # Customize binary.
-full_bin = "./tmp_app/app/engine"
+# full_bin = "./tmp_app/app/engine"
+full_bin = "dlv exec --accept-multiclient --log --headless --continue --listen :2345 --api-version 2 ./tmp_app/app/engine -- --config /etc/app.yaml"
 # This log file places in your tmp_dir.
 log = "air_errors.log"
 # Watch these filename extensions.
