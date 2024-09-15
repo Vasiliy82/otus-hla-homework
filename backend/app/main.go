@@ -40,6 +40,8 @@ func main() {
 	var jwtService domain.JWTService
 	var err error
 
+	log.Logger().Debug("main: starting otus-hla-homework")
+
 	// Создание основного контекста с возможностью отмены
 	ctx, cancel := context.WithCancel(context.Background())
 

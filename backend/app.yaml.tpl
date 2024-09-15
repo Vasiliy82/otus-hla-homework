@@ -2,11 +2,11 @@ api:
   server_address: ":9090"
   context_timeout: 2
 database: 
-  host: localhost
-  port: 5432
-  user: app_hw
-  password: Passw0rd
-  name: hw
+  host: ${POSTGRES_HOST}
+  port: ${POSTGRES_PORT}
+  user: ${POSTGRES_USER}
+  password: ${POSTGRES_PASSWORD}
+  name: ${POSTGRES_DB}
 jwt:
   private_key: |
     -----BEGIN PRIVATE KEY-----
