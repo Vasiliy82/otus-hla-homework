@@ -38,17 +38,18 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 
 	// Тестовые данные для успешной регистрации
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Sex:       "M",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 	mockUser := domain.User{
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Birthdate:    birthdate,
 		Biography:    "Blah-blah-blah",
 		City:         "Silent Hill",
@@ -91,12 +92,13 @@ func TestUserHandler_RegisterUser_BadRequest_NoPassword(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля Password)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
+		FirstName: "John",
+		LastName:  "Doe",
+		Sex:       "M",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -125,12 +127,12 @@ func TestUserHandler_RegisterUser_BadRequest_NoCity(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля City)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -157,12 +159,12 @@ func TestUserHandler_RegisterUser_BadRequest_NoBirthDate(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля BirthDate)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -192,13 +194,13 @@ func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля Password)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -261,12 +263,12 @@ func TestUserHandler_RegisterUser_BadRequest_NoFirstName(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля FirstName)
 	reqBody := dto.RegisterUserRequest{
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		LastName:  "Doe",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -295,12 +297,12 @@ func TestUserHandler_RegisterUser_BadRequest_NoUsername(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (нет поля Username)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -329,13 +331,13 @@ func TestUserHandler_RegisterUser_BadRequest_WrongUsername(t *testing.T) {
 
 	// Формируем HTTP-запрос с неполными данными (Username)
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe",
+		Password:  "password123",
 	}
 
 	reqJSON, _ := json.Marshal(reqBody)
@@ -371,17 +373,18 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 
 	// Тестовые данные для успешной регистрации
 	reqBody := dto.RegisterUserRequest{
-		FirstName:  "John",
-		SecondName: "Doe",
-		Birthdate:  birthdateStr,
-		Biography:  "Blah-blah-blah",
-		City:       "Silent Hill",
-		Username:   "johndoe@gmail.com",
-		Password:   "password123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Sex:       "M",
+		Birthdate: birthdateStr,
+		Biography: "Blah-blah-blah",
+		City:      "Silent Hill",
+		Username:  "johndoe@gmail.com",
+		Password:  "password123",
 	}
 	mockUser := domain.User{
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Birthdate:    birthdate,
 		Biography:    "Blah-blah-blah",
 		City:         "Silent Hill",
@@ -473,3 +476,5 @@ func TestUserHandler_Login_Failure(t *testing.T) {
 	// Проверяем, что вернулась ошибка и статус-код 500 Internal Server Error
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
+
+// TODO: Если не передать sex, то при регистрации 500 ошибка вместо 400

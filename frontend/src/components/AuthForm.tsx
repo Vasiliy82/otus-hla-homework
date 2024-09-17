@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './authForm.css';  // Стили для формы авторизации
-import { loginUser, getUserById} from '../services/api';  // Импортируем API методы
+import { getUserById } from '../services/api';  // Импортируем API метод
 import { authService } from '../services/authService';
 import Modal, { useModal } from './Modal';  // Импортируем модальное окно для ошибок
 
@@ -13,18 +13,17 @@ const AuthForm: React.FC = () => {
     e.preventDefault();
     try {
       // Выполняем запрос на логин
-      const response = await loginUser({ username, password });
+      const response = await authService.loginUser({ username, password });
       const { token } = response.data;
 
-      const userId = response.data.user_id;
-      // Если логин успешен, получаем профиль пользователя по user_id
+      // Парсим токен и получаем userId и другие данные
+      const { userId } = authService.parseToken(token);
+
+      // Получаем профиль пользователя по userId
       const profileResponse = await getUserById(userId);
-      // На всякий случай сохраним его в репозиторий (хотя сейчас оттуда используется только логин для отображения в шапке)
       const profile = profileResponse.data;
 
       // Логиним пользователя и сохраняем данные (токен и профиль)
-      // TODO: на самом деле это не правильно, т.к. будучи не залогиненными, мы getUserById не получим!
-      // TODO: сначала надо успешно авторизоваться, затем ходить за инфой в профиль
       authService.login(token, profile);
 
       // Перезагрузить или перенаправить на другую страницу после авторизации

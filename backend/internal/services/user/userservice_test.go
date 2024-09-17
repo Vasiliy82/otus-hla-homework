@@ -23,7 +23,7 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -48,7 +48,7 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -80,7 +80,7 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -106,7 +106,7 @@ func TestUserService_Login_Success(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -160,7 +160,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -193,7 +193,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}
@@ -225,7 +225,7 @@ func TestUserService_GetById_Success(t *testing.T) {
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "e6cd2e922b06929cf2df81324491ec70",
 	}

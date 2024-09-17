@@ -18,6 +18,8 @@ var (
 func init() {
 	validate = validator.New()
 
+	validate.RegisterValidation("sex", sexValidator)
+
 	// Установка переводчика для русского языка
 	ruLocale := ru.New()
 	uni := ut.New(ruLocale, ruLocale)
@@ -48,4 +50,10 @@ func ValidateUserId(id string) error {
 		return apperrors.NewBadRequestError("id cannot be empty")
 	}
 	return nil
+}
+
+// Функция валидации биолгоического пола
+func sexValidator(fl validator.FieldLevel) bool {
+	sex := fl.Field().String()
+	return sex == "M" || sex == "F"
 }
