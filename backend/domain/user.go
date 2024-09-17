@@ -15,10 +15,18 @@ const (
 
 type Permission string
 
+type Sex byte
+
+const (
+	Male Sex = iota
+	Female
+)
+
 type User struct {
 	ID           string    `json:"id"`
 	FirstName    string    `json:"first_name"`
-	SecondName   string    `json:"second_name"`
+	LastName     string    `json:"last_name"`
+	Sex          Sex       `json:"sex"`
 	Birthdate    time.Time `json:"birthdate"`
 	Biography    string    `json:"biography"`
 	City         string    `json:"city"`

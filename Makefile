@@ -40,3 +40,17 @@ clean-docker:
 #	@docker volume rm $$(docker volume ls -q) || true
 #	@docker network rm $$(docker network ls -q) || true
 #	@docker system prune -a --volumes -f || true
+
+
+TESTS_ARGS := --format testname --jsonfile gotestsum.json.out
+TESTS_ARGS += --max-fails 2
+TESTS_ARGS += -- ./backend/...
+TESTS_ARGS += -test.parallel 2
+TESTS_ARGS += -test.count    1
+TESTS_ARGS += -test.failfast
+TESTS_ARGS += -test.coverprofile   coverage.out
+TESTS_ARGS += -test.timeout        5s
+TESTS_ARGS += -race
+
+tests:
+	@ gotestsum $(TESTS_ARGS) -short

@@ -24,14 +24,14 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	// Создаем тестового пользователя
 	testUser := domain.User{
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "hashedpassword",
 	}
 
 	// Эмулируем успешную вставку в базу данных
 	mock.ExpectQuery("^INSERT INTO users").
-		WithArgs(testUser.FirstName, testUser.SecondName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
+		WithArgs(testUser.FirstName, testUser.LastName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("123"))
 
 	// Вызываем метод репозитория
@@ -55,14 +55,14 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 
 	testUser := domain.User{
 		FirstName:    "John",
-		SecondName:   "Doe",
+		LastName:     "Doe",
 		Username:     "johndoe@gmail.com",
 		PasswordHash: "hashedpassword",
 	}
 
 	// Эмулируем ошибку дублирования
 	mock.ExpectQuery("^INSERT INTO users").
-		WithArgs(testUser.FirstName, testUser.SecondName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
+		WithArgs(testUser.FirstName, testUser.LastName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
 		WillReturnError(errors.New("db error")) // Код ошибки уникального ограничения
 
 	userID, err := userRepo.RegisterUser(&testUser)
@@ -83,17 +83,17 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 
 	testUser := domain.User{
-		ID:         "123",
-		FirstName:  "John",
-		SecondName: "Doe",
-		Username:   "johndoe@gmail.com",
+		ID:        "123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Username:  "johndoe@gmail.com",
 	}
 
 	// Эмулируем успешный результат SELECT
 	mock.ExpectQuery("^SELECT").
 		WithArgs("123").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "second_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
-			AddRow(testUser.ID, testUser.FirstName, testUser.SecondName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
+			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
 
 	user, err := userRepo.GetByID("123")
 
@@ -135,17 +135,17 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 
 	testUser := domain.User{
-		ID:         "123",
-		FirstName:  "John",
-		SecondName: "Doe",
-		Username:   "johndoe@gmail.com",
+		ID:        "123",
+		FirstName: "John",
+		LastName:  "Doe",
+		Username:  "johndoe@gmail.com",
 	}
 
 	// Эмулируем успешный результат SELECT
 	mock.ExpectQuery("^SELECT").
 		WithArgs("johndoe@gmail.com").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "second_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
-			AddRow(testUser.ID, testUser.FirstName, testUser.SecondName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
+			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
 
 	user, err := userRepo.GetByUsername("johndoe@gmail.com")
 
