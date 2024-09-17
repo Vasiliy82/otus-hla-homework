@@ -35,7 +35,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"first_name\":  \"John\",\n\t\t\"second_name\": \"Doe\",\n\t\t\"birthdate\":  \"2000-01-01\",\n\t\t\"biography\":  \"Blah-blah-blah\",\n\t\t\"city\":       \"Silent Hill\",\n\t\t\"username\":   \"johndoe2@gmail.com\",\n        \"password\":   \"password123\"\n}\n",
+							"raw": "{ \n    \"first_name\":  \"John\",\n    \"last_name\": \"Doe\",\n    \"birthdate\":  \"2000-01-01\",\n    \"sex\":        \"M\",\n    \"biography\":  \"Blah-blah-blah\",\n    \"city\":       \"Silent Hill\",\n    \"username\":   \"johndoe3@gmail.com\",\n    \"password\":   \"password123\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -98,7 +98,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password123\"\n}\n",
+							"raw": "{\n    \"username\": \"johndoe4@gmail.com\",\n    \"password\": \"password123\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -124,7 +124,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password124\"\n}\n",
+							"raw": "{\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password124\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -219,7 +219,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password124\"\n}\n",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
