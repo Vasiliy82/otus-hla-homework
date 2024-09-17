@@ -3,7 +3,7 @@
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     first_name VARCHAR(100) NOT NULL,
-    second_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     birthdate DATE NOT NULL,
     biography TEXT,
     city VARCHAR(100),

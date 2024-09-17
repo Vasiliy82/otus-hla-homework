@@ -92,7 +92,7 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 	// Эмулируем успешный результат SELECT
 	mock.ExpectQuery("^SELECT").
 		WithArgs("123").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "second_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "last_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
 			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
 
 	user, err := userRepo.GetByID("123")
@@ -144,7 +144,7 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 	// Эмулируем успешный результат SELECT
 	mock.ExpectQuery("^SELECT").
 		WithArgs("johndoe@gmail.com").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "second_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "last_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
 			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
 
 	user, err := userRepo.GetByUsername("johndoe@gmail.com")

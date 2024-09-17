@@ -12,7 +12,7 @@ const api = axios.create({
 // DTO для регистрации
 export interface RegisterUserDto {
   first_name: string;
-  second_name: string;
+  last_name: string;
   birthdate: string;
   biography: string;
   city: string;
@@ -29,7 +29,7 @@ export interface RegisterUserResponse {
 export interface UserDto {
   id: string;
   first_name: string;
-  second_name: string;
+  last_name: string;
   birthdate: string;
   biography: string;
   city: string;
