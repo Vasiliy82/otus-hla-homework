@@ -5,6 +5,7 @@
 Разрабатывалось и тестировалось в окружении: Ubuntu 22.04 x86_64, Docker 27.2.0, GNU Make 4.3
 #### 1.2 запуск
 ```sh
+git clone https://github.com/Vasiliy82/otus-hla-homework.git
 make up
 ```
 #### 1.3. остановка
