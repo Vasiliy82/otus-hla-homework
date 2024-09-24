@@ -11,6 +11,7 @@ export SHELL := bash
 up: docker-up ## Start all services
 down: docker-down  ## Stop all services
 destroy: docker-teardown clean  ## Remove containers and volumes
+:
 
 docker-up: ## Start Docker Compose
 	@ docker compose up -d --build

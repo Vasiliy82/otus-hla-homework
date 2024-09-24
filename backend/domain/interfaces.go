@@ -13,6 +13,7 @@ type UserRepository interface {
 	RegisterUser(user *User) (string, error)
 	GetByID(id string) (*User, error)
 	GetByUsername(username string) (*User, error)
+	Search(firstName, lastName string) ([]*User, error)
 }
 
 //go:generate mockery --name BlacklistRepository
@@ -26,6 +27,7 @@ type BlacklistRepository interface {
 type UserService interface {
 	RegisterUser(user *User) (string, error)
 	GetById(id string) (*User, error)
+	Search(firstName, lastName string) ([]*User, error)
 	Login(username, password string) (TokenString, error)
 	Logout(token *jwt.Token) error
 }

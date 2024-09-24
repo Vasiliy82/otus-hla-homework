@@ -38,6 +38,7 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.JWTMiddleware(jwtSvc))
 	apiGroup.GET("/user/get/:id", userHandler.Get)
+	apiGroup.GET("/user/search", userHandler.Search)
 	apiGroup.POST("/logout", userHandler.Logout)
 
 	logger.Logger().Infof("Otus HLA Homework server starting at %s", address)

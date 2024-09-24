@@ -3,6 +3,7 @@ package rest
 import (
 	"errors"
 	"net/http"
+	"regexp"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
@@ -18,6 +19,9 @@ import (
 type userHandler struct {
 	userService domain.UserService
 }
+
+// Регулярное выражение для проверки только букв
+var validNameRegex = regexp.MustCompile(`^[\p{L}]+$`) // \p{L} соответствует любому юникодовскому символу, который является буквой
 
 func NewUserHandler(userService domain.UserService) user.UserHandler {
 	return &userHandler{userService: userService}
@@ -106,6 +110,30 @@ func (h *userHandler) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+func (h *userHandler) Search(c echo.Context) error {
+	// Извлечение query параметров first_name и last_name
+	firstName := c.QueryParam("first_name")
+	lastName := c.QueryParam("last_name")
+
+	// Валидация параметров
+	if !isValidName(firstName) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Неверный формат имени"})
+	}
+	if !isValidName(lastName) {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Неверный формат фамилии"})
+	}
+
+	users, err := h.userService.Search(firstName, lastName)
+	if err != nil {
+		var apperr *apperrors.AppError
+		if errors.As(err, &apperr) {
+			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
 func (h *userHandler) Logout(c echo.Context) error {
 	log.Logger().Debug("UserHandler.Logout")
 	// Извлекаем токен из контекста
@@ -119,4 +147,10 @@ func (h *userHandler) Logout(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, nil)
+}
+
+// Функция для валидации имени
+func isValidName(name string) bool {
+	// Проверяем, что строка содержит только буквы
+	return validNameRegex.MatchString(name)
 }
