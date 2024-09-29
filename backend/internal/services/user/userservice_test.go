@@ -3,7 +3,6 @@ package user_test
 import (
 	"database/sql"
 	"errors"
-	errors_ "errors"
 	"testing"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
@@ -86,7 +85,7 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	}
 
 	// Мокаем ошибку базы данных
-	mockRepo.On("RegisterUser", &testUser).Return("", apperrors.NewInternalServerError("db error", errors_.New("db error")))
+	mockRepo.On("RegisterUser", &testUser).Return("", apperrors.NewInternalServerError("db error", errors.New("db error")))
 
 	userID, err := userService.RegisterUser(&testUser)
 

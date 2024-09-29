@@ -15,6 +15,7 @@ type UserHandler interface {
 	RegisterUser(c echo.Context) error
 	Login(c echo.Context) error
 	Get(c echo.Context) error
+	Search(c echo.Context) error
 	Logout(c echo.Context) error
 }
 
@@ -79,6 +80,18 @@ func (s *userService) Login(username, password string) (domain.TokenString, erro
 	}
 
 	return token, nil
+}
+
+func (s *userService) Search(firstName, lastName string) ([]*domain.User, error) {
+	users, err := s.userRepo.Search(firstName, lastName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apperrors.NewNotFoundError("User not found")
+		}
+		return nil, apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
+	}
+
+	return users, nil
 }
 
 func (s *userService) Logout(token *jwt.Token) error {
