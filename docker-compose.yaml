@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16
+    container_name: postgres
     environment:
       POSTGRES_USER: "app_hw"
       POSTGRES_PASSWORD: "Passw0rd"
@@ -17,6 +18,7 @@ services:
       retries: 5
 
   devbackend:
+    container_name: devbackend
     build:
       context: ./backend
       dockerfile: ./../misc/devbackend/Dockerfile
@@ -27,8 +29,8 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
     ports:
-      - "9090:9090"
-      - "2345:2345"
+      - "8080:9090" # REST service
+      - "2345:2345" # Remote debug (delve)
     volumes:
       - ./backend:/app
     depends_on:
@@ -36,6 +38,7 @@ services:
         condition: service_healthy
 
   devfrontend:
+    container_name: devfrontend
     build:
       context: ./frontend
       dockerfile: ./../misc/devfrontend/Dockerfile
@@ -46,5 +49,54 @@ services:
     environment:
       CHOKIDAR_USEPOLLING: "true"
 
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://app_hw:Passw0rd@postgres:5432/hw?sslmode=disable"
+    depends_on:
+      - postgres
+    ports:
+      - "9187:9187"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./misc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - postgres-exporter
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    privileged: true
+    depends_on:
+      - postgres
+      - devbackend
+      - devfrontend
+
 volumes:
   db-data:
+  grafana_data:
