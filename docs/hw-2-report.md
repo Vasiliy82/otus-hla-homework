@@ -256,13 +256,13 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 
 ### 5. Результаты тестирования до индексации
 
-![[lat-before-1.png]] 
+![Latency, до оптимизации (1 симв)](./lat-before-1.png)
 
-![[thr-before-1.png]]
+![Throughput, до оптимизации (1 симв)](./thr-before-1.png)
 
-![[lat-before-2.png]]
+![Latency, до оптимизации (2 симв)](lat-before-2.png)
 
-![[thr-before-2.png]]
+![Throughput, до оптимизации (2 симв)](thr-before-2.png)
 
 
 
@@ -351,13 +351,13 @@ Execution Time: 9.775 ms
 
 ### 7. Результаты тестирования после индексации
 
-![[lat-after-1.png]] 
+![Latency, после оптимизации (1 симв)](lat-after-1.png)
 
-![[thr-after-1.png]]
+![Throughput, после оптимизации (1 симв)](thr-after-1.png)
 
-![[lat-after-2.png]]
+![Latency, после оптимизации (2 симв)](lat-after-2.png)
 
-![[thr-after-2.png]]
+![Throughput, после оптимизации (2 симв)](thr-after-2.png)
 
 
 После добавления индексов результаты значительно улучшились:
