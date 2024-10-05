@@ -70,5 +70,9 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 		users = append(users, &user)
 	}
 
+	// проверял максимальное количество потоков, создаваемое JMeter
+	// time.Sleep(1000 * time.Millisecond)
+	//
+
 	return users, nil
 }

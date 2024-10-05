@@ -28,5 +28,11 @@ func InitDB(ctx context.Context, cfg *config.DatabaseConfig) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
+	db.SetConnMaxIdleTime(cfg.MaxConnIdleTime)
+	db.SetConnMaxLifetime(cfg.MaxConnLifetime)
+
 	return db, nil
 }

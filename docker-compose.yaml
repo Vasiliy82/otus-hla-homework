@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: postgres:16
+    build:
+      context: ./misc/postgres
     container_name: postgres
     environment:
       POSTGRES_USER: "app_hw"
@@ -29,7 +30,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
     ports:
-      - "8080:9090" # REST service
+      - "8080:8080" # REST service
       - "2345:2345" # Remote debug (delve)
     volumes:
       - ./backend:/app
@@ -82,7 +83,7 @@ services:
       - prometheus
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor
     ports:
       - "8081:8080"

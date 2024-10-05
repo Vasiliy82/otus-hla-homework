@@ -8,3 +8,6 @@ scrape_configs:
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
+  - job_name: 'devbackend'
+    static_configs:
+      - targets: ['devbackend:8080']      

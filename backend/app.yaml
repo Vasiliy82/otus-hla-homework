@@ -1,5 +1,5 @@
 api:
-  server_address: ":9090"
+  server_address: ":8080"
   context_timeout: 2
 database: 
   host: postgres
@@ -7,6 +7,10 @@ database:
   user: app_hw
   password: Passw0rd
   name: hw
+  max_open_conns: 100
+  max_idle_conns: 100
+  max_conn_lifetime: 10m
+  max_conn_idle_time: 1m
 jwt:
   private_key: |
     -----BEGIN PRIVATE KEY-----
@@ -50,4 +54,5 @@ jwt:
   token_expiry: 1440m
   permissions_claim: "permissions"
   serial_claim: "serial"
-
+metrics:
+  update_interval: 1s

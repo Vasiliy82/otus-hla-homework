@@ -65,6 +65,8 @@ func main() {
 		log.Logger().Fatalf("Error loading config: %v", err)
 	}
 
+	log.Logger().Debugw("Config", "cfg", cfg)
+
 	db, err := postgresqldb.InitDB(ctx, cfg.SQLServer)
 	if err != nil {
 		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
@@ -77,6 +79,8 @@ func main() {
 			log.Logger().Errorf("main: db.Close() returned error: %v", err)
 		}
 	}()
+
+	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
 
 	// Инициализация сервисов
 	if jwtService, err = jwt.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {

@@ -8,6 +8,15 @@
 git clone https://github.com/Vasiliy82/otus-hla-homework.git
 make up
 ```
+[frontend](http://localhost:5173)
+[backend](http://localhost:8080)
+[backend metrics](http://localhost:8080/metrics)
+[grafana](http://localhost:3000)
+[prometheus](http://localhost:9090)
+[cadvisor metrics](http://localhost:8081/metrics)
+[postgres-exporter metrics](http://localhost:9187/metrics)
+
+
 #### 1.3. остановка
 ```sh
 make down
@@ -53,3 +62,9 @@ make destroy
 #### 3.2 [frontend](./frontend/README.md)
 #### 3.3 [database](./postgresql.md)
 ### 4. Использованные инструменты (в разработке)
+### 5. Todo
+    5.1 Прописать автоматическую настройку Прометеуса и Графаны в /misc/*/Dockerfile;
+    5.2 Добавить ELK и перевести туда логирование;
+    5.3 Реализовать конфиг файл, вынести туда настройки пулинга подключений к БД
+    5.4 Вынести метрики пулинга БД в Прометеус и Графану
+    5.5 Во всех Dockerfile / docker-compose сервисах зафиксировать конкретные версии образов
