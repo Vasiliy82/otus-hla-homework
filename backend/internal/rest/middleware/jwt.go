@@ -32,6 +32,7 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 
 			// Сохранение токена в контексте
 			c.Set("token", token)
+			c.Set("claims", claims)
 
 			return next(c)
 		}

@@ -2,10 +2,11 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type userRepository struct {
@@ -75,4 +76,37 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 	//
 
 	return users, nil
+}
+
+func (r *userRepository) AddFriend(my_id, friend_id string) error {
+	_, err := r.db.Exec("INSERT INTO users_friends (id, friend_id) SELECT $1 AS id, $2 AS friend_id", my_id, friend_id)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" { // duplicate key value violates unique constraint
+				return domain.ErrObjectAlreadyExists
+			}
+			if pqErr.Code == "23503" { // insert or update violates foreign key constraint
+				return domain.ErrObjectNotFound
+			}
+		}
+		// прочие ошибки
+		return fmt.Errorf("userRepository.AddFriend: r.db.Exec returned error %w", err)
+	}
+	return nil
+}
+
+func (r *userRepository) RemoveFriend(my_id, friend_id string) error {
+	q, err := r.db.Exec("DELETE FROM users_friends WHERE id = $1 AND friend_id = $2", my_id, friend_id)
+	if err != nil {
+		return fmt.Errorf("userRepository.RemoveFriend: r.db.Exec returned error %w", err)
+	}
+	rows, err := q.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("userRepository.RemoveFriend: q.RowsAffected returned error %w", err)
+	}
+	if rows != 1 {
+		return domain.ErrObjectNotFound
+	}
+	return nil
 }

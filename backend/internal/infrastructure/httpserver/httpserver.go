@@ -41,6 +41,8 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 	apiGroup.GET("/user/get/:id", userHandler.Get)
 	apiGroup.GET("/user/search", userHandler.Search)
 	apiGroup.POST("/logout", userHandler.Logout)
+	apiGroup.PUT("/friend/add/:friend_id", userHandler.AddFriend)
+	apiGroup.PUT("/friend/remove/:friend_id", userHandler.RemoveFriend)
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))

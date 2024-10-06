@@ -16,6 +16,8 @@ type UserHandler interface {
 	Login(c echo.Context) error
 	Get(c echo.Context) error
 	Search(c echo.Context) error
+	AddFriend(c echo.Context) error
+	RemoveFriend(c echo.Context) error
 	Logout(c echo.Context) error
 }
 
@@ -92,6 +94,31 @@ func (s *userService) Search(firstName, lastName string) ([]*domain.User, error)
 	}
 
 	return users, nil
+}
+
+func (s *userService) AddFriend(my_id, friend_id string) error {
+
+	if err := s.userRepo.AddFriend(my_id, friend_id); err != nil {
+		if err == domain.ErrObjectAlreadyExists {
+			return domain.ErrFriendAlreadyExists
+		}
+		if err == domain.ErrObjectNotFound {
+			return domain.ErrUserNotFound
+		}
+		return apperrors.NewInternalServerError("Internal server error", err)
+	}
+	return nil
+}
+
+func (s *userService) RemoveFriend(my_id, friend_id string) error {
+
+	if err := s.userRepo.RemoveFriend(my_id, friend_id); err != nil {
+		if err == domain.ErrObjectNotFound {
+			return domain.ErrFriendNotFound
+		}
+		return apperrors.NewInternalServerError("Internal server error", err)
+	}
+	return nil
 }
 
 func (s *userService) Logout(token *jwt.Token) error {

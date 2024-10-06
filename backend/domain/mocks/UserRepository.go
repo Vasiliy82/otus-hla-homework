@@ -12,6 +12,24 @@ type UserRepository struct {
 	mock.Mock
 }
 
+// AddFriend provides a mock function with given fields: my_id, friend_id
+func (_m *UserRepository) AddFriend(my_id string, friend_id string) error {
+	ret := _m.Called(my_id, friend_id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddFriend")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(my_id, friend_id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetByID provides a mock function with given fields: id
 func (_m *UserRepository) GetByID(id string) (*domain.User, error) {
 	ret := _m.Called(id)
@@ -98,6 +116,24 @@ func (_m *UserRepository) RegisterUser(user *domain.User) (string, error) {
 	}
 
 	return r0, r1
+}
+
+// RemoveFriend provides a mock function with given fields: my_id, friend_id
+func (_m *UserRepository) RemoveFriend(my_id string, friend_id string) error {
+	ret := _m.Called(my_id, friend_id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RemoveFriend")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(my_id, friend_id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // Search provides a mock function with given fields: firstName, lastName

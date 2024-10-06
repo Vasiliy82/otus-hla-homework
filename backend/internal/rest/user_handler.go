@@ -134,11 +134,86 @@ func (h *userHandler) Search(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
+func (h *userHandler) AddFriend(c echo.Context) error {
+	log.Logger().Debug("UserHandler.AddFriend")
+
+	var err error
+
+	// Извлечение идентификатора будущего друга из URL
+	friend_id := c.Param("friend_id")
+
+	if err = validators.ValidateUserId(friend_id); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Извлечение своего идентификатора из контекста
+	// Здесь наверное нужен рефакторинг, сделать приватный метод со всеми проверками,
+	// т.к. в будущем контекст пользователя понадобится практически везде
+	claims, ok := c.Get("claims").(*domain.UserClaims)
+	if !ok {
+		// Теоретически, такого не должно случиться, т.к. токен проверяется в Middleware
+		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
+	}
+
+	my_id := claims.Subject
+
+	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
+	if err = validators.ValidateUserId(my_id); err != nil {
+		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
+	}
+
+	if err = h.userService.AddFriend(my_id, friend_id); err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrFriendAlreadyExists) {
+			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
+		}
+		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
+	}
+	return c.JSON(http.StatusNoContent, nil)
+}
+
+func (h *userHandler) RemoveFriend(c echo.Context) error {
+	log.Logger().Debug("UserHandler.RemoveFriend")
+
+	var err error
+
+	// Извлечение идентификатора будущего друга из URL
+	friend_id := c.Param("friend_id")
+
+	if err = validators.ValidateUserId(friend_id); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// Извлечение своего идентификатора из контекста
+	// Здесь наверное нужен рефакторинг, сделать приватный метод со всеми проверками,
+	// т.к. в будущем контекст пользователя понадобится практически везде
+	claims, ok := c.Get("claims").(*domain.UserClaims)
+	if !ok {
+		// Теоретически, такого не должно случиться, т.к. токен проверяется в Middleware
+		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
+	}
+
+	my_id := claims.Subject
+
+	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
+	if err = validators.ValidateUserId(my_id); err != nil {
+		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
+	}
+
+	if err = h.userService.RemoveFriend(my_id, friend_id); err != nil {
+		if errors.Is(err, domain.ErrFriendNotFound) {
+			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
+		}
+		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
+	}
+	return c.JSON(http.StatusNoContent, nil)
+}
+
 func (h *userHandler) Logout(c echo.Context) error {
 	log.Logger().Debug("UserHandler.Logout")
 	// Извлекаем токен из контекста
 	token, ok := c.Get("token").(*jwt.Token)
 	if !ok {
+		// Теоретически такого не может случиться, т.к. токен проверяется в Middleware
 		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
 	}
 

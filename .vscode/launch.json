@@ -10,7 +10,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/backend/app/main.go",
-            "cwd": "${workspaceFolder}/backend"
+            "cwd": "${workspaceFolder}/backend",
+            "args": ["-config", "app-local.yaml"]
         },
         {
             "name": "Attach to Backend in Docker",

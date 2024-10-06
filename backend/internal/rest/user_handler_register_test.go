@@ -402,7 +402,7 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	err = handler.RegisterUser(c)
+	_ = handler.RegisterUser(c)
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusConflict, rec.Code)
