@@ -7,8 +7,8 @@ database:
   user: ${POSTGRES_USER}
   password: ${POSTGRES_PASSWORD}
   name: ${POSTGRES_DB}
-  max_open_conns: 50
-  max_idle_conns: 50
+  max_open_conns: 100
+  max_idle_conns: 100
   max_conn_lifetime: 10m
   max_conn_idle_time: 1m  
 jwt:
