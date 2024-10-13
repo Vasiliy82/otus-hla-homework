@@ -11,7 +11,6 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
-	_ "github.com/lib/pq"
 
 	"github.com/Vasiliy82/otus-hla-homework/internal/repository"
 
@@ -67,7 +66,7 @@ func main() {
 
 	log.Logger().Debugw("Config", "cfg", cfg)
 
-	db, err := postgresqldb.InitDB(ctx, cfg.SQLServer)
+	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
 	if err != nil {
 		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
 		return

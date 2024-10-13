@@ -7,75 +7,73 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	repository "github.com/Vasiliy82/otus-hla-homework/internal/repository"
+	"github.com/Vasiliy82/otus-hla-homework/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBlacklistRepository_AddToBlacklist_Success(t *testing.T) {
-	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем masterMock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	serial := "12345"
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectExec("^INSERT INTO blacklisted").
+	mMock.ExpectExec("^INSERT INTO blacklisted").
 		WithArgs(serial, sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1)) // Эмулируем успешную вставку
 
 	// Вызываем метод репозитория
-	err = blRepo.AddToBlacklist(serial, time.Now().Add(24*time.Hour))
+	err := blRepo.AddToBlacklist(serial, time.Now().Add(24*time.Hour))
 
 	// Проверяем, что ошибок нет и ID пользователя вернулся
 	assert.NoError(t, err)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_AddToBlacklist_Failure(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	serial := "12345"
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectExec("^INSERT INTO blacklisted").
+	mMock.ExpectExec("^INSERT INTO blacklisted").
 		WithArgs(serial, sqlmock.AnyArg()).WillReturnError(errors.New("DB Error"))
 
 	// Вызываем метод репозитория
-	err = blRepo.AddToBlacklist(serial, time.Now().Add(24*time.Hour))
+	err := blRepo.AddToBlacklist(serial, time.Now().Add(24*time.Hour))
 
 	// Проверяем, что ошибок нет и ID пользователя вернулся
 	assert.Error(t, err)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_IsBlacklisted_Success_False(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	serial := "12345"
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^SELECT 1 FROM blacklisted").
+	mMock.ExpectQuery("^SELECT 1 FROM blacklisted").
 		WithArgs(serial).
 		WillReturnRows(sqlmock.NewRows([]string{""}))
 
@@ -87,23 +85,22 @@ func TestBlacklistRepository_IsBlacklisted_Success_False(t *testing.T) {
 	assert.Equal(t, false, result)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_IsBlacklisted_Success_True(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	serial := "12345"
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^SELECT 1 FROM blacklisted").
+	mMock.ExpectQuery("^SELECT 1 FROM blacklisted").
 		WithArgs(serial).
 		WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(1))
 
@@ -115,23 +112,22 @@ func TestBlacklistRepository_IsBlacklisted_Success_True(t *testing.T) {
 	assert.Equal(t, true, result)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_IsBlacklisted_Fail(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	serial := "12345"
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^SELECT 1 FROM blacklisted").
+	mMock.ExpectQuery("^SELECT 1 FROM blacklisted").
 		WithArgs(serial).
 		WillReturnError(errors.New("DB Error"))
 
@@ -143,22 +139,21 @@ func TestBlacklistRepository_IsBlacklisted_Fail(t *testing.T) {
 	assert.Equal(t, false, result)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_NewSerial_Success(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^SELECT nextval").
-		WillReturnRows(mock.NewRows([]string{""}).AddRow(400))
+	mMock.ExpectQuery("^SELECT nextval").
+		WillReturnRows(mMock.NewRows([]string{""}).AddRow(400))
 
 	// Вызываем метод репозитория
 	result, err := blRepo.NewSerial()
@@ -168,21 +163,20 @@ func TestBlacklistRepository_NewSerial_Success(t *testing.T) {
 	assert.Equal(t, "400", result)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestBlacklistRepository_NewSerial_Fail(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	blRepo := repository.NewBlacklistRepository(db)
+	blRepo := repository.NewBlacklistRepository(dbCluster)
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^SELECT nextval").
+	mMock.ExpectQuery("^SELECT nextval").
 		WillReturnError(errors.New("DB Error"))
 
 	// Вызываем метод репозитория
@@ -193,6 +187,6 @@ func TestBlacklistRepository_NewSerial_Fail(t *testing.T) {
 	assert.Equal(t, "", result)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }

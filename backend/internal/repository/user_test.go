@@ -9,17 +9,17 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	repository "github.com/Vasiliy82/otus-hla-homework/internal/repository"
+	"github.com/Vasiliy82/otus-hla-homework/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	// Создаем mock для базы данных
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
 	// Создаем экземпляр репозитория
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	// Создаем тестового пользователя
 	testUser := domain.User{
@@ -30,7 +30,7 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	}
 
 	// Эмулируем успешную вставку в базу данных
-	mock.ExpectQuery("^INSERT INTO users").
+	mMock.ExpectQuery("^INSERT INTO users").
 		WithArgs(testUser.FirstName, testUser.LastName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("123"))
 
@@ -42,16 +42,16 @@ func TestUserRepository_RegisterUser_Success(t *testing.T) {
 	assert.Equal(t, "123", userID)
 
 	// Проверяем, что все mock-ожидания выполнены
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestUserRepository_RegisterUser_Error(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем mock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	testUser := domain.User{
 		FirstName:    "John",
@@ -61,7 +61,7 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 	}
 
 	// Эмулируем ошибку дублирования
-	mock.ExpectQuery("^INSERT INTO users").
+	mMock.ExpectQuery("^INSERT INTO users").
 		WithArgs(testUser.FirstName, testUser.LastName, testUser.Birthdate, testUser.Biography, testUser.City, testUser.Username, testUser.PasswordHash).
 		WillReturnError(errors.New("db error")) // Код ошибки уникального ограничения
 
@@ -71,16 +71,16 @@ func TestUserRepository_RegisterUser_Error(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, "", userID)
 
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestUserRepository_GetUserByID_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем mock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	testUser := domain.User{
 		ID:        "123",
@@ -90,7 +90,7 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 	}
 
 	// Эмулируем успешный результат SELECT
-	mock.ExpectQuery("^SELECT").
+	mMock.ExpectQuery("^SELECT").
 		WithArgs("123").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "last_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
 			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
@@ -101,19 +101,19 @@ func TestUserRepository_GetUserByID_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "johndoe@gmail.com", user.Username)
 
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestUserRepository_GetUserByID_NotFound(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем mock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	// Эмулируем ошибку, что пользователь не найден
-	mock.ExpectQuery("^SELECT").
+	mMock.ExpectQuery("^SELECT").
 		WithArgs("123").
 		WillReturnError(sql.ErrNoRows)
 
@@ -123,16 +123,16 @@ func TestUserRepository_GetUserByID_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, &domain.User{}, user)
 
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем mock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	testUser := domain.User{
 		ID:        "123",
@@ -142,7 +142,7 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 	}
 
 	// Эмулируем успешный результат SELECT
-	mock.ExpectQuery("^SELECT").
+	mMock.ExpectQuery("^SELECT").
 		WithArgs("johndoe@gmail.com").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "first_name", "last_name", "birthdate", "biography", "city", "username", "password_hash", "created_at", "updated_at"}).
 			AddRow(testUser.ID, testUser.FirstName, testUser.LastName, time.Now(), "", "", testUser.Username, testUser.PasswordHash, time.Now(), time.Now()))
@@ -153,19 +153,19 @@ func TestUserRepository_GetUserByUsername_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "johndoe@gmail.com", user.Username)
 
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
 
 func TestUserRepository_GetUserByUsername_NotFound(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
+	// Создаем mock для базы данных
+	dbCluster, mMock, _ := testutils.NewMockDBCluster(t, 1)
+	defer dbCluster.Close()
 
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewUserRepository(dbCluster)
 
 	// Эмулируем ошибку, что пользователь не найден
-	mock.ExpectQuery("^SELECT").
+	mMock.ExpectQuery("^SELECT").
 		WithArgs("123").
 		WillReturnError(sql.ErrNoRows)
 
@@ -175,6 +175,6 @@ func TestUserRepository_GetUserByUsername_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, &domain.User{}, user)
 
-	err = mock.ExpectationsWereMet()
+	err = mMock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }

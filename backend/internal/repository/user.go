@@ -1,25 +1,31 @@
 package repository
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/lib/pq"
 )
 
 type userRepository struct {
-	db *sql.DB
+	dbCluster *postgresqldb.DBCluster
 }
 
-func NewUserRepository(db *sql.DB) domain.UserRepository {
-	return &userRepository{db: db}
+func NewUserRepository(dbcluster *postgresqldb.DBCluster) domain.UserRepository {
+	return &userRepository{dbCluster: dbcluster}
 }
 
 func (r *userRepository) RegisterUser(user *domain.User) (string, error) {
 	var userId string
-	err := r.db.QueryRow("INSERT INTO users (first_name, last_name, birthdate, biography, city, username, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+
+	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	if err != nil {
+		return "", fmt.Errorf("userRepository.RegisterUser: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	err = db.QueryRow("INSERT INTO users (first_name, last_name, birthdate, biography, city, username, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
 		user.FirstName, user.LastName, user.Birthdate, user.Biography, user.City, user.Username, user.PasswordHash).Scan(&userId)
 	if err != nil {
 		return "", fmt.Errorf("userRepository.RegisterUser: r.db.QueryRow returned error %w", err)
@@ -29,7 +35,13 @@ func (r *userRepository) RegisterUser(user *domain.User) (string, error) {
 
 func (r *userRepository) GetByID(id string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.QueryRow("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE id = $1", id).Scan(
+
+	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetByID: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	err = db.QueryRow("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE id = $1", id).Scan(
 		&user.ID, &user.FirstName, &user.LastName, &user.Birthdate, &user.Biography, &user.City, &user.Username, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("userRepository.GetByID: r.db.QueryRow returned error %w", err)
@@ -39,7 +51,13 @@ func (r *userRepository) GetByID(id string) (*domain.User, error) {
 
 func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.QueryRow("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE username = $1", username).Scan(
+
+	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetByUsername: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	err = db.QueryRow("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE username = $1", username).Scan(
 		&user.ID, &user.FirstName, &user.LastName, &user.Birthdate, &user.Biography, &user.City, &user.Username, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("userRepository.GetByUsername: r.db.QueryRow returned error %w", err)
@@ -50,10 +68,15 @@ func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, error) {
 	var users []*domain.User
 
+	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.Search: r.dbCluster.GetDB returned error %w", err)
+	}
+
 	ptnFirstName := fmt.Sprintf("%s%%", firstName)
 	ptnLastName := fmt.Sprintf("%s%%", lastName)
 
-	q, err := r.db.Query("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE first_name LIKE $1 AND last_name LIKE $2 ORDER BY id", ptnFirstName, ptnLastName)
+	q, err := db.Query("SELECT id, first_name, last_name, birthdate, biography, city, username, password_hash, created_at, updated_at FROM users WHERE first_name LIKE $1 AND last_name LIKE $2 ORDER BY id", ptnFirstName, ptnLastName)
 	if err != nil {
 		return nil, fmt.Errorf("userRepository.Search: r.db.Query returned error %w", err)
 	}
@@ -79,7 +102,12 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 }
 
 func (r *userRepository) AddFriend(my_id, friend_id string) error {
-	_, err := r.db.Exec("INSERT INTO users_friends (id, friend_id) SELECT $1 AS id, $2 AS friend_id", my_id, friend_id)
+	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	if err != nil {
+		return fmt.Errorf("userRepository.AddFriend: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	_, err = db.Exec("INSERT INTO users_friends (id, friend_id) SELECT $1 AS id, $2 AS friend_id", my_id, friend_id)
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) {
@@ -97,7 +125,12 @@ func (r *userRepository) AddFriend(my_id, friend_id string) error {
 }
 
 func (r *userRepository) RemoveFriend(my_id, friend_id string) error {
-	q, err := r.db.Exec("DELETE FROM users_friends WHERE id = $1 AND friend_id = $2", my_id, friend_id)
+	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	if err != nil {
+		return fmt.Errorf("userRepository.RemoveFriend: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	q, err := db.Exec("DELETE FROM users_friends WHERE id = $1 AND friend_id = $2", my_id, friend_id)
 	if err != nil {
 		return fmt.Errorf("userRepository.RemoveFriend: r.db.Exec returned error %w", err)
 	}

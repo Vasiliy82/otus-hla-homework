@@ -2,32 +2,38 @@ package postgresqldb
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Метрики с возможностью добавления лейблов (срезов)
 var (
-	openConnections = prometheus.NewGauge(prometheus.GaugeOpts{
+	openConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "db_open_connections",
 		Help: "Number of open database connections.",
-	})
-	inUseConnections = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"role"})
+
+	inUseConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "db_in_use_connections",
 		Help: "Number of in-use (active) database connections.",
-	})
-	idleConnections = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"role"})
+
+	idleConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "db_idle_connections",
 		Help: "Number of idle database connections.",
-	})
-	waitCount = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"role"})
+
+	waitCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "db_wait_count",
 		Help: "Number of requests that had to wait for a connection.",
-	})
-	waitDuration = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, []string{"role"})
+
+	waitDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "db_wait_duration_seconds",
 		Help: "Total time waiting for a connection in seconds.",
-	})
+	}, []string{"role"})
 )
 
 func init() {
@@ -38,19 +44,29 @@ func init() {
 	prometheus.MustRegister(waitDuration)
 }
 
-func recordDBStats(db *sql.DB) {
+// recordDBStats обновляет метрики для переданного DB и добавляет соответствующие лейблы (role: master/replica)
+func recordDBStats(db *sql.DB, role string) {
 	stats := db.Stats()
-	openConnections.Set(float64(stats.OpenConnections))
-	inUseConnections.Set(float64(stats.InUse))
-	idleConnections.Set(float64(stats.Idle))
-	waitCount.Set(float64(stats.WaitCount))
-	waitDuration.Set(stats.WaitDuration.Seconds())
+	openConnections.WithLabelValues(role).Set(float64(stats.OpenConnections))
+	inUseConnections.WithLabelValues(role).Set(float64(stats.InUse))
+	idleConnections.WithLabelValues(role).Set(float64(stats.Idle))
+	waitCount.WithLabelValues(role).Set(float64(stats.WaitCount))
+	waitDuration.WithLabelValues(role).Set(stats.WaitDuration.Seconds())
 }
 
-func StartMonitoring(db *sql.DB, interval time.Duration) {
+// StartMonitoring начинает мониторинг для master и реплик в DBCluster с заданным интервалом
+func StartMonitoring(cluster *DBCluster, interval time.Duration) {
 	go func() {
 		for {
-			recordDBStats(db)
+			// Обновляем метрики для master
+			recordDBStats(cluster.masterDB, "master")
+
+			// Обновляем метрики для каждой реплики
+			for i, replica := range cluster.replicaDBs {
+				role := fmt.Sprintf("replica_%d", i+1) // динамически создаем имя реплики
+				recordDBStats(replica, role)
+			}
+
 			time.Sleep(interval)
 		}
 	}()
