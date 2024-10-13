@@ -40,17 +40,21 @@ func (h *userHandler) RegisterUser(c echo.Context) error {
 	if err = validators.ValidateRegisterUserRequest(userReq); err != nil {
 		var appverr *apperrors.ValidationError
 		if errors.As(err, &appverr) {
+			log.Logger().Warnw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned ValidationError", "err", err)
 			return c.JSON(http.StatusBadRequest, appverr)
 		}
+		log.Logger().Errorw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	if user, err = mappers.ToUser(userReq); err != nil {
+		log.Logger().Errorw("userHandler.RegisterUser: mappers.ToUser returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	userId, err := h.userService.RegisterUser(&user)
 	if err != nil {
+		log.Logger().Errorw("userHandler.RegisterUser: h.userService.RegisterUser returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, apperr)
@@ -79,6 +83,7 @@ func (h *userHandler) Login(c echo.Context) error {
 	token, err := h.userService.Login(req.Username, req.Password)
 
 	if err != nil {
+		log.Logger().Errorw("userHandler.Login: h.userService.Login returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
@@ -101,6 +106,7 @@ func (h *userHandler) Get(c echo.Context) error {
 
 	user, err := h.userService.GetById(id)
 	if err != nil {
+		log.Logger().Errorw("userHandler.Get: h.userService.GetById returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
@@ -125,6 +131,7 @@ func (h *userHandler) Search(c echo.Context) error {
 
 	users, err := h.userService.Search(firstName, lastName)
 	if err != nil {
+		log.Logger().Errorw("userHandler.Search: h.userService.Search returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
@@ -159,13 +166,16 @@ func (h *userHandler) AddFriend(c echo.Context) error {
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {
+		log.Logger().Errorw("userHandler.AddFriend: validators.ValidateUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
 	if err = h.userService.AddFriend(my_id, friend_id); err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrFriendAlreadyExists) {
+			log.Logger().Warnw("userHandler.AddFriend: h.userService.AddFriend returned ErrUserNotFound", "err", err)
 			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
 		}
+		log.Logger().Errorw("userHandler.AddFriend: h.userService.AddFriend returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 	return c.JSON(http.StatusNoContent, nil)
@@ -196,13 +206,16 @@ func (h *userHandler) RemoveFriend(c echo.Context) error {
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {
+		log.Logger().Errorw("userHandler.RemoveFriend: validators.ValidateUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
 	if err = h.userService.RemoveFriend(my_id, friend_id); err != nil {
 		if errors.Is(err, domain.ErrFriendNotFound) {
+			log.Logger().Warnw("userHandler.RemoveFriend: h.userService.RemoveFriend returned ErrFriendNotFound", "err", err)
 			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
 		}
+		log.Logger().Errorw("userHandler.RemoveFriend: h.userService.RemoveFriend returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 	return c.JSON(http.StatusNoContent, nil)
@@ -218,6 +231,7 @@ func (h *userHandler) Logout(c echo.Context) error {
 	}
 
 	if err := h.userService.Logout(token); err != nil {
+		log.Logger().Errorw("userHandler.Logout: h.userService.Logout returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 

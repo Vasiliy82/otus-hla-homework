@@ -1,3 +1,4 @@
 .obsidian
 .vscode
 misc/load-tests/**/*.csv
+misc/backup/**

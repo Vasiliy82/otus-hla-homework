@@ -42,6 +42,11 @@ clean-docker:
 #	@docker network rm $$(docker network ls -q) || true
 #	@docker system prune -a --volumes -f || true
 
+backup: postgres-backup
+postgres-backup:
+	@ mkdir -p /tmp/pgbackup
+	@ docker compose exec postgres bash -c "pg_dump -h localhost -U app_hw -F c -b -v hw | gzip > /tmp/pgbackup/hw_backup.gz"
+	@ docker compose cp postgres:/tmp/pgbackup/hw_backup.gz ./misc/backup/
 
 TESTS_ARGS := --format testname --jsonfile gotestsum.json.out
 TESTS_ARGS += --max-fails 2
