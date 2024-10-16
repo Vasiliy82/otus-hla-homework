@@ -256,9 +256,9 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 
 ### 5. Результаты тестирования до индексации
 
-![Latency, до оптимизации (1 симв)](./lat-before-1.png)
+![Latency, до оптимизации (1 симв)](lat-before-1.png)
 
-![Throughput, до оптимизации (1 симв)](./thr-before-1.png)
+![Throughput, до оптимизации (1 симв)](thr-before-1.png)
 
 ![Latency, до оптимизации (2 симв)](lat-before-2.png)
 

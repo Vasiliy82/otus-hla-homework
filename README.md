@@ -55,7 +55,8 @@ make destroy
 #### 2.1 [Функциональные требования](./functional_requirements.md)
 #### 2.2 [Нефункциональные требования](./non_functional_requirements.md)
 #### 2.3 Отчеты о проделанной работе
-##### 2.3.1 [Нагрузочные тесты метода /user/search](./docs/hw-2-report.md)
+##### 2.3.1 [Нагрузочное тестирование](docs/hw-2-report.md)
+##### 2.3.2 [Репликация](hw-3-report.md)
 
 ### 3 Описание компонентов
 #### 3.1 [backend](./backend/README.md)
