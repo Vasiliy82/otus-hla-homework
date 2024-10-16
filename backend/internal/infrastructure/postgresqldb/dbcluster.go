@@ -144,5 +144,7 @@ func initDBInstance(cfg *config.DBInstanceConfig) (*sql.DB, error) {
 	db.SetConnMaxIdleTime(cfg.MaxConnIdleTime)
 	db.SetConnMaxLifetime(cfg.MaxConnLifetime)
 
+	logger.Logger().Infof("postgresqldb.initDBInstance: connection established: %s", connStrMasked)
+
 	return db, nil
 }

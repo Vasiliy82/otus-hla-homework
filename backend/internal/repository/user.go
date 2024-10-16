@@ -30,6 +30,9 @@ func (r *userRepository) RegisterUser(user *domain.User) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("userRepository.RegisterUser: r.db.QueryRow returned error %w", err)
 	}
+	// Счетчик для ДЗ № 3 (необходимо считать количество успешно записанных данных)
+	incRecordsCount()
+
 	return userId, nil
 }
 

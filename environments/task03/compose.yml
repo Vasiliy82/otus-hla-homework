@@ -20,6 +20,12 @@ services:
       interval: 1s
       timeout: 1s
       retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
 
   postgres_slave1:
     image: postgres:latest
@@ -47,6 +53,12 @@ services:
       interval: 1s
       timeout: 1s
       retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
 
   postgres_slave2:
     image: postgres:latest
@@ -74,6 +86,12 @@ services:
       interval: 1s
       timeout: 1s
       retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
 
   backend:
     container_name: backend
@@ -84,9 +102,13 @@ services:
     ports:
       - "8080:8080" # REST service
     volumes:
-      - ./../../backend/app.yaml:/app/app.yaml
+      - ./backend/app.yaml:/app/app.yaml
     depends_on:
       postgres:
+        condition: service_healthy
+      postgres_slave1:
+        condition: service_healthy
+      postgres_slave2:
         condition: service_healthy
 
   postgres-exporter:
@@ -102,7 +124,7 @@ services:
 
   postgres_slave1-exporter:
     image: prometheuscommunity/postgres-exporter
-    container_name: postgres-slave1-exporter
+    container_name: postgres_slave1-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://app_hw:Passw0rd@postgres_slave1:5432/hw?sslmode=disable"
     depends_on:
@@ -113,7 +135,7 @@ services:
 
   postgres_slave2-exporter:
     image: prometheuscommunity/postgres-exporter
-    container_name: postgres-slave2-exporter
+    container_name: postgres_slave2-exporter
     environment:
       DATA_SOURCE_NAME: "postgresql://app_hw:Passw0rd@postgres_slave2:5432/hw?sslmode=disable"
     depends_on:
