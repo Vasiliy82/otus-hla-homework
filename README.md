@@ -6,6 +6,7 @@
 #### 1.2 запуск
 ```sh
 git clone https://github.com/Vasiliy82/otus-hla-homework.git
+cd otus-hla-homework/environments/hw03
 make up
 ```
 [frontend](http://localhost:5173)
@@ -15,7 +16,8 @@ make up
 [prometheus](http://localhost:9090)
 [cadvisor metrics](http://localhost:8081/metrics)
 [postgres-exporter metrics](http://localhost:9187/metrics)
-
+[postgres_slave1-exporter metrics](http://localhost:9188/metrics)
+[postgres_slave2-exporter metrics](http://localhost:9189/metrics)
 
 #### 1.3. остановка
 ```sh
@@ -55,8 +57,8 @@ make destroy
 #### 2.1 [Функциональные требования](./functional_requirements.md)
 #### 2.2 [Нефункциональные требования](./non_functional_requirements.md)
 #### 2.3 Отчеты о проделанной работе
-##### 2.3.1 [Нагрузочное тестирование](hw-2-report.md)
-##### 2.3.2 [Репликация](hw-3-report.md)
+##### 2.3.1 [Нагрузочное тестирование](./docs/hw2/hw-2-report.md)
+##### 2.3.2 [Репликация](./docs/hw3/hw-3-report.md)
 
 ### 3 Описание компонентов
 #### 3.1 [backend](./backend/README.md)
