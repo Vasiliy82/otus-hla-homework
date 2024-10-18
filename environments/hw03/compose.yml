@@ -98,7 +98,7 @@ services:
     hostname: backend
     build:
       context: ./../..
-      dockerfile: environments/task03/backend/Dockerfile
+      dockerfile: environments/hw03/backend/Dockerfile
     ports:
       - "8080:8080" # REST service
     volumes:
