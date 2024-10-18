@@ -92,7 +92,22 @@ services:
           cpus: '1.0'
         reservations:
           cpus: '1.0' 
-
+  
+  goose:
+    container_name: goose
+    build:
+      context: ./goose
+    profiles:
+      - migration
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "hw"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./../../backend/migrations:/app/migrations
+  
   backend:
     container_name: backend
     hostname: backend

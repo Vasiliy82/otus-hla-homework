@@ -40,10 +40,21 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      postgres_slave1:
-        condition: service_healthy
-      postgres_slave2:
-        condition: service_healthy
+
+  goose:
+    container_name: goose
+    build:
+      context: ./goose
+    profiles:
+      - migration
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "hw"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./../../backend/migrations:/app/migrations
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter
@@ -90,8 +101,6 @@ services:
     privileged: true
     # depends_on:
     #   - postgres
-    #   - postgres_slave1
-    #   - postgres_slave2
     #   - backend
 
 volumes:

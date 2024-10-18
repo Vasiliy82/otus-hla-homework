@@ -1,0 +1,415 @@
+{
+	"info": {
+		"_postman_id": "d728434d-2bba-434e-aec7-045a464a1c9b",
+		"name": "OTUS Homework",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38202183"
+	},
+	"item": [
+		{
+			"name": "public",
+			"item": [
+				{
+					"name": "Register user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Получаем тело ответа",
+									"var responseData = pm.response.json();",
+									"",
+									"// Сохраняем значение поля \"id\" в переменную коллекции user_id",
+									"pm.collectionVariables.set(\"user_id\", responseData.id);",
+									"",
+									"// Логируем для проверки",
+									"console.log(\"Saved user_id: \" + responseData.id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n    \"first_name\":  \"John\",\n    \"last_name\": \"Doe\",\n    \"birthdate\":  \"2000-01-01\",\n    \"sex\":        \"M\",\n    \"biography\":  \"Blah-blah-blah\",\n    \"city\":       \"Silent Hill\",\n    \"username\":   \"johndoe@gmail.com\",\n    \"password\":   \"password123\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/user/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "OPTIONS",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Получаем тело ответа",
+									"var responseData = pm.response.json();",
+									"",
+									"// Сохраняем токен в переменную коллекции",
+									"pm.collectionVariables.set(\"auth_token\", responseData.token);",
+									"",
+									"// Логируем для проверки",
+									"console.log(\"Saved authToken to collection: \" + responseData.token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password123\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login (wrong)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe@gmail.com\",\n    \"password\": \"password124\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout (wrong)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "authorized",
+			"item": [
+				{
+					"name": "Get user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/get/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"get",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user (wrong)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/get/{{user_id_wrong}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"get",
+								"{{user_id_wrong}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Получаем тело ответа",
+									"var responseData = pm.response.json();",
+									"",
+									"// Проверяем, является ли responseData массивом и содержит ли он элементы",
+									"if (Array.isArray(responseData) && responseData.length > 0) {",
+									"    var friendId = responseData[0].id;",
+									"",
+									"    // Сохраняем токен в переменную коллекции",
+									"    pm.collectionVariables.set(\"new_friend\", friendId);",
+									"",
+									"    // Логируем для проверки",
+									"    console.log(\"Saved new_friend to collection: \" + friendId);",
+									"} else {",
+									"    // Обработка случая, когда responseData не является массивом или пуст",
+									"    console.warn(\"Response is not an array or is empty.\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/search?first_name=Алин&last_name=Антон",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"search"
+							],
+							"query": [
+								{
+									"key": "first_name",
+									"value": "Алин"
+								},
+								{
+									"key": "last_name",
+									"value": "Антон"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AddFriend",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/friend/add/{{new_friend}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"friend",
+								"add",
+								"{{new_friend}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "RemoveFriend",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/friend/remove/{{new_friend}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"friend",
+								"remove",
+								"{{new_friend}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{auth_token}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "user_id",
+			"value": ""
+		},
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "user_id_wrong",
+			"value": "bb49a7d7-3e85-4935-9afd-570ec8ea318c",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": ""
+		},
+		{
+			"key": "new_friend",
+			"value": ""
+		}
+	]
+}
