@@ -102,7 +102,7 @@ func main() {
 	log.Logger().Debugln("done")
 
 	log.Logger().Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg.API, userHandler, jwtService)
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}

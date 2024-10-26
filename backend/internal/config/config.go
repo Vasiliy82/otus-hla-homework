@@ -27,7 +27,8 @@ type JWTConfig struct {
 }
 
 type MetricsConfig struct {
-	UpdateInterval time.Duration `yaml:"update_interval"`
+	UpdateInterval             time.Duration `yaml:"update_interval"`
+	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

@@ -12,13 +12,14 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/internal/services/user"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHandler, jwtSvc domain.JWTService) error {
+func Start(ctx context.Context, cfg *config.Config, userHandler user.UserHandler, jwtSvc domain.JWTService) error {
 
 	// Start Server
-	address := cfg.ServerAddress
+	address := cfg.API.ServerAddress
 
 	// prepare echo
 	e := echo.New()
@@ -26,10 +27,13 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 	// Настройка middleware CORS
 	middleware.CORSConfig(e)
 
-	timeout := cfg.ContextTimeout
+	timeout := cfg.API.ContextTimeout
 
 	timeoutContext := time.Duration(timeout) * time.Second
 	e.Use(middleware.SetRequestContextWithTimeout(timeoutContext))
+
+	counterMiddleware := NewMetricsMiddleware(prometheus.DefaultRegisterer, *cfg.Metrics)
+
 	e.Use(counterMiddleware)
 
 	// Роуты
@@ -62,7 +66,7 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 	logger.Logger().Info("Shutting down server...")
 
 	// Установка таймаута для завершения
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShutdownTimeout)*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.API.ShutdownTimeout)*time.Second)
 	defer cancel()
 
 	// Корректное завершение сервера с использованием таймаута
