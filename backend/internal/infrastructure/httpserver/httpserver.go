@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
@@ -49,10 +50,26 @@ func Start(ctx context.Context, cfg *config.APIConfig, userHandler user.UserHand
 
 	logger.Logger().Infof("Otus HLA Homework server starting at %s", address)
 
-	// Запуск сервера
-	err := e.Start(address)
-	if err != nil {
-		return fmt.Errorf("error while starting server: %w", err)
+	// Запуск сервера в горутине
+	go func() {
+		if err := e.Start(address); err != nil && err != http.ErrServerClosed {
+			logger.Logger().Errorf("error while starting server: %v", err)
+		}
+	}()
+
+	// Ожидание завершения контекста
+	<-ctx.Done()
+	logger.Logger().Info("Shutting down server...")
+
+	// Установка таймаута для завершения
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.ShutdownTimeout)*time.Second)
+	defer cancel()
+
+	// Корректное завершение сервера с использованием таймаута
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("error while shutting down server: %w", err)
 	}
+
+	logger.Logger().Info("Server shutdown gracefully")
 	return nil
 }

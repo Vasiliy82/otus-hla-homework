@@ -15,8 +15,9 @@ type Config struct {
 }
 
 type APIConfig struct {
-	ServerAddress  string `yaml:"server_address"`
-	ContextTimeout int    `yaml:"context_timeout"`
+	ServerAddress   string        `yaml:"server_address"`
+	ContextTimeout  time.Duration `yaml:"context_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 }
 
 type JWTConfig struct {

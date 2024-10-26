@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,7 +50,7 @@ func main() {
 	// Горутинa для обработки системных сигналов
 	go func() {
 		sig := <-sigs
-		fmt.Printf("Received signal: %s, shutting down...\n", sig)
+		log.Logger().Infof("Received signal: %s, shutting down...\n", sig)
 		cancel() // Отмена контекста при получении сигнала
 	}()
 
@@ -64,8 +63,9 @@ func main() {
 		log.Logger().Fatalf("Error loading config: %v", err)
 	}
 
-	log.Logger().Debugw("Config", "cfg", cfg)
+	// log.Logger().Debugw("Config", "cfg", cfg)
 
+	log.Logger().Debug("main: init postgresql...")
 	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
 	if err != nil {
 		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
@@ -79,18 +79,32 @@ func main() {
 		}
 	}()
 
-	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
+	log.Logger().Debugln("done")
 
-	// Инициализация сервисов
+	log.Logger().Debug("main: init metrics...")
+	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: init JWTService...")
 	if jwtService, err = jwt.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
-	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo, jwtService)
-	userHandler := rest.NewUserHandler(userService)
+	log.Logger().Debugln("done")
 
+	log.Logger().Debug("main: init metrics...")
+	userRepo := repository.NewUserRepository(db)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init metrics...")
+	userService := service.NewUserService(userRepo, jwtService)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init metrics...")
+	userHandler := rest.NewUserHandler(userService)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debugln("Starting HTTP server...")
 	err = httpserver.Start(ctx, cfg.API, userHandler, jwtService)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
+	log.Logger().Debug("main: main: otus-hla-homework succesfully stopped")
 }
