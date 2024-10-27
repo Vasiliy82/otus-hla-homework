@@ -26,6 +26,28 @@ func NewPostHandler(postService domain.PostService, cfg *config.PostHandlerConfi
 	return &postHandler{postService: postService, cfg: cfg}
 }
 
+func (h *postHandler) List(c echo.Context) error {
+	userId, err := getUserId(c)
+	if err != nil {
+		log.Logger().Errorw("postHandler.List: getUserId returned error", "err", err)
+		return c.JSON(http.StatusInternalServerError, nil)
+	}
+	limit, lastPostId, err := h.getLimits(c)
+	if err != nil {
+		log.Logger().Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	posts, err := h.postService.List(userId, limit, lastPostId)
+	if err != nil {
+		log.Logger().Errorw("postHandler.Feed: h.postService.Feed returned error", "err", err)
+		if errors.Is(err, domain.ErrObjectNotFound) {
+			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, mappers.ToPostsResponse(posts))
+}
+
 // Создание нового поста (POST /posts)
 func (h *postHandler) Create(c echo.Context) error {
 	userId, err := getUserId(c)
@@ -151,37 +173,14 @@ func (h *postHandler) Delete(c echo.Context) error {
 func (h *postHandler) Feed(c echo.Context) error {
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Get: getUserId returned error", "err", err)
+		log.Logger().Errorw("postHandler.Feed: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-
-	var limit int
-
-	// Преобразование limit в int
-	limitParam := c.QueryParam("limit")
-	if limitParam == "" {
-		limit = h.cfg.FeedDefaultPageSize
-	} else {
-		limit, err = strconv.Atoi(limitParam)
-		if err != nil || limit <= 0 || limit > h.cfg.FeedMaxPageSize {
-			log.Logger().Warnw("postHandler.Feed: invalid limit parameter", "limit", limitParam)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid limit parameter"})
-		}
+	limit, lastPostId, err := h.getLimits(c)
+	if err != nil {
+		log.Logger().Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
+		return c.JSON(http.StatusBadRequest, err)
 	}
-
-	// Преобразование lastPostId в domain.PostKey
-	var lastPostId domain.PostKey = math.MaxInt64
-
-	lastPostIdParam := c.QueryParam("last_id")
-	if lastPostIdParam != "" {
-		lastPostIdInt, err := strconv.ParseInt(lastPostIdParam, 10, 64)
-		if err != nil {
-			log.Logger().Warnw("postHandler.Feed: invalid lastPostId parameter", "lastPostId", lastPostIdParam)
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid lastPostId parameter"})
-		}
-		lastPostId = domain.PostKey(lastPostIdInt)
-	}
-
 	posts, err := h.postService.GetFeed(userId, limit, lastPostId)
 	if err != nil {
 		log.Logger().Errorw("postHandler.Feed: h.postService.Feed returned error", "err", err)
@@ -190,8 +189,7 @@ func (h *postHandler) Feed(c echo.Context) error {
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-
-	return c.JSON(http.StatusOK, mappers.ToFeedResponse(posts))
+	return c.JSON(http.StatusOK, mappers.ToPostsResponse(posts))
 }
 
 func getUserId(c echo.Context) (domain.UserKey, error) {
@@ -213,4 +211,31 @@ func getPostId(c echo.Context) (domain.PostKey, error) {
 		return 0, fmt.Errorf("rest.getPostId: strconv.ParseInt returned error: %w", err)
 	}
 	return domain.PostKey(postId), nil
+}
+
+func (h postHandler) getLimits(c echo.Context) (int, domain.PostKey, error) {
+	var limit int
+	var err error
+	var lastPostId domain.PostKey = math.MaxInt64
+
+	// Преобразование limit в int
+	limitParam := c.QueryParam("limit")
+	if limitParam == "" {
+		limit = h.cfg.FeedDefaultPageSize
+	} else {
+		limit, err = strconv.Atoi(limitParam)
+		if err != nil || limit <= 0 || limit > h.cfg.FeedMaxPageSize {
+			return 0, 0, fmt.Errorf("Invalid limit parameter")
+		}
+	}
+
+	lastPostIdParam := c.QueryParam("last_id")
+	if lastPostIdParam != "" {
+		lastPostIdInt, err := strconv.ParseInt(lastPostIdParam, 10, 64)
+		if err != nil {
+			return 0, 0, fmt.Errorf("Invalid lastPostId parameter")
+		}
+		lastPostId = domain.PostKey(lastPostIdInt)
+	}
+	return limit, lastPostId, nil
 }

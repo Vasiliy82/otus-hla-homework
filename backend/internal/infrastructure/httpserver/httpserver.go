@@ -50,6 +50,7 @@ func Start(ctx context.Context, cfg *config.Config, userHandler services.UserHan
 	apiGroup.PUT("/friend/remove/:friend_id", userHandler.RemoveFriend)
 
 	apiGroup.POST("/post", postHandler.Create)
+	apiGroup.GET("/post", postHandler.List)
 	apiGroup.GET("/post/:post_id", postHandler.Get)
 	apiGroup.PUT("/post/:post_id", postHandler.Update)
 	apiGroup.DELETE("/post/:post_id", postHandler.Delete)

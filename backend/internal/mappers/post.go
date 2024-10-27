@@ -26,7 +26,7 @@ func ToUpdatedPost(post *domain.Post, request *dto.CreateOrUpdatePostRequest) {
 	post.ModifiedAt = &modifiedAt
 }
 
-func ToFeedResponse(posts []*domain.Post) *dto.GetFeedResponse {
+func ToPostsResponse(posts []*domain.Post) *dto.GetFeedResponse {
 	var lastId domain.PostKey = 0
 	if len(posts) > 0 && posts[len(posts)-1] != nil {
 		lastId = posts[len(posts)-1].Id

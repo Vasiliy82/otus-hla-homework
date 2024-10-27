@@ -20,6 +20,7 @@ type UserRepository interface {
 
 //go:generate mockery --name PostRepository
 type PostRepository interface {
+	List(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
 	Create(userId UserKey, message PostMessage) (PostKey, error)
 	Get(postId PostKey) (*Post, error)
 	GetPostOwner(postId PostKey) (UserKey, error)
@@ -48,6 +49,7 @@ type UserService interface {
 
 //go:generate mockery --name PostService
 type PostService interface {
+	List(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
 	Create(userId UserKey, message PostMessage) (PostKey, error)
 	Get(userId UserKey, postId PostKey) (*Post, error)
 	Update(userId UserKey, postId PostKey, newMessage PostMessage) error

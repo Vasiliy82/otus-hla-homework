@@ -14,6 +14,7 @@ type postService struct {
 }
 
 type PostHandler interface {
+	List(c echo.Context) error
 	Create(c echo.Context) error
 	Get(c echo.Context) error
 	Update(c echo.Context) error
@@ -25,6 +26,14 @@ func NewPostService(ur domain.PostRepository) domain.PostService {
 	return &postService{
 		postRepo: ur,
 	}
+}
+
+func (s *postService) List(userId domain.UserKey, limit int, lastPostId domain.PostKey) ([]*domain.Post, error) {
+	posts, err := s.postRepo.List(userId, limit, lastPostId)
+	if err != nil {
+		return nil, apperrors.NewInternalServerError("postService.List: s.postRepo.List returned error", err)
+	}
+	return posts, nil
 }
 
 // Создание нового поста
