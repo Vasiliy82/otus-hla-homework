@@ -78,3 +78,6 @@ jwt:
   serial_claim: "serial"
 metrics:
   update_interval: 1s
+post_handler:
+  feed_default_page_size: 50
+  feed_max_page_size: 200

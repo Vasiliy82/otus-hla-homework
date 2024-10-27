@@ -10,13 +10,13 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(ctx context.Context, cfg *config.Config, userHandler user.UserHandler, jwtSvc domain.JWTService) error {
+func Start(ctx context.Context, cfg *config.Config, userHandler services.UserHandler, postHandler services.PostHandler, jwtSvc domain.JWTService) error {
 
 	// Start Server
 	address := cfg.API.ServerAddress
@@ -48,6 +48,12 @@ func Start(ctx context.Context, cfg *config.Config, userHandler user.UserHandler
 	apiGroup.POST("/logout", userHandler.Logout)
 	apiGroup.PUT("/friend/add/:friend_id", userHandler.AddFriend)
 	apiGroup.PUT("/friend/remove/:friend_id", userHandler.RemoveFriend)
+
+	apiGroup.POST("/post", postHandler.Create)
+	apiGroup.GET("/post/:post_id", postHandler.Get)
+	apiGroup.PUT("/post/:post_id", postHandler.Update)
+	apiGroup.DELETE("/post/:post_id", postHandler.Delete)
+	apiGroup.GET("/post/feed", postHandler.Feed)
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))

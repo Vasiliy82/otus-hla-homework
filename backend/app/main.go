@@ -16,8 +16,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/httpserver"
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
-	service "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/joho/godotenv"
 )
 
@@ -85,24 +84,34 @@ func main() {
 	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
 	log.Logger().Debugln("done")
 
-	log.Logger().Debug("main: init JWTService...")
-	if jwtService, err = jwt.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
+	log.Logger().Debug("main: init JWT Service...")
+	if jwtService, err = services.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
 	log.Logger().Debugln("done")
 
-	log.Logger().Debug("main: init metrics...")
+	log.Logger().Debug("main: init User Repository...")
 	userRepo := repository.NewUserRepository(db)
 	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init metrics...")
-	userService := service.NewUserService(userRepo, jwtService)
+	log.Logger().Debug("main: init User Service...")
+	userService := services.NewUserService(userRepo, jwtService)
 	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init metrics...")
+	log.Logger().Debug("main: init User Handler...")
 	userHandler := rest.NewUserHandler(userService)
 	log.Logger().Debugln("done")
 
+	log.Logger().Debug("main: init Post Repository...")
+	postRepo := repository.NewPostRepository(db)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init User Service...")
+	postService := services.NewPostService(postRepo)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init NewPostHandler...")
+	postHandler := rest.NewPostHandler(postService, cfg.PostHandler)
+	log.Logger().Debugln("done")
+
 	log.Logger().Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg, userHandler, jwtService)
+	err = httpserver.Start(ctx, cfg, userHandler, postHandler, jwtService)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}

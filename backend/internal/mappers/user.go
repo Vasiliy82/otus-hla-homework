@@ -15,7 +15,7 @@ func ToSex(sex string) (domain.Sex, error) {
 	if sex == "F" {
 		return domain.Female, nil
 	}
-	return domain.Male, fmt.Errorf("Error converting %s into domain.Sex", sex)
+	return domain.Male, fmt.Errorf("error converting %s into domain.Sex", sex)
 }
 
 func ToUser(request dto.RegisterUserRequest) (domain.User, error) {

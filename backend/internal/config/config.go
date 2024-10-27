@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	JWT       *JWTConfig      `yaml:"jwt"`
-	SQLServer *DatabaseConfig `yaml:"database"`
-	API       *APIConfig      `yaml:"api"`
-	Metrics   *MetricsConfig  `yaml:"metrics"`
+	JWT         *JWTConfig         `yaml:"jwt"`
+	SQLServer   *DatabaseConfig    `yaml:"database"`
+	API         *APIConfig         `yaml:"api"`
+	Metrics     *MetricsConfig     `yaml:"metrics"`
+	PostHandler *PostHandlerConfig `yaml:"post_handler"`
 }
 
 type APIConfig struct {
@@ -29,6 +30,11 @@ type JWTConfig struct {
 type MetricsConfig struct {
 	UpdateInterval             time.Duration `yaml:"update_interval"`
 	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
+}
+
+type PostHandlerConfig struct {
+	FeedDefaultPageSize int `yaml:"feed_default_page_size"`
+	FeedMaxPageSize     int `yaml:"feed_max_page_size"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

@@ -18,6 +18,16 @@ type UserRepository interface {
 	RemoveFriend(my_id, friend_id string) error
 }
 
+//go:generate mockery --name PostRepository
+type PostRepository interface {
+	Create(userId UserKey, message PostMessage) (PostKey, error)
+	Get(postId PostKey) (*Post, error)
+	GetPostOwner(postId PostKey) (UserKey, error)
+	UpdateMessage(postId PostKey, newMessage PostMessage) error
+	Delete(id PostKey) error
+	GetFeed(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
+}
+
 //go:generate mockery --name BlacklistRepository
 type BlacklistRepository interface {
 	NewSerial() (string, error)
@@ -34,6 +44,15 @@ type UserService interface {
 	AddFriend(my_id, friend_id string) error
 	RemoveFriend(my_id, friend_id string) error
 	Logout(token *jwt.Token) error
+}
+
+//go:generate mockery --name PostService
+type PostService interface {
+	Create(userId UserKey, message PostMessage) (PostKey, error)
+	Get(userId UserKey, postId PostKey) (*Post, error)
+	Update(userId UserKey, postId PostKey, newMessage PostMessage) error
+	Delete(userId UserKey, postId PostKey) error
+	GetFeed(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
 }
 
 //go:generate mockery --name JWTService

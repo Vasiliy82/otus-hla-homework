@@ -1,4 +1,4 @@
-package jwt_test
+package services_test
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	jwtsvc "github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +59,7 @@ GwIDAQAB
 
 func TestJWTService_GenerateToken_Success(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestJWTService_GenerateToken_Success(t *testing.T) {
 }
 func TestJWTService_GenerateToken_DatabaseError(t *testing.T) {
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestJWTService_ValidateToken_Success(t *testing.T) {
 	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestJWTService_ValidateToken_Expired(t *testing.T) {
 	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestJWTService_ValidateToken_Blacklisted(t *testing.T) {
 	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestJWTService_RevokeToken_Success(t *testing.T) {
 	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestJWTService_RevokeToken_Error(t *testing.T) {
 	fmt.Printf("Now is %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	mockBL := mocks.NewBlacklistRepository(t)
-	swtService, err := jwtsvc.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
+	swtService, err := services.NewJWTService(&config.JWTConfig{PrivateKey: test_private_key, PublicKey: test_public_key, TokenExpiry: 86400 * time.Second}, mockBL)
 	if err != nil {
 		t.Fatalf("Error creating JWTService: %v", err)
 	}

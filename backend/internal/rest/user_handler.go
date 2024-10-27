@@ -10,7 +10,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/internal/mappers"
 	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/internal/validators"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -23,7 +23,7 @@ type userHandler struct {
 // Регулярное выражение для проверки только букв
 var validNameRegex = regexp.MustCompile(`^[\p{L}]+$`) // \p{L} соответствует любому юникодовскому символу, который является буквой
 
-func NewUserHandler(userService domain.UserService) user.UserHandler {
+func NewUserHandler(userService domain.UserService) services.UserHandler {
 	return &userHandler{userService: userService}
 }
 
