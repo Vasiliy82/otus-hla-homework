@@ -98,7 +98,7 @@ func (h *userHandler) Get(c echo.Context) error {
 
 	log.Logger().Debug("UserHandler.Get")
 
-	id := c.Param("id")
+	id := domain.UserKey(c.Param("id"))
 
 	if err = validators.ValidateUserId(id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -147,7 +147,7 @@ func (h *userHandler) AddFriend(c echo.Context) error {
 	var err error
 
 	// Извлечение идентификатора будущего друга из URL
-	friend_id := c.Param("friend_id")
+	friend_id := domain.UserKey(c.Param("friend_id"))
 
 	if err = validators.ValidateUserId(friend_id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -162,7 +162,7 @@ func (h *userHandler) AddFriend(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
 	}
 
-	my_id := claims.Subject
+	my_id := domain.UserKey(claims.Subject)
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {
@@ -187,7 +187,7 @@ func (h *userHandler) RemoveFriend(c echo.Context) error {
 	var err error
 
 	// Извлечение идентификатора будущего друга из URL
-	friend_id := c.Param("friend_id")
+	friend_id := domain.UserKey(c.Param("friend_id"))
 
 	if err = validators.ValidateUserId(friend_id); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -202,7 +202,7 @@ func (h *userHandler) RemoveFriend(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid token"))
 	}
 
-	my_id := claims.Subject
+	my_id := domain.UserKey(claims.Subject)
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {

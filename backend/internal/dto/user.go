@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/Vasiliy82/otus-hla-homework/domain"
+
 // Структура для запроса на вход
 type LoginRequest struct {
 	Username string `json:"username" validate:"required,email"` // Username должен быть email и обязательным
@@ -19,6 +21,6 @@ type RegisterUserRequest struct {
 }
 
 type LoginResponse struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
+	ID    domain.UserKey `json:"id"`
+	Token string         `json:"token"`
 }

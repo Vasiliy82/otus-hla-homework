@@ -33,8 +33,8 @@ func NewUserService(ur domain.UserRepository, jwts domain.JWTService) domain.Use
 	}
 }
 
-func (s *userService) RegisterUser(user *domain.User) (string, error) {
-	var id string
+func (s *userService) RegisterUser(user *domain.User) (domain.UserKey, error) {
+	var id domain.UserKey
 	var err error
 
 	if id, err = s.userRepo.RegisterUser(user); err != nil {
@@ -50,7 +50,7 @@ func (s *userService) RegisterUser(user *domain.User) (string, error) {
 	return id, nil
 }
 
-func (s *userService) GetById(id string) (*domain.User, error) {
+func (s *userService) GetById(id domain.UserKey) (*domain.User, error) {
 	var user *domain.User
 	var err error
 	if user, err = s.userRepo.GetByID(id); err != nil {
@@ -96,7 +96,7 @@ func (s *userService) Search(firstName, lastName string) ([]*domain.User, error)
 	return users, nil
 }
 
-func (s *userService) AddFriend(my_id, friend_id string) error {
+func (s *userService) AddFriend(my_id, friend_id domain.UserKey) error {
 
 	if err := s.userRepo.AddFriend(my_id, friend_id); err != nil {
 		if err == domain.ErrObjectAlreadyExists {
@@ -110,7 +110,7 @@ func (s *userService) AddFriend(my_id, friend_id string) error {
 	return nil
 }
 
-func (s *userService) RemoveFriend(my_id, friend_id string) error {
+func (s *userService) RemoveFriend(my_id, friend_id domain.UserKey) error {
 
 	if err := s.userRepo.RemoveFriend(my_id, friend_id); err != nil {
 		if err == domain.ErrObjectNotFound {

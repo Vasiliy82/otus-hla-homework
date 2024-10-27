@@ -10,12 +10,12 @@ type TokenString string
 
 //go:generate mockery --name UserRepository
 type UserRepository interface {
-	RegisterUser(user *User) (string, error)
-	GetByID(id string) (*User, error)
+	RegisterUser(user *User) (UserKey, error)
+	GetByID(id UserKey) (*User, error)
 	GetByUsername(username string) (*User, error)
 	Search(firstName, lastName string) ([]*User, error)
-	AddFriend(my_id, friend_id string) error
-	RemoveFriend(my_id, friend_id string) error
+	AddFriend(my_id, friend_id UserKey) error
+	RemoveFriend(my_id, friend_id UserKey) error
 }
 
 //go:generate mockery --name PostRepository
@@ -38,12 +38,12 @@ type BlacklistRepository interface {
 
 //go:generate mockery --name UserService
 type UserService interface {
-	RegisterUser(user *User) (string, error)
-	GetById(id string) (*User, error)
+	RegisterUser(user *User) (UserKey, error)
+	GetById(id UserKey) (*User, error)
 	Search(firstName, lastName string) ([]*User, error)
 	Login(username, password string) (TokenString, error)
-	AddFriend(my_id, friend_id string) error
-	RemoveFriend(my_id, friend_id string) error
+	AddFriend(my_id, friend_id UserKey) error
+	RemoveFriend(my_id, friend_id UserKey) error
 	Logout(token *jwt.Token) error
 }
 

@@ -13,7 +13,7 @@ type UserRepository struct {
 }
 
 // AddFriend provides a mock function with given fields: my_id, friend_id
-func (_m *UserRepository) AddFriend(my_id string, friend_id string) error {
+func (_m *UserRepository) AddFriend(my_id domain.UserKey, friend_id domain.UserKey) error {
 	ret := _m.Called(my_id, friend_id)
 
 	if len(ret) == 0 {
@@ -21,7 +21,7 @@ func (_m *UserRepository) AddFriend(my_id string, friend_id string) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.UserKey) error); ok {
 		r0 = rf(my_id, friend_id)
 	} else {
 		r0 = ret.Error(0)
@@ -31,7 +31,7 @@ func (_m *UserRepository) AddFriend(my_id string, friend_id string) error {
 }
 
 // GetByID provides a mock function with given fields: id
-func (_m *UserRepository) GetByID(id string) (*domain.User, error) {
+func (_m *UserRepository) GetByID(id domain.UserKey) (*domain.User, error) {
 	ret := _m.Called(id)
 
 	if len(ret) == 0 {
@@ -40,10 +40,10 @@ func (_m *UserRepository) GetByID(id string) (*domain.User, error) {
 
 	var r0 *domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (*domain.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey) (*domain.User, error)); ok {
 		return rf(id)
 	}
-	if rf, ok := ret.Get(0).(func(string) *domain.User); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey) *domain.User); ok {
 		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
@@ -51,7 +51,7 @@ func (_m *UserRepository) GetByID(id string) (*domain.User, error) {
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
+	if rf, ok := ret.Get(1).(func(domain.UserKey) error); ok {
 		r1 = rf(id)
 	} else {
 		r1 = ret.Error(1)
@@ -91,22 +91,22 @@ func (_m *UserRepository) GetByUsername(username string) (*domain.User, error) {
 }
 
 // RegisterUser provides a mock function with given fields: user
-func (_m *UserRepository) RegisterUser(user *domain.User) (string, error) {
+func (_m *UserRepository) RegisterUser(user *domain.User) (domain.UserKey, error) {
 	ret := _m.Called(user)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RegisterUser")
 	}
 
-	var r0 string
+	var r0 domain.UserKey
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*domain.User) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(*domain.User) (domain.UserKey, error)); ok {
 		return rf(user)
 	}
-	if rf, ok := ret.Get(0).(func(*domain.User) string); ok {
+	if rf, ok := ret.Get(0).(func(*domain.User) domain.UserKey); ok {
 		r0 = rf(user)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(domain.UserKey)
 	}
 
 	if rf, ok := ret.Get(1).(func(*domain.User) error); ok {
@@ -119,7 +119,7 @@ func (_m *UserRepository) RegisterUser(user *domain.User) (string, error) {
 }
 
 // RemoveFriend provides a mock function with given fields: my_id, friend_id
-func (_m *UserRepository) RemoveFriend(my_id string, friend_id string) error {
+func (_m *UserRepository) RemoveFriend(my_id domain.UserKey, friend_id domain.UserKey) error {
 	ret := _m.Called(my_id, friend_id)
 
 	if len(ret) == 0 {
@@ -127,7 +127,7 @@ func (_m *UserRepository) RemoveFriend(my_id string, friend_id string) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.UserKey) error); ok {
 		r0 = rf(my_id, friend_id)
 	} else {
 		r0 = ret.Error(0)
