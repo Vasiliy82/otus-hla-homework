@@ -13,25 +13,25 @@ database:
     max_idle_conns: 100
     max_conn_lifetime: 10m
     max_conn_idle_time: 1m
-  replicas:
-    - host: localhost
-      port: 5433
-      user: app_hw
-      password: Passw0rd
-      name: hw
-      max_open_conns: 100
-      max_idle_conns: 100
-      max_conn_lifetime: 10m
-      max_conn_idle_time: 1m
-    - host: localhost
-      port: 5434
-      user: app_hw
-      password: Passw0rd
-      name: hw
-      max_open_conns: 100
-      max_idle_conns: 100
-      max_conn_lifetime: 10m
-      max_conn_idle_time: 1m
+  # replicas:
+  #   - host: localhost
+  #     port: 5433
+  #     user: app_hw
+  #     password: Passw0rd
+  #     name: hw
+  #     max_open_conns: 100
+  #     max_idle_conns: 100
+  #     max_conn_lifetime: 10m
+  #     max_conn_idle_time: 1m
+  #   - host: localhost
+  #     port: 5434
+  #     user: app_hw
+  #     password: Passw0rd
+  #     name: hw
+  #     max_open_conns: 100
+  #     max_idle_conns: 100
+  #     max_conn_lifetime: 10m
+  #     max_conn_idle_time: 1m
 
 jwt:
   private_key: |

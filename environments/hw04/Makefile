@@ -31,3 +31,9 @@ down:
 destroy:
 	@echo "Остановка и удаление всех контейнеров и томов..."
 	docker compose -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
+
+.PHONY: pg-backup
+pg-backup:
+	@echo "Резервное копирование БД..."
+	docker compose exec postgres pg_dump -U app_hw -d hw | gzip > ~/Projects/2024-11-01-hw_backup.gz
+	@echo "завершено"
