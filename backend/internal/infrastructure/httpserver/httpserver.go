@@ -16,7 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(ctx context.Context, cfg *config.Config, userHandler services.UserHandler, postHandler services.PostHandler, jwtSvc domain.JWTService) error {
+func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNetworkHandler, jwtSvc domain.JWTService) error {
 
 	// Start Server
 	address := cfg.API.ServerAddress
@@ -37,24 +37,24 @@ func Start(ctx context.Context, cfg *config.Config, userHandler services.UserHan
 	e.Use(counterMiddleware)
 
 	// Роуты
-	e.POST("/api/login", userHandler.Login)
-	e.POST("/api/user/register", userHandler.RegisterUser)
+	e.POST("/api/login", snHandler.Login)
+	e.POST("/api/user/register", snHandler.CreateUser)
 
 	// protected routes
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.JWTMiddleware(jwtSvc))
-	apiGroup.GET("/user/get/:id", userHandler.Get)
-	apiGroup.GET("/user/search", userHandler.Search)
-	apiGroup.POST("/logout", userHandler.Logout)
-	apiGroup.PUT("/friend/add/:friend_id", userHandler.AddFriend)
-	apiGroup.PUT("/friend/remove/:friend_id", userHandler.RemoveFriend)
+	apiGroup.GET("/user/get/:id", snHandler.GetUser)
+	apiGroup.GET("/user/search", snHandler.Search)
+	apiGroup.POST("/logout", snHandler.Logout)
+	apiGroup.PUT("/friend/add/:friend_id", snHandler.AddFriend)
+	apiGroup.PUT("/friend/remove/:friend_id", snHandler.RemoveFriend)
 
-	apiGroup.POST("/post", postHandler.Create)
-	apiGroup.GET("/post", postHandler.List)
-	apiGroup.GET("/post/:post_id", postHandler.Get)
-	apiGroup.PUT("/post/:post_id", postHandler.Update)
-	apiGroup.DELETE("/post/:post_id", postHandler.Delete)
-	apiGroup.GET("/post/feed", postHandler.Feed)
+	apiGroup.POST("/post", snHandler.CreatePost)
+	apiGroup.GET("/post", snHandler.ListPosts)
+	apiGroup.GET("/post/:post_id", snHandler.GetPost)
+	apiGroup.PUT("/post/:post_id", snHandler.UpdatePost)
+	apiGroup.DELETE("/post/:post_id", snHandler.DeletePost)
+	apiGroup.GET("/post/feed", snHandler.GetFeed)
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))

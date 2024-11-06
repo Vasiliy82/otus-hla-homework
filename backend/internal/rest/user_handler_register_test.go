@@ -17,6 +17,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
 )
@@ -27,8 +28,8 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	e := echo.New()
 
 	// Создаем mock для UserService
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	mockUserService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(mockUserService, nil)
 
 	birthdateStr := "2020-01-01"
 	birthdate, err := time.Parse("2006-01-02", birthdateStr)
@@ -58,7 +59,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	}
 
 	// Мокаем успешную регистрацию
-	mockUserService.On("RegisterUser", &mockUser).Return("bb49a7d7-3e85-4935-9afd-570ec8ea318b", nil)
+	mockUserService.On("CreateUser", &mockUser).Return("bb49a7d7-3e85-4935-9afd-570ec8ea318b", nil)
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)
@@ -68,7 +69,7 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	err = handler.RegisterUser(c)
+	err = handler.CreateUser(c)
 
 	// Проверяем, что ошибок нет, а статус-код ответа 200 OK
 	assert.NoError(t, err)
@@ -85,8 +86,8 @@ func TestUserHandler_RegisterUser_Success(t *testing.T) {
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoPassword(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -108,20 +109,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoPassword(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoCity(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -142,20 +143,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoCity(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoBirthDate(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Формируем HTTP-запрос с неполными данными (нет поля BirthDate)
 	reqBody := dto.RegisterUserRequest{
@@ -174,20 +175,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoBirthDate(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-13-01"
 	// birthdateStr := ""
@@ -210,20 +211,20 @@ func TestUserHandler_RegisterUser_BadRequest_WrongBirthDate(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoSecondName(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -244,20 +245,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoSecondName(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoFirstName(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -278,20 +279,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoFirstName(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_NoUsername(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -312,20 +313,20 @@ func TestUserHandler_RegisterUser_BadRequest_NoUsername(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 2. Тест на ошибочный запрос (например, неполные данные)
 func TestUserHandler_RegisterUser_BadRequest_WrongUsername(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 
@@ -347,13 +348,13 @@ func TestUserHandler_RegisterUser_BadRequest_WrongUsername(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	if err := handler.RegisterUser(c); err != nil {
+	if err := handler.CreateUser(c); err != nil {
 		t.Fatal(err)
 	}
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // RegisterUser - duplicate user
@@ -362,8 +363,8 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 	e := echo.New()
 
 	// Создаем mock для UserService
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	birthdateStr := "2020-01-01"
 	birthdate, err := time.Parse("2006-01-02", birthdateStr)
@@ -392,7 +393,7 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 		PasswordHash: "482c811da5d5b4bc6d497ffa98491e38",
 	}
 	// Мокаем успешную регистрацию
-	mockUserService.On("RegisterUser", &mockUser).Return("", apperrors.NewConflictError("Login already used"))
+	snService.On("CreateUser", &mockUser).Return("", apperrors.NewConflictError("Login already used"))
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)
@@ -402,18 +403,18 @@ func TestUserHandler_RegisterUser_Duplicate(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Вызываем обработчик
-	_ = handler.RegisterUser(c)
+	_ = handler.CreateUser(c)
 
 	// Проверяем, что вернулась ошибка и статус-код 400 Bad Request
 	assert.Equal(t, http.StatusConflict, rec.Code)
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 3. Тест на успешный ответ при аутентификации
 func TestUserHandler_Login_Success(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Тестовые данные для успешного логина
 	reqBody := dto.LoginRequest{
@@ -422,7 +423,7 @@ func TestUserHandler_Login_Success(t *testing.T) {
 	}
 
 	// Мокаем успешный логин
-	mockUserService.On("Login", "johndoe@gmail.com", "password123").Return(domain.TokenString("token123"), nil)
+	snService.On("Login", "johndoe@gmail.com", "password123").Return(domain.TokenString("token123"), nil)
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)
@@ -443,14 +444,14 @@ func TestUserHandler_Login_Success(t *testing.T) {
 	json.Unmarshal(rec.Body.Bytes(), &resp)
 	assert.Equal(t, "token123", resp["token"])
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // 4. Тест на ошибку при неверных данных (неверный пароль)
 func TestUserHandler_Login_Failure(t *testing.T) {
 	e := echo.New()
-	mockUserService := new(mocks.UserService)
-	handler := rest.NewUserHandler(mockUserService)
+	snService := new(mocks.SocialNetworkService)
+	handler := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Тестовые данные для логина с неправильным паролем
 	reqBody := dto.LoginRequest{
@@ -459,7 +460,7 @@ func TestUserHandler_Login_Failure(t *testing.T) {
 	}
 
 	// Мокаем ошибку логина
-	mockUserService.On("Login", "johndoe@gmail.com", "wrongpassword").Return(domain.TokenString(""), errors.New("invalid credentials"))
+	snService.On("Login", "johndoe@gmail.com", "wrongpassword").Return(domain.TokenString(""), errors.New("invalid credentials"))
 
 	// Формируем HTTP-запрос
 	reqJSON, _ := json.Marshal(reqBody)

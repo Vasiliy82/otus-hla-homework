@@ -36,24 +36,20 @@ type BlacklistRepository interface {
 	IsBlacklisted(serial string) (bool, error)
 }
 
-//go:generate mockery --name UserService
-type UserService interface {
-	RegisterUser(user *User) (UserKey, error)
-	GetById(id UserKey) (*User, error)
+//go:generate mockery --name SocialNetworkService
+type SocialNetworkService interface {
+	CreateUser(user *User) (UserKey, error)
+	GetUser(id UserKey) (*User, error)
 	Search(firstName, lastName string) ([]*User, error)
 	Login(username, password string) (TokenString, error)
 	AddFriend(my_id, friend_id UserKey) error
 	RemoveFriend(my_id, friend_id UserKey) error
 	Logout(token *jwt.Token) error
-}
-
-//go:generate mockery --name PostService
-type PostService interface {
-	List(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
-	Create(userId UserKey, message PostMessage) (PostKey, error)
-	Get(userId UserKey, postId PostKey) (*Post, error)
-	Update(userId UserKey, postId PostKey, newMessage PostMessage) error
-	Delete(userId UserKey, postId PostKey) error
+	ListPosts(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
+	CreatePost(userId UserKey, message PostMessage) (PostKey, error)
+	GetPost(userId UserKey, postId PostKey) (*Post, error)
+	UpdatePost(userId UserKey, postId PostKey, newMessage PostMessage) error
+	DeletePost(userId UserKey, postId PostKey) error
 	GetFeed(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
 }
 

@@ -8,17 +8,18 @@ import (
 )
 
 type Config struct {
-	JWT         *JWTConfig         `yaml:"jwt"`
-	SQLServer   *DatabaseConfig    `yaml:"database"`
-	API         *APIConfig         `yaml:"api"`
-	Metrics     *MetricsConfig     `yaml:"metrics"`
-	PostHandler *PostHandlerConfig `yaml:"post_handler"`
+	JWT       *JWTConfig      `yaml:"jwt"`
+	SQLServer *DatabaseConfig `yaml:"database"`
+	API       *APIConfig      `yaml:"api"`
+	Metrics   *MetricsConfig  `yaml:"metrics"`
 }
 
 type APIConfig struct {
-	ServerAddress   string        `yaml:"server_address"`
-	ContextTimeout  time.Duration `yaml:"context_timeout"`
-	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
+	ServerAddress       string        `yaml:"server_address"`
+	ContextTimeout      time.Duration `yaml:"context_timeout"`
+	ShutdownTimeout     time.Duration `yaml:"shutdown_timeout"`
+	FeedDefaultPageSize int           `yaml:"feed_default_page_size"`
+	FeedMaxPageSize     int           `yaml:"feed_max_page_size"`
 }
 
 type JWTConfig struct {
@@ -30,11 +31,6 @@ type JWTConfig struct {
 type MetricsConfig struct {
 	UpdateInterval             time.Duration `yaml:"update_interval"`
 	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
-}
-
-type PostHandlerConfig struct {
-	FeedDefaultPageSize int `yaml:"feed_default_page_size"`
-	FeedMaxPageSize     int `yaml:"feed_max_page_size"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

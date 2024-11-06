@@ -9,6 +9,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -24,21 +25,21 @@ func TestUserHandler_Get_Success(t *testing.T) {
 	c.SetParamValues("123")
 
 	// Мокаем UserService
-	mockUserService := mocks.NewUserService(t)
-	mockUserService.On("GetById", "123").Return(&domain.User{ID: "123", Username: "testuser"}, nil)
+	snService := mocks.NewSocialNetworkService(t)
+	snService.On("GetUser", "123").Return(&domain.User{ID: "123", Username: "testuser"}, nil)
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Get
-	err := h.Get(c)
+	err := h.GetUser(c)
 
 	// Проверяем успешный ответ
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), "testuser")
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // Тест на невалидный ID
@@ -51,19 +52,19 @@ func TestUserHandler_Get_InvalidID(t *testing.T) {
 	c.SetParamValues("")
 
 	// Создаем мок UserService
-	mockUserService := mocks.NewUserService(t)
+	snService := mocks.NewSocialNetworkService(t)
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Get
-	err := h.Get(c)
+	err := h.GetUser(c)
 
 	// Проверяем ответ на невалидный ID
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 func TestUserHandler_Get_UserNotFound(t *testing.T) {
@@ -75,21 +76,21 @@ func TestUserHandler_Get_UserNotFound(t *testing.T) {
 	c.SetParamValues("999")
 
 	// Мокаем UserService
-	mockUserService := mocks.NewUserService(t)
-	mockUserService.On("GetById", "999").Return(nil, apperrors.NewNotFoundError("User not found"))
+	snService := mocks.NewSocialNetworkService(t)
+	snService.On("GetUser", "999").Return(nil, apperrors.NewNotFoundError("User not found"))
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Get
-	err := h.Get(c)
+	err := h.GetUser(c)
 
 	// Проверяем ответ на несуществующего пользователя
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 	assert.Contains(t, rec.Body.String(), "User not found")
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // Тест на успешный Logout
@@ -111,11 +112,11 @@ func TestUserHandler_Logout_Success(t *testing.T) {
 	c.Set("token", token)
 
 	// Мокаем UserService
-	mockUserService := mocks.NewUserService(t)
-	mockUserService.On("Logout", token).Return(nil)
+	snService := mocks.NewSocialNetworkService(t)
+	snService.On("Logout", token).Return(nil)
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Logout
 	err := h.Logout(c)
@@ -125,7 +126,7 @@ func TestUserHandler_Logout_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Contains(t, rec.Body.String(), "null")
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // Тест на отсутствие токена при Logout
@@ -136,10 +137,10 @@ func TestUserHandler_Logout_MissingToken(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Мокаем UserService
-	mockUserService := mocks.NewUserService(t)
+	snService := mocks.NewSocialNetworkService(t)
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Logout без токена
 	err := h.Logout(c)
@@ -148,7 +149,7 @@ func TestUserHandler_Logout_MissingToken(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
 
 // Тест на ошибку при Logout
@@ -170,11 +171,11 @@ func TestUserHandler_Logout_Failed(t *testing.T) {
 	c.Set("token", token)
 
 	// Мокаем UserService с ошибкой при Logout
-	mockUserService := mocks.NewUserService(t)
-	mockUserService.On("Logout", token).Return(errors.New("logout error"))
+	snService := mocks.NewSocialNetworkService(t)
+	snService.On("Logout", token).Return(errors.New("logout error"))
 
 	// Создаем обработчик
-	h := rest.NewUserHandler(mockUserService)
+	h := rest.NewSocialNetworkHandler(snService, &config.APIConfig{})
 
 	// Вызываем метод Logout
 	err := h.Logout(c)
@@ -183,5 +184,5 @@ func TestUserHandler_Logout_Failed(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 
-	mockUserService.AssertExpectations(t)
+	snService.AssertExpectations(t)
 }
