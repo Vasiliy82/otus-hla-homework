@@ -26,7 +26,7 @@ type PostRepository interface {
 	GetPostOwner(postId PostKey) (UserKey, error)
 	UpdateMessage(postId PostKey, newMessage PostMessage) error
 	Delete(id PostKey) error
-	GetFeed(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
+	GetFeed(userId UserKey, limit int) ([]*Post, error)
 }
 
 //go:generate mockery --name BlacklistRepository
@@ -50,7 +50,7 @@ type SocialNetworkService interface {
 	GetPost(userId UserKey, postId PostKey) (*Post, error)
 	UpdatePost(userId UserKey, postId PostKey, newMessage PostMessage) error
 	DeletePost(userId UserKey, postId PostKey) error
-	GetFeed(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
+	GetFeed(userId UserKey, limit int) ([]*Post, error)
 }
 
 //go:generate mockery --name JWTService

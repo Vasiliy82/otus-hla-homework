@@ -198,8 +198,8 @@ func (s *socialNetworkService) DeletePost(userId domain.UserKey, postId domain.P
 	return nil
 }
 
-func (s *socialNetworkService) GetFeed(userId domain.UserKey, limit int, lastPostId domain.PostKey) ([]*domain.Post, error) {
-	posts, err := s.postRepo.GetFeed(userId, limit, lastPostId)
+func (s *socialNetworkService) GetFeed(userId domain.UserKey, limit int) ([]*domain.Post, error) {
+	posts, err := s.postRepo.GetFeed(userId, limit)
 	if err != nil {
 		return nil, apperrors.NewInternalServerError("postService.Feed: s.postRepo.Feed returned error", err)
 	}

@@ -396,12 +396,12 @@ func (h *socialNetworkHandler) GetFeed(c echo.Context) error {
 		log.Logger().Errorw("postHandler.Feed: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-	limit, lastPostId, err := h.getLimits(c)
+	limit, _, err := h.getLimits(c)
 	if err != nil {
 		log.Logger().Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	posts, err := h.snService.GetFeed(userId, limit, lastPostId)
+	posts, err := h.snService.GetFeed(userId, limit)
 	if err != nil {
 		log.Logger().Errorw("postHandler.Feed: h.postService.Feed returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {

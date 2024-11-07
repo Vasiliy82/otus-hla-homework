@@ -20,7 +20,6 @@ SELECT p.*
 FROM friends AS f
 INNER JOIN posts AS p 
 	ON p.user_id = f.id
-WHERE p.id < $3
 ORDER BY p.id DESC
 LIMIT $2`
 	listQuery = `"SELECT 
@@ -154,14 +153,14 @@ func (r *postRepository) GetPostOwner(postId domain.PostKey) (domain.UserKey, er
 	return post, nil
 }
 
-func (r *postRepository) GetFeed(userId domain.UserKey, limit int, lastPostId domain.PostKey) ([]*domain.Post, error) {
+func (r *postRepository) GetFeed(userId domain.UserKey, limit int) ([]*domain.Post, error) {
 	var posts []*domain.Post
 
 	db, err := r.dbCluster.GetDB(postgresqldb.Read)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.GetFeed: r.dbCluster.GetDB returned error %w", err)
 	}
-	rows, err := db.Query(getFeedQuery, userId, limit, lastPostId)
+	rows, err := db.Query(getFeedQuery, userId, limit)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.GetFeed: r.db.QueryRow returned error %w", err)
 	}
