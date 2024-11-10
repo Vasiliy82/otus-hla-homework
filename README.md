@@ -18,7 +18,8 @@ make up
 [postgres-exporter metrics](http://localhost:9187/metrics)
 [postgres_slave1-exporter metrics](http://localhost:9188/metrics)
 [postgres_slave2-exporter metrics](http://localhost:9189/metrics)
-
+[kafka metrics](http://localhost:9102/metrics)
+[redis-exporter metrics](http://localhost:9121/metrics)
 #### 1.3. остановка
 ```sh
 make down
