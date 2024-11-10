@@ -1,4 +1,4 @@
-package user_test
+package services_test
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
-	user "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -16,9 +16,9 @@ import (
 )
 
 func TestUserService_RegisterUser_Success(t *testing.T) {
-	mockRepo := mocks.NewUserRepository(t)
+	mockUserRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockUserRepo, nil, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -28,22 +28,22 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	}
 
 	// Мокаем успешную регистрацию
-	mockRepo.On("RegisterUser", &testUser).Return("123", nil)
+	mockUserRepo.On("RegisterUser", &testUser).Return("123", nil)
 
-	userID, err := userService.RegisterUser(&testUser)
+	userID, err := userService.CreateUser(&testUser)
 
 	// Проверяем, что ошибок нет и ID пользователя возвращен
 	assert.NoError(t, err)
 	assert.Equal(t, "123", userID)
 
-	mockRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
 	mockJwt.AssertExpectations(t)
 }
 
 func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -55,7 +55,7 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	// Мокаем ошибку дублирования логина
 	mockRepo.On("RegisterUser", &testUser).Return("", &pq.Error{Code: "23505"})
 
-	userID, err := userService.RegisterUser(&testUser)
+	userID, err := userService.CreateUser(&testUser)
 
 	// Проверяем, что вернулась ошибка конфликта и ID не сгенерирован
 	var apperr *apperrors.AppError
@@ -75,7 +75,7 @@ func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 func TestUserService_RegisterUser_DBError(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 	testUser := domain.User{
 		ID:           "123",
 		FirstName:    "John",
@@ -87,7 +87,7 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 	// Мокаем ошибку базы данных
 	mockRepo.On("RegisterUser", &testUser).Return("", apperrors.NewInternalServerError("db error", errors.New("db error")))
 
-	userID, err := userService.RegisterUser(&testUser)
+	userID, err := userService.CreateUser(&testUser)
 
 	// Проверяем, что вернулась ошибка базы данных и ID не сгенерирован
 	assert.Error(t, err)
@@ -100,7 +100,7 @@ func TestUserService_RegisterUser_DBError(t *testing.T) {
 func TestUserService_Login_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -130,7 +130,7 @@ func TestUserService_Login_Success(t *testing.T) {
 func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	// Мокаем
 	mockRepo.On("GetByUsername", "johndoe@gmail.com").Return(&domain.User{}, errors.New("database error"))
@@ -154,7 +154,7 @@ func TestUserService_Login_GetByUsername_DBError(t *testing.T) {
 func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -187,7 +187,7 @@ func TestUserService_Login_CreateSession_DBError(t *testing.T) {
 func TestUserService_Login_Failed(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -219,7 +219,7 @@ func TestUserService_Login_Failed(t *testing.T) {
 func TestUserService_GetById_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	testUser := domain.User{
 		ID:           "123",
@@ -232,7 +232,7 @@ func TestUserService_GetById_Success(t *testing.T) {
 	// Мокаем успешное получение пользователя
 	mockRepo.On("GetByID", "123").Return(&testUser, nil)
 
-	user, err := userService.GetById("123")
+	user, err := userService.GetUser("123")
 
 	// Проверяем, что ошибок нет и пользователь получен
 	assert.NoError(t, err)
@@ -245,12 +245,12 @@ func TestUserService_GetById_Success(t *testing.T) {
 func TestUserService_GetById_NotFound(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 
 	// Мокаем ошибку получения пользователя
 	mockRepo.On("GetByID", "123").Return(&domain.User{}, sql.ErrNoRows)
 
-	user, err := userService.GetById("123")
+	user, err := userService.GetUser("123")
 
 	// Проверяем, что вернулась ошибка и пользователь не был найден
 	var apperr *apperrors.AppError
@@ -269,7 +269,7 @@ func TestUserService_GetById_NotFound(t *testing.T) {
 func TestUserService_Logout_Success(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 	mockToken := jwt.Token{} // Token{Serial: 1232}
 
 	mockJwt.On("RevokeToken", mock.Anything).Return(nil)
@@ -286,7 +286,7 @@ func TestUserService_Logout_Success(t *testing.T) {
 func TestUserService_Logout_Failed(t *testing.T) {
 	mockRepo := mocks.NewUserRepository(t)
 	mockJwt := mocks.NewJWTService(t)
-	userService := user.NewUserService(mockRepo, mockJwt)
+	userService := services.NewSocialNetworkService(mockRepo, nil, mockJwt)
 	mockToken := jwt.Token{} // &domain.Token{Serial: 1232}
 
 	mockJwt.On("RevokeToken", mock.Anything).Return(errors.New("Database error"))

@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
 	"github.com/go-playground/locales/ru"
@@ -45,7 +46,7 @@ func ValidateLoginRequest(request dto.LoginRequest) error {
 	return nil
 }
 
-func ValidateUserId(id string) error {
+func ValidateUserId(id domain.UserKey) error {
 	if id == "" {
 		return apperrors.NewBadRequestError("id cannot be empty")
 	}

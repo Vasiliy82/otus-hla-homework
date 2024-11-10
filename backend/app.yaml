@@ -1,6 +1,7 @@
 api:
   server_address: ":8080"
-  context_timeout: 2
+  context_timeout: 2s
+  shutdown_timeout: 5s
 database:
   master:
     host: postgres

@@ -17,8 +17,8 @@ func NewUserRepository(dbcluster *postgresqldb.DBCluster) domain.UserRepository 
 	return &userRepository{dbCluster: dbcluster}
 }
 
-func (r *userRepository) RegisterUser(user *domain.User) (string, error) {
-	var userId string
+func (r *userRepository) RegisterUser(user *domain.User) (domain.UserKey, error) {
+	var userId domain.UserKey
 
 	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *userRepository) RegisterUser(user *domain.User) (string, error) {
 	return userId, nil
 }
 
-func (r *userRepository) GetByID(id string) (*domain.User, error) {
+func (r *userRepository) GetByID(id domain.UserKey) (*domain.User, error) {
 	var user domain.User
 
 	db, err := r.dbCluster.GetDB(postgresqldb.Read)
@@ -104,7 +104,7 @@ func (r *userRepository) Search(firstName, lastName string) ([]*domain.User, err
 	return users, nil
 }
 
-func (r *userRepository) AddFriend(my_id, friend_id string) error {
+func (r *userRepository) AddFriend(my_id, friend_id domain.UserKey) error {
 	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
 	if err != nil {
 		return fmt.Errorf("userRepository.AddFriend: r.dbCluster.GetDB returned error %w", err)
@@ -127,7 +127,7 @@ func (r *userRepository) AddFriend(my_id, friend_id string) error {
 	return nil
 }
 
-func (r *userRepository) RemoveFriend(my_id, friend_id string) error {
+func (r *userRepository) RemoveFriend(my_id, friend_id domain.UserKey) error {
 	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
 	if err != nil {
 		return fmt.Errorf("userRepository.RemoveFriend: r.dbCluster.GetDB returned error %w", err)

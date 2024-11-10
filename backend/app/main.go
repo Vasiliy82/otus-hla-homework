@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,8 +16,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/httpserver"
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services/jwt"
-	service "github.com/Vasiliy82/otus-hla-homework/internal/services/user"
+	"github.com/Vasiliy82/otus-hla-homework/internal/services"
 	"github.com/joho/godotenv"
 )
 
@@ -51,7 +49,7 @@ func main() {
 	// Горутинa для обработки системных сигналов
 	go func() {
 		sig := <-sigs
-		fmt.Printf("Received signal: %s, shutting down...\n", sig)
+		log.Logger().Infof("Received signal: %s, shutting down...\n", sig)
 		cancel() // Отмена контекста при получении сигнала
 	}()
 
@@ -64,8 +62,9 @@ func main() {
 		log.Logger().Fatalf("Error loading config: %v", err)
 	}
 
-	log.Logger().Debugw("Config", "cfg", cfg)
+	// log.Logger().Debugw("Config", "cfg", cfg)
 
+	log.Logger().Debug("main: init postgresql...")
 	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
 	if err != nil {
 		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
@@ -79,18 +78,35 @@ func main() {
 		}
 	}()
 
-	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
+	log.Logger().Debugln("done")
 
-	// Инициализация сервисов
-	if jwtService, err = jwt.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
+	log.Logger().Debug("main: init metrics...")
+	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: init JWT Service...")
+	if jwtService, err = services.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(db)); err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
-	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo, jwtService)
-	userHandler := rest.NewUserHandler(userService)
+	log.Logger().Debugln("done")
 
-	err = httpserver.Start(ctx, cfg.API, userHandler, jwtService)
+	log.Logger().Debug("main: init User Repository...")
+	userRepo := repository.NewUserRepository(db)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init Post Repository...")
+	postRepo := repository.NewPostRepository(db)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init User Service...")
+	snService := services.NewSocialNetworkService(userRepo, postRepo, jwtService)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init User Handler...")
+	userHandler := rest.NewSocialNetworkHandler(snService, cfg.API)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debugln("Starting HTTP server...")
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
+	log.Logger().Debug("main: main: otus-hla-homework succesfully stopped")
 }
