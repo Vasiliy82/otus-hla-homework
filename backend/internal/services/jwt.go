@@ -39,7 +39,7 @@ func NewJWTService(cfg *config.JWTConfig, blacklist domain.BlacklistRepository) 
 }
 
 // GenerateToken создает JWT токен для пользователя
-func (s *jwtService) GenerateToken(userID string, permissions []domain.Permission) (domain.TokenString, error) {
+func (s *jwtService) GenerateToken(userID domain.UserKey, permissions []domain.Permission) (domain.TokenString, error) {
 	serial, err := s.blacklist.NewSerial()
 	if err != nil {
 		return "", fmt.Errorf("jwtService.GenerateToken: s.blacklist.NewSerial returned error: %w", err)
@@ -49,7 +49,7 @@ func (s *jwtService) GenerateToken(userID string, permissions []domain.Permissio
 		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        serial,
-			Subject:   userID,
+			Subject:   string(userID),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.cfg.TokenExpiry)),
 			Issuer:    "myApp", // Это можно настроить через cfg, если нужно
 		},

@@ -259,7 +259,7 @@ func (h *socialNetworkHandler) ListPosts(c echo.Context) error {
 	}
 	posts, err := h.snService.ListPosts(userId, limit, lastPostId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.postService.Feed returned error", "err", err)
+		log.Logger().Errorw("postHandler.Feed: h.snService.ListPosts returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -396,14 +396,9 @@ func (h *socialNetworkHandler) GetFeed(c echo.Context) error {
 		log.Logger().Errorw("postHandler.Feed: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
-	limit, _, err := h.getLimits(c)
+	posts, err := h.snService.GetFeed(userId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	posts, err := h.snService.GetFeed(userId, limit)
-	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.postService.Feed returned error", "err", err)
+		log.Logger().Errorw("postHandler.Feed: h.snService.GetFeed returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
