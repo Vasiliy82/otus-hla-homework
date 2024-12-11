@@ -2,6 +2,25 @@ api:
   server_address: ":8080"
   context_timeout: 2s
   shutdown_timeout: 5s
+cache:
+  redis:
+     host: localhost
+     port: 6379
+     password: ""
+  kafka:
+    brokers: "localhost:9092"
+    acks: "all"
+    retries: 3
+    linger_ms: 100
+    enable_idempotence: true
+  expiry: 1h
+  invalidate_topic: mysocnet.cache.invalidate_feed
+  invalidate_consumer_group: cache.invalidate_feed
+  invalidate_num_workers: 10
+  cache_warmup_enabled: true
+  cache_warmup_period: 1h
+social_network:
+  feed_length: 1000
 database:
   master:
     host: localhost

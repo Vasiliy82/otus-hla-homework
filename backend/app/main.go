@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,9 +11,12 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/config"
 	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/internal/repository/cache"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/Vasiliy82/otus-hla-homework/internal/repository"
 
+	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/broker"
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/httpserver"
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
@@ -78,6 +82,19 @@ func main() {
 		}
 	}()
 
+	redis := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.Cache.Redis.Host, cfg.Cache.Redis.Port), // Адрес Redis сервера (по умолчанию localhost:6379)
+		Password: cfg.Cache.Redis.Password,                                         // Пароль, если установлен
+		DB:       0,                                                                // Номер базы данных (по умолчанию 0)
+	})
+
+	// Проверяем подключение к Redis
+	_, err = redis.Ping(context.Background()).Result()
+	if err != nil {
+		log.Logger().Fatalw("Ошибка подключения к Redis:", "err", err)
+		return
+	}
+
 	log.Logger().Debugln("done")
 
 	log.Logger().Debug("main: init metrics...")
@@ -96,17 +113,36 @@ func main() {
 	log.Logger().Debug("main: init Post Repository...")
 	postRepo := repository.NewPostRepository(db)
 	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init Post Cache...")
+	postCache := cache.NewPostCache(cfg.Cache, redis)
+	log.Logger().Debugln("done")
+	log.Logger().Debug("main: init Producer...")
+	prod, err := broker.NewKafkaProducer(cfg.Cache.Kafka)
+	if err != nil {
+		log.Logger().Fatalf("Error: %v", err)
+	}
+	bprod := broker.NewProducer(prod, cfg.Cache.InvalidateTopic)
+	bprod.StartErrorLogger(ctx)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: init Cache Invalidator...")
+	cacheInv := services.NewCacheInvalidator(cfg.Cache, cfg.SocialNetwork, userRepo, postRepo, postCache, bprod)
+	cacheInv.ListenAndProcessEvents(ctx)
+	cacheInv.CacheWarmup(ctx)
+	log.Logger().Debugln("done")
+
 	log.Logger().Debug("main: init User Service...")
-	snService := services.NewSocialNetworkService(userRepo, postRepo, jwtService)
+	snService := services.NewSocialNetworkService(cfg, userRepo, postRepo, postCache, jwtService, bprod)
 	log.Logger().Debugln("done")
 	log.Logger().Debug("main: init User Handler...")
 	userHandler := rest.NewSocialNetworkHandler(snService, cfg.API)
 	log.Logger().Debugln("done")
 
 	log.Logger().Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg, userHandler, jwtService)
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
+	cacheInv.WaitForDone()
 	log.Logger().Debug("main: main: otus-hla-homework succesfully stopped")
 }
