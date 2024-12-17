@@ -27,6 +27,9 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 			}
 
 			claims, err := jwtService.ExtractClaims(token)
+			if err != nil {
+				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
+			}
 
 			logger.Logger().Debugf("Token successfully validated", "token", token, "user_id", claims.Subject)
 

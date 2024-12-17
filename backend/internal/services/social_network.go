@@ -3,6 +3,11 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"github.com/Vasiliy82/otus-hla-homework/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/broker"
+	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
@@ -30,14 +35,25 @@ type SocialNetworkHandler interface {
 type socialNetworkService struct {
 	userRepo   domain.UserRepository
 	postRepo   domain.PostRepository
+	postCache  domain.PostCache
 	jwtService domain.JWTService
+	cfg        *config.SocialNetworkConfig
+	producer   *broker.Producer
 }
 
-func NewSocialNetworkService(ur domain.UserRepository, pr domain.PostRepository, jwts domain.JWTService) domain.SocialNetworkService {
+func NewSocialNetworkService(cfg *config.Config,
+	ur domain.UserRepository,
+	pr domain.PostRepository,
+	pc domain.PostCache,
+	jwts domain.JWTService,
+	producer *broker.Producer) domain.SocialNetworkService {
 	return &socialNetworkService{
 		userRepo:   ur,
 		postRepo:   pr,
+		postCache:  pc,
 		jwtService: jwts,
+		cfg:        cfg.SocialNetwork,
+		producer:   producer,
 	}
 }
 
@@ -151,6 +167,7 @@ func (s *socialNetworkService) CreatePost(userId domain.UserKey, message domain.
 	if err != nil {
 		return 0, apperrors.NewInternalServerError("postService.Create: s.postRepo.Create returned error", err)
 	}
+	s.sendRecalculationEvent(userId, domain.EventPostCreated)
 	return postId, nil
 }
 
@@ -179,6 +196,7 @@ func (s *socialNetworkService) UpdatePost(userId domain.UserKey, postId domain.P
 		}
 		return apperrors.NewInternalServerError("postService.Update: s.postRepo.Update returned error", err)
 	}
+	s.sendRecalculationEvent(userId, domain.EventPostEdited)
 	return nil
 }
 
@@ -195,15 +213,39 @@ func (s *socialNetworkService) DeletePost(userId domain.UserKey, postId domain.P
 		}
 		return apperrors.NewInternalServerError("postService.Delete: s.postRepo.Delete returned error", err)
 	}
+	s.sendRecalculationEvent(userId, domain.EventPostDeleted)
 	return nil
 }
 
-func (s *socialNetworkService) GetFeed(userId domain.UserKey, limit int) ([]*domain.Post, error) {
-	posts, err := s.postRepo.GetFeed(userId, limit)
+func (s *socialNetworkService) GetFeed(userId domain.UserKey) ([]*domain.Post, error) {
+	// Если есть кеш, то сначала посмотрим там
+	if s.postCache != nil {
+		cache, err := s.postCache.GetFeed(userId, s.cfg.FeedLength)
+		if err != nil {
+			log.Logger().Warnw("postService.Feed: s.postCache.GetFeed returned error", "err", err)
+		} else if cache != nil {
+			return cache, nil
+		}
+	}
+
+	// Если в кеше ничего нет (забыли или не успели "прогреть", бывает), то берем из БД
+	posts, err := s.postRepo.GetFeed(userId, s.cfg.FeedLength)
 	if err != nil {
-		return nil, apperrors.NewInternalServerError("postService.Feed: s.postRepo.Feed returned error", err)
+		return nil, apperrors.NewInternalServerError("postService.Feed: s.postRepo.GetFeed returned error", err)
+	}
+	if s.postCache != nil {
+		if err = s.postCache.UpdateFeed(userId, posts); err != nil {
+			log.Logger().Warnw("postService.Feed: s.postCache.UpdateFeed returned error", "err", err)
+		}
 	}
 	return posts, nil
+}
+
+func (s *socialNetworkService) SetLastActivity(userId domain.UserKey) error {
+	if err := s.userRepo.SetLastActivity(userId); err != nil {
+		return fmt.Errorf("socialNetworkService.SetLastActivity: s.userRepo.SetLastActivity() returned error: %w", err)
+	}
+	return nil
 }
 
 func (s *socialNetworkService) checkOwner(userId domain.UserKey, postId domain.PostKey) error {
@@ -214,5 +256,25 @@ func (s *socialNetworkService) checkOwner(userId domain.UserKey, postId domain.P
 	if postOwner != userId {
 		return apperrors.New(403, "Wrong post owner", nil)
 	}
+	return nil
+}
+
+func (s *socialNetworkService) sendRecalculationEvent(userId domain.UserKey, eventType domain.EventType) error {
+	if s.producer == nil {
+		return nil
+	}
+
+	// Создаем и сериализуем событие
+	event := domain.EventInvalidateCache{
+		UserID:    userId,
+		EventType: eventType,
+	}
+
+	// Отправляем событие в Kafka
+	if err := s.producer.SendCacheEvent(event); err != nil {
+		log.Logger().Errorw("Ошибка отправки события в Kafka", "userId", userId, "err", err)
+		return err
+	}
+
 	return nil
 }

@@ -8,10 +8,12 @@ import (
 )
 
 type Config struct {
-	JWT       *JWTConfig      `yaml:"jwt"`
-	SQLServer *DatabaseConfig `yaml:"database"`
-	API       *APIConfig      `yaml:"api"`
-	Metrics   *MetricsConfig  `yaml:"metrics"`
+	JWT           *JWTConfig           `yaml:"jwt"`
+	SQLServer     *DatabaseConfig      `yaml:"database"`
+	API           *APIConfig           `yaml:"api"`
+	Metrics       *MetricsConfig       `yaml:"metrics"`
+	Cache         *CacheConfig         `yaml:"cache"`
+	SocialNetwork *SocialNetworkConfig `yaml:"social_network"`
 }
 
 type APIConfig struct {
@@ -20,6 +22,16 @@ type APIConfig struct {
 	ShutdownTimeout     time.Duration `yaml:"shutdown_timeout"`
 	FeedDefaultPageSize int           `yaml:"feed_default_page_size"`
 	FeedMaxPageSize     int           `yaml:"feed_max_page_size"`
+}
+type CacheConfig struct {
+	Redis                   *RedisConfig  `yaml:"redis"`
+	Kafka                   *KafkaConfig  `yaml:"kafka"`
+	Expiry                  time.Duration `yaml:"expiry"`
+	InvalidateNumWorkers    int           `yaml:"invalidate_num_workers"`
+	InvalidateTopic         string        `yaml:"invalidate_topic"`
+	InvalidateConsumerGroup string        `yaml:"invalidate_consumer_group"`
+	CacheWarmupEnabled      bool          `yaml:"cache_warmup_enabled"`
+	CacheWarmupPeriod       time.Duration `yaml:"cache_warmup_period"`
 }
 
 type JWTConfig struct {
@@ -31,6 +43,23 @@ type JWTConfig struct {
 type MetricsConfig struct {
 	UpdateInterval             time.Duration `yaml:"update_interval"`
 	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
+}
+type SocialNetworkConfig struct {
+	FeedLength int `yaml:"feed_length"`
+}
+
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+}
+
+type KafkaConfig struct {
+	Brokers           string `yaml:"brokers"`
+	Acks              string `yaml:"acks"`               // Гарантия доставки
+	Retries           int    `yaml:"retries"`            // Количество повторов в случае ошибки
+	LingerMs          int    `yaml:"linger_ms"`          // Снижение нагрузки за счет небольшого ожидания перед отправкой
+	EnableIdempotence bool   `yaml:"enable_idempotence"` // Идемпотентность продюсера
 }
 
 func LoadConfig(configPath string) (*Config, error) {

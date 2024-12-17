@@ -16,7 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNetworkHandler, jwtSvc domain.JWTService) error {
+func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNetworkHandler, jwtSvc domain.JWTService, snSvc domain.SocialNetworkService) error {
 
 	// Start Server
 	address := cfg.API.ServerAddress
@@ -43,6 +43,7 @@ func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNet
 	// protected routes
 	apiGroup := e.Group("/api")
 	apiGroup.Use(middleware.JWTMiddleware(jwtSvc))
+	apiGroup.Use(middleware.UserActivityMiddleware(snSvc))
 	apiGroup.GET("/user/get/:id", snHandler.GetUser)
 	apiGroup.GET("/user/search", snHandler.Search)
 	apiGroup.POST("/logout", snHandler.Logout)

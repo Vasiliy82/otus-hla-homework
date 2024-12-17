@@ -3,10 +3,29 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/domain"
 	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
 	"github.com/lib/pq"
+)
+
+const (
+	getFriendsIds_query = `WITH friends AS (
+    SELECT uf1.friend_id AS id
+    FROM users_friends uf1
+    INNER JOIN users_friends uf2 
+        ON uf2.id = uf1.friend_id 
+        AND uf2.friend_id = uf1.id
+    WHERE uf1.id = $1
+)
+SELECT friends.id FROM friends`
+
+	setLastActivity_query = `INSERT INTO users_last_activity (id, last_activity) 
+VALUES($1, NOW())
+ON CONFLICT (id) DO UPDATE SET last_activity = EXCLUDED.last_activity;`
+
+	getUsersActiveSince_query = "SELECT id FROM users_last_activity WHERE last_activity >= NOW() - INTERVAL '1 second' * $1;"
 )
 
 type userRepository struct {
@@ -145,4 +164,74 @@ func (r *userRepository) RemoveFriend(my_id, friend_id domain.UserKey) error {
 		return domain.ErrObjectNotFound
 	}
 	return nil
+}
+
+func (r *userRepository) GetFriendsIds(id domain.UserKey) ([]domain.UserKey, error) {
+	var result []domain.UserKey
+
+	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetFriendsIds: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	q, err := db.Query(getFriendsIds_query, id)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetFriendsIds: r.db.Query returned error %w", err)
+	}
+	defer q.Close()
+
+	for q.Next() {
+		var friendId domain.UserKey
+		err := q.Scan(&friendId)
+		if err != nil {
+			return nil, fmt.Errorf("userRepository.GetFriendsIds: q.Scan returned error %w", err)
+		}
+		result = append(result, friendId)
+	}
+	return result, nil
+}
+
+func (r *userRepository) SetLastActivity(id domain.UserKey) error {
+	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	if err != nil {
+		return fmt.Errorf("userRepository.SetLastActivity: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	q, err := db.Exec(setLastActivity_query, id)
+	if err != nil {
+		return fmt.Errorf("userRepository.SetLastActivity: r.db.Exec returned error %w", err)
+	}
+	rows, err := q.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("userRepository.SetLastActivity: q.RowsAffected returned error %w", err)
+	}
+	if rows != 1 {
+		return domain.ErrObjectNotFound
+	}
+	return nil
+}
+
+func (r *userRepository) GetUsersActiveSince(period time.Duration) ([]domain.UserKey, error) {
+	var result []domain.UserKey
+
+	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetUsersActiveSince: r.dbCluster.GetDB returned error %w", err)
+	}
+
+	q, err := db.Query(getUsersActiveSince_query, period.Seconds())
+	if err != nil {
+		return nil, fmt.Errorf("userRepository.GetUsersActiveSince: r.db.Query returned error %w", err)
+	}
+	defer q.Close()
+
+	for q.Next() {
+		var friendId domain.UserKey
+		err := q.Scan(&friendId)
+		if err != nil {
+			return nil, fmt.Errorf("userRepository.GetUsersActiveSince: q.Scan returned error %w", err)
+		}
+		result = append(result, friendId)
+	}
+	return result, nil
 }

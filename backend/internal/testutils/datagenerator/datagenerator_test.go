@@ -157,7 +157,7 @@ func TestGenerateTestData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create JWT Service: %v", err)
 	}
-	us := services.NewSocialNetworkService(ur, pr, jwts)
+	us := services.NewSocialNetworkService(cfg, ur, pr, nil, jwts, nil)
 
 	gen := datagenerator.NewServiceDataGenerator(us)
 	err = generateTestData(gen, 1000000, 10000000, 10000000)

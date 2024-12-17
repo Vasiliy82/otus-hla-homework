@@ -25,7 +25,7 @@ const (
 type UserKey string
 
 type User struct {
-	ID           string    `json:"id"`
+	ID           UserKey   `json:"id"`
 	FirstName    string    `json:"first_name"`
 	LastName     string    `json:"last_name"`
 	Sex          Sex       `json:"sex"`
@@ -42,6 +42,11 @@ type User struct {
 type UserClaims struct {
 	Permissions []Permission `json:"permissions"`
 	jwt.RegisteredClaims
+}
+
+type UserLastActivity struct {
+	ID           UserKey   `json:"id"`
+	LastActivity time.Time `json:"last_activity"`
 }
 
 func (u *User) SetPassword(password string) {

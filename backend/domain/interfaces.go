@@ -16,6 +16,9 @@ type UserRepository interface {
 	Search(firstName, lastName string) ([]*User, error)
 	AddFriend(my_id, friend_id UserKey) error
 	RemoveFriend(my_id, friend_id UserKey) error
+	GetFriendsIds(id UserKey) ([]UserKey, error)
+	SetLastActivity(id UserKey) error
+	GetUsersActiveSince(period time.Duration) ([]UserKey, error)
 }
 
 //go:generate mockery --name PostRepository
@@ -27,6 +30,12 @@ type PostRepository interface {
 	UpdateMessage(postId PostKey, newMessage PostMessage) error
 	Delete(id PostKey) error
 	GetFeed(userId UserKey, limit int) ([]*Post, error)
+}
+
+//go:generate mockery --name PostCache
+type PostCache interface {
+	GetFeed(userId UserKey, limit int) ([]*Post, error)
+	UpdateFeed(userId UserKey, posts []*Post) error
 }
 
 //go:generate mockery --name BlacklistRepository
@@ -50,12 +59,13 @@ type SocialNetworkService interface {
 	GetPost(userId UserKey, postId PostKey) (*Post, error)
 	UpdatePost(userId UserKey, postId PostKey, newMessage PostMessage) error
 	DeletePost(userId UserKey, postId PostKey) error
-	GetFeed(userId UserKey, limit int) ([]*Post, error)
+	GetFeed(userId UserKey) ([]*Post, error)
+	SetLastActivity(userId UserKey) error
 }
 
 //go:generate mockery --name JWTService
 type JWTService interface {
-	GenerateToken(userID string, permissions []Permission) (TokenString, error)
+	GenerateToken(userID UserKey, permissions []Permission) (TokenString, error)
 	ValidateToken(tokenString TokenString) (*jwt.Token, error)
 	RevokeToken(token *jwt.Token) error
 	ExtractClaims(token *jwt.Token) (*UserClaims, error)
