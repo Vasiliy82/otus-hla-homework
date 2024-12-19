@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	repository "github.com/Vasiliy82/otus-hla-homework/internal/repository"
-	"github.com/Vasiliy82/otus-hla-homework/internal/testutils"
+	repository "github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/testutils"
 	"github.com/stretchr/testify/assert"
 )
 

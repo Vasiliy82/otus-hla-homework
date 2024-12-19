@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 )
 
 func ToSex(sex string) (domain.Sex, error) {

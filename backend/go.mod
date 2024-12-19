@@ -1,4 +1,4 @@
-module github.com/Vasiliy82/otus-hla-homework
+module github.com/Vasiliy82/otus-hla-homework/domain
 
 go 1.21
 

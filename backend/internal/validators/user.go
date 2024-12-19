@@ -1,9 +1,9 @@
 package validators
 
 import (
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
-	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 	"github.com/go-playground/locales/ru"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"

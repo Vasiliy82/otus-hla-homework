@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 
 	// _ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"

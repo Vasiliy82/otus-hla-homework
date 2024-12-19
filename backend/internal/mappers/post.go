@@ -3,8 +3,8 @@ package mappers
 import (
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 )
 
 func ToPostMessage(request *dto.CreateOrUpdatePostRequest) domain.PostMessage {

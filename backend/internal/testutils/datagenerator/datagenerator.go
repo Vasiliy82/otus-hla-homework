@@ -1,6 +1,6 @@
 package datagenerator
 
-import "github.com/Vasiliy82/otus-hla-homework/domain"
+import "github.com/Vasiliy82/otus-hla-homework/backend/domain"
 
 type DataGenerator interface {
 	CreateUser(*domain.User) (domain.UserKey, error)
