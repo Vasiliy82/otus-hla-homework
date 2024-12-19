@@ -1,14 +1,14 @@
 package main
 
-import 
-(
+import (
 	"fmt"
- domain "github.com/Vasiliy82/otus-hla-homework/backend/domain"
+
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 )
 
-
 func main() {
-	x := domain.x()
+	var x domain.UserKey = "213"
 
-	fmt.Println("ok")
+	fmt.Println("ok", x)
+
 }
