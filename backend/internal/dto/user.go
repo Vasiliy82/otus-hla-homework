@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/Vasiliy82/otus-hla-homework/domain"
+import "github.com/Vasiliy82/otus-hla-homework/backend/domain"
 
 // Структура для запроса на вход
 type LoginRequest struct {

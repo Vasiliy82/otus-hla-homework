@@ -3,8 +3,8 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
 	"github.com/labstack/echo/v4"
 )
 

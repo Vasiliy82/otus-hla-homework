@@ -8,19 +8,19 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	log "github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
-	"github.com/Vasiliy82/otus-hla-homework/internal/repository/cache"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	log "github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/repository"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/broker"
-	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/httpserver"
-	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
-	"github.com/Vasiliy82/otus-hla-homework/internal/rest"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/httpserver"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/joho/godotenv"
 )
 

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 

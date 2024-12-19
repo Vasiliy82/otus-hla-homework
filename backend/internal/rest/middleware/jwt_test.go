@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/domain/mocks"
-	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain/mocks"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

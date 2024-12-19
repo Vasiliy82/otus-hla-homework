@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"

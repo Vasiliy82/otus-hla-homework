@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
-	"github.com/Vasiliy82/otus-hla-homework/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
-	"github.com/Vasiliy82/otus-hla-homework/internal/repository"
-	"github.com/Vasiliy82/otus-hla-homework/internal/services"
-	"github.com/Vasiliy82/otus-hla-homework/internal/testutils/datagenerator"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/testutils/datagenerator"
 	"github.com/go-faker/faker/v4"
 )
 

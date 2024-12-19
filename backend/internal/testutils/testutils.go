@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/infrastructure/postgresqldb"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"

@@ -1,8 +1,8 @@
 package validators
 
 import (
-	"github.com/Vasiliy82/otus-hla-homework/internal/apperrors"
-	"github.com/Vasiliy82/otus-hla-homework/internal/dto"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 )
 
 // Валидация запроса на создание поста

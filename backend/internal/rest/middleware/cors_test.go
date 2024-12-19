@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Vasiliy82/otus-hla-homework/internal/rest/middleware"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 )
 
 func TestCORS(t *testing.T) {

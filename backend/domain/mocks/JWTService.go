@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	domain "github.com/Vasiliy82/otus-hla-homework/domain"
+	domain "github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	jwt "github.com/golang-jwt/jwt/v5"
 
 	mock "github.com/stretchr/testify/mock"

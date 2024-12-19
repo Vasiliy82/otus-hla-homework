@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 )
 
 // Структура запроса для создания нового поста
