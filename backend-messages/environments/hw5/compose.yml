@@ -1,0 +1,98 @@
+services:
+  master:
+    image: citusdata/citus:12.1
+    container_name: hw5_citus_master
+    hostname: master
+    environment:
+      POSTGRES_USER: ${PG_SUPERUSER}
+      POSTGRES_PASSWORD: ${PG_SUPERPASSWORD}
+      POSTGRES_DB: ${APP_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - master_data:/var/lib/postgresql/data
+    command: >
+      postgres -c shared_preload_libraries=citus
+               -c listen_addresses='*'
+               -c wal_level=logical
+               -c max_wal_senders=10
+               -c max_replication_slots=10
+    networks:
+      - citus_network
+
+  worker1:
+    image: citusdata/citus:12.1
+    container_name: hw5_citus_worker1
+    hostname: worker1
+    environment:
+      POSTGRES_USER: ${PG_SUPERUSER}
+      POSTGRES_PASSWORD: ${PG_SUPERPASSWORD}
+      POSTGRES_DB: ${APP_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - worker1_data:/var/lib/postgresql/data
+    command: >
+      postgres -c shared_preload_libraries=citus
+               -c listen_addresses='*'
+    networks:
+      - citus_network
+
+  worker2:
+    image: citusdata/citus:12.1
+    container_name: hw5_citus_worker2
+    hostname: worker2
+    environment:
+      POSTGRES_USER: ${PG_SUPERUSER}
+      POSTGRES_PASSWORD: ${PG_SUPERPASSWORD}
+      POSTGRES_DB: ${APP_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - worker2_data:/var/lib/postgresql/data
+    command: >
+      postgres -c shared_preload_libraries=citus
+               -c listen_addresses='*'
+    networks:
+      - citus_network
+
+  worker3:
+    image: citusdata/citus:12.1
+    container_name: hw5_citus_worker3
+    hostname: worker3
+    environment:
+      POSTGRES_USER: ${PG_SUPERUSER}
+      POSTGRES_PASSWORD: ${PG_SUPERPASSWORD}
+      POSTGRES_DB: ${APP_DB}
+    ports:
+      - "5435:5432"
+    volumes:
+      - worker3_data:/var/lib/postgresql/data
+    command: >
+      postgres -c shared_preload_libraries=citus
+               -c listen_addresses='*'
+    networks:
+      - citus_network
+  
+  goose:
+    build:
+      context: "./goose"
+      dockerfile: "Dockerfile"
+    container_name: hw5_goose
+    working_dir: /migrations
+    volumes:
+      - ./../../migrations:/app/migrations
+    depends_on:
+      - master
+    networks:
+      - citus_network
+
+volumes:
+  master_data:
+  worker1_data:
+  worker2_data:
+  worker3_data:
+
+networks:
+  citus_network:
+    driver: bridge

@@ -1,0 +1,18 @@
+database:
+  master:
+    host: localhost
+    port: 5432
+    user: postgres
+    password: postgres
+    name: hw_messages
+    max_open_conns: 100
+    max_idle_conns: 1
+    max_conn_lifetime: 10m
+    max_conn_idle_time: 1m
+api:
+  server_address: :8080
+  context_timeout: 2s
+  shutdown_timeout: 10s
+dialogs:
+  default_page_size: 20
+  max_page_size: 1000
