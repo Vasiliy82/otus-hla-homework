@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain/mocks"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/agiledragon/gomonkey/v2"
 	"github.com/golang-jwt/jwt/v5"

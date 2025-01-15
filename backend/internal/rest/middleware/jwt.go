@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/labstack/echo/v4"
 )

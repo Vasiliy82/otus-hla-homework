@@ -1,72 +1,119 @@
 package postgresqldb
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// Метрики с возможностью добавления лейблов (срезов)
+// Метрики для пула подключений
 var (
-	openConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "db_open_connections",
-		Help: "Number of open database connections.",
-	}, []string{"role"})
-
-	inUseConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "db_in_use_connections",
-		Help: "Number of in-use (active) database connections.",
-	}, []string{"role"})
-
-	idleConnections = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "db_idle_connections",
-		Help: "Number of idle database connections.",
-	}, []string{"role"})
-
-	waitCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "db_wait_count",
-		Help: "Number of requests that had to wait for a connection.",
-	}, []string{"role"})
-
-	waitDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "db_wait_duration_seconds",
-		Help: "Total time waiting for a connection in seconds.",
-	}, []string{"role"})
+	acquireCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "pgxpool_acquire_count",
+			Help: "Общее количество успешных получений подключений из пула",
+		},
+		[]string{"role"},
+	)
+	acquireDuration = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "pgxpool_acquire_duration_seconds",
+			Help: "Общее время, затраченное на получение подключений из пула в секундах",
+		},
+		[]string{"role"},
+	)
+	acquiredConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "pgxpool_acquired_conns",
+			Help: "Текущее количество занятых подключений в пуле",
+		},
+		[]string{"role"},
+	)
+	canceledAcquireCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "pgxpool_canceled_acquire_count",
+			Help: "Общее количество отмененных попыток получения подключения из пула",
+		},
+		[]string{"role"},
+	)
+	constructingConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "pgxpool_constructing_conns",
+			Help: "Текущее количество подключений, находящихся в процессе создания",
+		},
+		[]string{"role"},
+	)
+	emptyAcquireCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "pgxpool_empty_acquire_count",
+			Help: "Общее количество успешных получений подключений, ожидавших освобождения или создания ресурса из-за пустого пула",
+		},
+		[]string{"role"},
+	)
+	idleConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "pgxpool_idle_conns",
+			Help: "Текущее количество свободных подключений в пуле",
+		},
+		[]string{"role"},
+	)
+	maxConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "pgxpool_max_conns",
+			Help: "Максимальное количество подключений в пуле",
+		},
+		[]string{"role"},
+	)
+	totalConns = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "pgxpool_total_conns",
+			Help: "Общее количество подключений в пуле",
+		},
+		[]string{"role"},
+	)
 )
 
 func init() {
-	prometheus.MustRegister(openConnections)
-	prometheus.MustRegister(inUseConnections)
-	prometheus.MustRegister(idleConnections)
-	prometheus.MustRegister(waitCount)
-	prometheus.MustRegister(waitDuration)
+	// Регистрация метрик в Prometheus
+	prometheus.MustRegister(
+		acquireCount,
+		acquireDuration,
+		acquiredConns,
+		canceledAcquireCount,
+		constructingConns,
+		emptyAcquireCount,
+		idleConns,
+		maxConns,
+		totalConns,
+	)
 }
 
-// recordDBStats обновляет метрики для переданного DB и добавляет соответствующие лейблы (role: master/replica)
-func recordDBStats(db *sql.DB, role string) {
-	stats := db.Stats()
-	openConnections.WithLabelValues(role).Set(float64(stats.OpenConnections))
-	inUseConnections.WithLabelValues(role).Set(float64(stats.InUse))
-	idleConnections.WithLabelValues(role).Set(float64(stats.Idle))
-	waitCount.WithLabelValues(role).Set(float64(stats.WaitCount))
-	waitDuration.WithLabelValues(role).Set(stats.WaitDuration.Seconds())
+// recordDBStats обновляет метрики для переданного пула подключений и роли
+func recordDBStats(pool *pgxpool.Pool, role string) {
+	stats := pool.Stat()
+
+	acquireCount.WithLabelValues(role).Add(float64(stats.AcquireCount()))
+	acquireDuration.WithLabelValues(role).Add(stats.AcquireDuration().Seconds())
+	acquiredConns.WithLabelValues(role).Set(float64(stats.AcquiredConns()))
+	canceledAcquireCount.WithLabelValues(role).Add(float64(stats.CanceledAcquireCount()))
+	constructingConns.WithLabelValues(role).Set(float64(stats.ConstructingConns()))
+	emptyAcquireCount.WithLabelValues(role).Add(float64(stats.EmptyAcquireCount()))
+	idleConns.WithLabelValues(role).Set(float64(stats.IdleConns()))
+	maxConns.WithLabelValues(role).Set(float64(stats.MaxConns()))
+	totalConns.WithLabelValues(role).Set(float64(stats.TotalConns()))
 }
 
-// StartMonitoring начинает мониторинг для master и реплик в DBCluster с заданным интервалом
+// StartMonitoring запускает мониторинг метрик с указанным интервалом
 func StartMonitoring(cluster *DBCluster, interval time.Duration) {
 	go func() {
 		for {
-			// Обновляем метрики для master
-			recordDBStats(cluster.masterDB, "master")
-
-			// Обновляем метрики для каждой реплики
-			for i, replica := range cluster.replicaDBs {
-				role := fmt.Sprintf("replica_%d", i+1) // динамически создаем имя реплики
+			recordDBStats(cluster.masterPool, "master")
+			for i, replica := range cluster.replicaPools {
+				role := fmt.Sprintf("replica_%d", i+1)
 				recordDBStats(replica, role)
 			}
-
 			time.Sleep(interval)
 		}
 	}()

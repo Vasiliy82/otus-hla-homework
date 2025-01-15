@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
@@ -150,9 +150,9 @@ func TestGenerateTestData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect DB: %v", err)
 	}
-	bl := repository.NewBlacklistRepository(db)
-	ur := repository.NewUserRepository(db)
-	pr := repository.NewPostRepository(db)
+	bl := repository.NewBlacklistRepository(ctx, db)
+	ur := repository.NewUserRepository(ctx, db)
+	pr := repository.NewPostRepository(ctx, db)
 	jwts, err := services.NewJWTService(cfg.JWT, bl)
 	if err != nil {
 		t.Fatalf("failed to create JWT Service: %v", err)

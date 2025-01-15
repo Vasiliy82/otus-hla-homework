@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 )
 

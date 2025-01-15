@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"

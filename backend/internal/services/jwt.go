@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
 

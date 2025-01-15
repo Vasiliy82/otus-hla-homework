@@ -1,0 +1,159 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgres/init-master.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
+ 
+  goose:
+    container_name: goose
+    build:
+      context: ./goose
+    profiles:
+      - migration
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "hw"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./../../backend/migrations:/app/migrations
+  
+  backend:
+    container_name: backend
+    hostname: backend
+    build:
+      context: ./../..
+      dockerfile: environments/hw06/backend/Dockerfile
+    ports:
+      - "8080:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://app_hw:Passw0rd@postgres:5432/hw?sslmode=disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "9187:9187"
+    command:
+      - "--no-collector.stat_bgwriter"
+  
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/configuration.tar.gz:/tmp/configuration.tar.gz
+    depends_on:
+      - prometheus
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    privileged: true
+    # depends_on:
+    #   - postgres
+    #   - postgres_slave1
+    #   - postgres_slave2
+    #   - backend
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  kafka:
+    build: "./kafka"
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"    # для хоста
+      - "9101:9101"    # JMX
+      - "9102:9102"    # Prometheus metrics
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: kafka
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: 'MZwa-fURSkiW8PG4ISQe8Q'  # Убедитесь, что это значение актуально
+      KAFKA_OPTS: "-javaagent:/usr/app/jmx_prometheus_javaagent.jar=9102:/etc/jmx-agent/prom-jmx-agent-config.yml"
+    volumes:
+      - kafka-data:/var/lib/kafka/data  # Для хранения данных
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"  # Порт для Redis Exporter
+    environment:
+      REDIS_ADDR: "redis:6379"  # Адрес Redis сервера
+    depends_on:
+      - redis
+
+volumes:
+  postgres-data:
+  grafana-data:
+  prometheus-data:
+  redis-data:
+  kafka-data:

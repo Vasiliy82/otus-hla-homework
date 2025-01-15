@@ -9,8 +9,8 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
 	log "github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"

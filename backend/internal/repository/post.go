@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
 )
 
@@ -32,21 +33,22 @@ LIMIT $2"`
 )
 
 type postRepository struct {
+	ctx       context.Context
 	dbCluster *postgresqldb.DBCluster
 }
 
-func NewPostRepository(dbcluster *postgresqldb.DBCluster) domain.PostRepository {
-	return &postRepository{dbCluster: dbcluster}
+func NewPostRepository(ctx context.Context, dbcluster *postgresqldb.DBCluster) domain.PostRepository {
+	return &postRepository{ctx: ctx, dbCluster: dbcluster}
 }
 
 func (r *postRepository) List(userId domain.UserKey, limit int, lastPostId domain.PostKey) ([]*domain.Post, error) {
 	var posts []*domain.Post
 
-	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.Read)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.List: r.dbCluster.GetDB returned error %w", err)
 	}
-	rows, err := db.Query(listQuery, userId, limit, lastPostId)
+	rows, err := db.Query(r.ctx, listQuery, userId, limit, lastPostId)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.List: r.db.QueryRow returned error %w", err)
 	}
@@ -72,12 +74,12 @@ func (r *postRepository) List(userId domain.UserKey, limit int, lastPostId domai
 func (r *postRepository) Create(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
 	var postId domain.PostKey
 
-	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
 		return 0, fmt.Errorf("postRepository.CreatePost: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	err = db.QueryRow("INSERT INTO posts (user_id, message) VALUES ($1, $2) RETURNING id",
+	err = db.QueryRow(r.ctx, "INSERT INTO posts (user_id, message) VALUES ($1, $2) RETURNING id",
 		userId, message).Scan(&postId)
 	if err != nil {
 		return 0, fmt.Errorf("postRepository.CreatePost: r.db.QueryRow returned error %w", err)
@@ -89,12 +91,12 @@ func (r *postRepository) Create(userId domain.UserKey, message domain.PostMessag
 func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 	var post domain.Post
 
-	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.Read)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.Get: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	err = db.QueryRow("SELECT id, message, created_at, modified_at FROM posts WHERE id = $1", id).Scan(
+	err = db.QueryRow(r.ctx, "SELECT id, message, created_at, modified_at FROM posts WHERE id = $1", id).Scan(
 		&post.Id, &post.Message, &post.CreatedAt, &post.ModifiedAt)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.Get: r.db.QueryRow returned error %w", err)
@@ -104,12 +106,12 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 
 // Обновление сообщения поста по ID
 func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostMessage) error {
-	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
 		return fmt.Errorf("postRepository.UpdateMessage: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	_, err = db.Exec("UPDATE posts SET message = $1, modified_at = NOW() WHERE id = $2", newMessage, postId)
+	_, err = db.Exec(r.ctx, "UPDATE posts SET message = $1, modified_at = NOW() WHERE id = $2", newMessage, postId)
 	if err != nil {
 		return fmt.Errorf("postRepository.UpdateMessage: db.Exec returned error %w", err)
 	}
@@ -118,20 +120,18 @@ func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.
 
 // Удаление поста по ID
 func (r *postRepository) Delete(postId domain.PostKey) error {
-	db, err := r.dbCluster.GetDB(postgresqldb.ReadWrite)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
 		return fmt.Errorf("postRepository.Delete: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	q, err := db.Exec("DELETE FROM posts WHERE id = $1", postId)
+	q, err := db.Exec(r.ctx, "DELETE FROM posts WHERE id = $1", postId)
 	if err != nil {
 		return fmt.Errorf("postRepository.Delete: db.Exec returned error %w", err)
 	}
 
-	rows, err := q.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("postRepository.Delete: q.RowsAffected returned error %w", err)
-	}
+	rows := q.RowsAffected()
+
 	if rows != 1 {
 		return domain.ErrObjectNotFound
 	}
@@ -141,12 +141,12 @@ func (r *postRepository) Delete(postId domain.PostKey) error {
 func (r *postRepository) GetPostOwner(postId domain.PostKey) (domain.UserKey, error) {
 	var post domain.UserKey
 
-	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.Read)
 	if err != nil {
 		return "", fmt.Errorf("postRepository.GetPostOwner: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	err = db.QueryRow("SELECT user_id FROM posts WHERE id = $1", postId).Scan(&post)
+	err = db.QueryRow(r.ctx, "SELECT user_id FROM posts WHERE id = $1", postId).Scan(&post)
 	if err != nil {
 		return "", fmt.Errorf("postRepository.GetPostOwner: r.db.QueryRow returned error %w", err)
 	}
@@ -156,11 +156,11 @@ func (r *postRepository) GetPostOwner(postId domain.PostKey) (domain.UserKey, er
 func (r *postRepository) GetFeed(userId domain.UserKey, limit int) ([]*domain.Post, error) {
 	var posts []*domain.Post
 
-	db, err := r.dbCluster.GetDB(postgresqldb.Read)
+	db, err := r.dbCluster.GetDBPool(postgresqldb.Read)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.GetFeed: r.dbCluster.GetDB returned error %w", err)
 	}
-	rows, err := db.Query(getFeedQuery, userId, limit)
+	rows, err := db.Query(r.ctx, getFeedQuery, userId, limit)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.GetFeed: r.db.QueryRow returned error %w", err)
 	}

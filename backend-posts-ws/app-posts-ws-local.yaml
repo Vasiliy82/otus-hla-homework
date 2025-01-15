@@ -1,0 +1,14 @@
+api:
+  server_address: ":8080"          # Адрес сервера (например, :8080)
+  shutdown_timeout: 10s            # Таймаут завершения сервера
+
+websocket:
+  ping_interval: 7s               # Интервал пинга WebSocket-соединений
+  pong_wait: 20s                   # 
+
+broker:
+  brokers: "localhost:9092"        # Адрес Kafka брокера (например, localhost:9092)
+  group: "posts-ws-group"          # Имя группы консюмеров
+  topic: "posts-feed"              # Топик для получения событий
+log:
+  level: 0

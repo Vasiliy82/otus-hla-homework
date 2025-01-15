@@ -4,16 +4,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/labstack/gommon/log"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
+	WebSocket     *WebSocketConfig     `yaml:"websocket"`
 	JWT           *JWTConfig           `yaml:"jwt"`
 	SQLServer     *DatabaseConfig      `yaml:"database"`
 	API           *APIConfig           `yaml:"api"`
 	Metrics       *MetricsConfig       `yaml:"metrics"`
 	Cache         *CacheConfig         `yaml:"cache"`
 	SocialNetwork *SocialNetworkConfig `yaml:"social_network"`
+	Log           *LogConfig           `yaml:"log"`
+	Dialogs       *DialogServiceConfig `yaml:"dialogs"`
 }
 
 type APIConfig struct {
@@ -60,6 +64,17 @@ type KafkaConfig struct {
 	Retries           int    `yaml:"retries"`            // Количество повторов в случае ошибки
 	LingerMs          int    `yaml:"linger_ms"`          // Снижение нагрузки за счет небольшого ожидания перед отправкой
 	EnableIdempotence bool   `yaml:"enable_idempotence"` // Идемпотентность продюсера
+}
+
+type WebSocketConfig struct {
+	PingInterval time.Duration `yaml:"ping_interval"` // как часто сервер пингует клиента
+	PongWait     time.Duration `yaml:"pong_wait"`     // время ожидания ответа (pong) от клиента
+
+}
+
+// LogConfig представляет настройки логирования
+type LogConfig struct {
+	Level log.Lvl `yaml:"level"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {
