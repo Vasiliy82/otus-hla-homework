@@ -71,20 +71,20 @@ func (r *postRepository) List(userId domain.UserKey, limit int, lastPostId domai
 }
 
 // Добавление нового поста
-func (r *postRepository) Create(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
-	var postId domain.PostKey
+func (r *postRepository) Create(userId domain.UserKey, message domain.PostMessage) (*domain.Post, error) {
 
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
-		return 0, fmt.Errorf("postRepository.CreatePost: r.dbCluster.GetDB returned error %w", err)
+		return nil, fmt.Errorf("postRepository.CreatePost: r.dbCluster.GetDB returned error %w", err)
 	}
+	var post domain.Post
 
-	err = db.QueryRow(r.ctx, "INSERT INTO posts (user_id, message) VALUES ($1, $2) RETURNING id",
-		userId, message).Scan(&postId)
+	err = db.QueryRow(r.ctx, "INSERT INTO posts (user_id, message) VALUES ($1, $2) RETURNING id, user_id, message, created_at, modified_at",
+		userId, message).Scan(&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
 	if err != nil {
-		return 0, fmt.Errorf("postRepository.CreatePost: r.db.QueryRow returned error %w", err)
+		return nil, fmt.Errorf("postRepository.CreatePost: r.db.QueryRow returned error %w", err)
 	}
-	return postId, nil
+	return &post, nil
 }
 
 // Получение поста по ID
@@ -96,8 +96,8 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 		return nil, fmt.Errorf("postRepository.Get: r.dbCluster.GetDB returned error %w", err)
 	}
 
-	err = db.QueryRow(r.ctx, "SELECT id, message, created_at, modified_at FROM posts WHERE id = $1", id).Scan(
-		&post.Id, &post.Message, &post.CreatedAt, &post.ModifiedAt)
+	err = db.QueryRow(r.ctx, "SELECT id, user_id, message, created_at, modified_at FROM posts WHERE id = $1", id).Scan(
+		&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.Get: r.db.QueryRow returned error %w", err)
 	}
@@ -105,17 +105,20 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 }
 
 // Обновление сообщения поста по ID
-func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostMessage) error {
+func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostMessage) (*domain.Post, error) {
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
-		return fmt.Errorf("postRepository.UpdateMessage: r.dbCluster.GetDB returned error %w", err)
+		return nil, fmt.Errorf("postRepository.UpdateMessage: r.dbCluster.GetDB returned error %w", err)
 	}
+	var post domain.Post
+	err = db.QueryRow(r.ctx,
+		"UPDATE posts SET message = $1, modified_at = NOW() WHERE id = $2 RETURNING id, user_id, message, created_at, modified_at", newMessage, postId).Scan(
+		&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
 
-	_, err = db.Exec(r.ctx, "UPDATE posts SET message = $1, modified_at = NOW() WHERE id = $2", newMessage, postId)
 	if err != nil {
-		return fmt.Errorf("postRepository.UpdateMessage: db.Exec returned error %w", err)
+		return nil, fmt.Errorf("postRepository.UpdateMessage: db.Exec returned error %w", err)
 	}
-	return nil
+	return &post, nil
 }
 
 // Удаление поста по ID

@@ -74,8 +74,8 @@ func main() {
 	e.File("/", "./frontend-demo/index.html")
 
 	// Инициализация WebSocket сервера
-	wsServer := services.NewWSService(cfg.WebSocket)
-	e.GET("/ws", wsServer.HandleConnection)
+	wsService := services.NewWSService(cfg.Posts)
+	e.GET("/ws", wsService.HandleConnection)
 
 	// Запускаем HTTP-сервер
 	go func() {
@@ -84,6 +84,9 @@ func main() {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
+
+	fcProc := services.NewFollowerNotifyProcessor(cfg, wsService)
+	fcProc.Start(ctx)
 
 	// Ожидаем завершения
 	<-ctx.Done()
@@ -95,6 +98,8 @@ func main() {
 	if err := e.Shutdown(shutdownCtx); err != nil {
 		log.Errorf("Error during server shutdown: %v", err)
 	}
+	log.Info("Waiting consumer threads...")
+	fcProc.Wait()
 }
 
 func getLogLevel(l log.Lvl) zapcore.Level {

@@ -18,6 +18,10 @@ import (
 	"github.com/go-faker/faker/v4"
 )
 
+const (
+	appName = "datagenerator_test"
+)
+
 type user struct {
 	First       string `faker:"-"`
 	Last        string `faker:"-"`
@@ -142,11 +146,11 @@ func TestGenerateTestData(t *testing.T) {
 
 	ctx := context.Background()
 
-	cfg, err := config.LoadConfig("./../../../app-local.yaml")
+	cfg, err := config.LoadConfig("./../../../socnet-local.yaml")
 	if err != nil {
 		t.Fatalf("failed to open config: %v", err)
 	}
-	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
+	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer, appName)
 	if err != nil {
 		t.Fatalf("failed to connect DB: %v", err)
 	}
@@ -160,7 +164,7 @@ func TestGenerateTestData(t *testing.T) {
 	us := services.NewSocialNetworkService(cfg, ur, pr, nil, jwts, nil)
 
 	gen := datagenerator.NewServiceDataGenerator(us)
-	err = generateTestData(gen, 1000000, 10000000, 10000000)
+	err = generateTestData(gen, 10, 4, 10)
 	if err != nil {
 		t.Fatalf("failed to generate test data: %v", err)
 	}

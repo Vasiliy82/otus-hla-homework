@@ -14,16 +14,16 @@ kafka:
   num_workers_feed_changed: 2
   num_workers_follower_notify: 2
 api:
-  server_address: ":8080"
+  server_address: ":8082"
   context_timeout: 2s
   shutdown_timeout: 5s
   feed_default_page_size: 20
   feed_max_page_size: 100
 cache:
   redis:
-    host: localhost
-    port: 6379
-    password: ""
+     host: localhost
+     port: 6379
+     password: ""
   expiry: 1h
   cache_warmup_enabled: true
   cache_warmup_period: 8760h

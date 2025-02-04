@@ -21,6 +21,7 @@ import (
 
 const (
 	defaultConfigFilename = "socnet.yaml"
+	appName               = "messages"
 )
 
 func main() {
@@ -52,7 +53,7 @@ func main() {
 	log.Println("Initializing database connection...")
 
 	// Инициализация кластера базы данных
-	dbCluster, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
+	dbCluster, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer, appName)
 	if err != nil {
 		logger.Logger().Fatalw("Failed to initialize database cluster", "err", err)
 	}
@@ -75,8 +76,8 @@ func main() {
 	middleware.CORSConfig(e)
 
 	// Роутинг
-	e.POST("/dialog/:partnerId/send", dialogHandler.SendMessage)
-	e.GET("/dialog/:partnerId/list", dialogHandler.GetDialog)
+	e.POST("/api/dialog/:partnerId/send", dialogHandler.SendMessage)
+	e.GET("/api/dialog/:partnerId/list", dialogHandler.GetDialog)
 
 	// Запуск HTTP-сервера
 	go func() {

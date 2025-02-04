@@ -42,9 +42,9 @@ services:
     volumes:
       - ./../../backend/migrations:/app/migrations
   
-  backend:
-    container_name: backend
-    hostname: backend
+  socnet:
+    container_name: socnet
+    hostname: socnet
     build:
       context: ./../..
       dockerfile: environments/hw06/backend/Dockerfile
@@ -52,9 +52,51 @@ services:
       - "8080:8080" # REST service
     volumes:
       - ./backend/socnet.yaml:/app/socnet.yaml
+      - ./../../backend/frontend-demo:/app/frontend-demo
+    command: ["./socnet"]
     depends_on:
       postgres:
         condition: service_healthy
+    links:
+      - kafka
+      - redis
+
+  messages:
+    container_name: messages
+    hostname: messages
+    build:
+      context: ./../..
+      dockerfile: environments/hw06/backend/Dockerfile
+    ports:
+      - "8081:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+    command: ["./messages"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
+
+
+  posts-ws:
+    container_name: posts-ws
+    hostname: posts-ws
+    build:
+      context: ./../..
+      dockerfile: environments/hw06/backend/Dockerfile
+    ports:
+      - "8082:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+    command: ["./posts-ws"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
@@ -95,7 +137,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor
     ports:
-      - "8081:8080"
+      - "8083:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /sys:/sys:ro

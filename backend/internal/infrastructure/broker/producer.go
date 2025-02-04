@@ -13,7 +13,7 @@ import (
 
 type Producer struct {
 	producer *kafka.Producer
-	topic    string
+	cfg      *config.Config
 }
 
 func NewKafkaProducer(cfg *config.KafkaConfig) (*kafka.Producer, error) {
@@ -33,39 +33,85 @@ func NewKafkaProducer(cfg *config.KafkaConfig) (*kafka.Producer, error) {
 	return producer, nil
 }
 
-func NewProducer(producer *kafka.Producer, topic string) *Producer {
+func NewProducer(ctx context.Context, producer *kafka.Producer, cfg *config.Config) *Producer {
 	if producer == nil {
 		return nil
 	}
-	return &Producer{
+	p := &Producer{
 		producer: producer,
-		topic:    topic,
+		cfg:      cfg,
 	}
+	p.startErrorLogger(ctx)
+	return p
 }
 
-func (p *Producer) SendCacheEvent(event domain.EventInvalidateCache) error {
+func (p *Producer) SendPostModifiedEvent(event domain.EventPostModified) error {
 	eventData, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("Producer.SendCacheEvent: json.Marshal() returned error: %w", err)
+		return fmt.Errorf("Producer.SendPostModifiedEvent: json.Marshal() returned error: %w", err)
 	}
 
 	// Отправляем событие в Kafka
 	err = p.producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &p.topic, Partition: kafka.PartitionAny},
+		TopicPartition: kafka.TopicPartition{Topic: &p.cfg.Kafka.TopicPostModified, Partition: kafka.PartitionAny},
+		Key:            nil, // round robin distribution
+		Value:          eventData,
+	}, nil)
+
+	if err != nil {
+		return fmt.Errorf("Producer.SendPostModifiedEvent: p.producer.Produce() returned error: %w", err)
+	}
+
+	logger.Logger().Debugw("Producer.SendPostModifiedEvent: event was sent", "event", event)
+
+	return nil
+}
+
+func (p *Producer) SendFeedChangedEvent(event domain.EventFeedChanged) error {
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("Producer.SendFeedChangedEvent: json.Marshal() returned error: %w", err)
+	}
+
+	// Отправляем событие в Kafka
+	err = p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &p.cfg.Kafka.TopicFeedChanged, Partition: kafka.PartitionAny},
 		Key:            []byte(event.UserID),
 		Value:          eventData,
 	}, nil)
 
 	if err != nil {
-		return fmt.Errorf("Producer.SendCacheEvent: p.producer.Produce() returned error: %w", err)
+		return fmt.Errorf("Producer.SendFeedChangedEvent: p.producer.Produce() returned error: %w", err)
 	}
 
-	logger.Logger().Debugw("Producer.SendCacheEvent: event was sent", "event", event)
+	logger.Logger().Debugw("Producer.SendFeedChangedEvent: event was sent", "event", event)
 
 	return nil
 }
 
-func (p *Producer) StartErrorLogger(ctx context.Context) {
+func (p *Producer) SendFollowerNotifyEvent(event domain.EventFollowerNotify) error {
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("Producer.SendFollowerNotifyEvent: json.Marshal() returned error: %w", err)
+	}
+
+	// Отправляем событие в Kafka
+	err = p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &p.cfg.Kafka.TopicFollowerNotify, Partition: kafka.PartitionAny},
+		Key:            nil, // round robin distribution
+		Value:          eventData,
+	}, nil)
+
+	if err != nil {
+		return fmt.Errorf("Producer.SendFollowerNotifyEvent: p.producer.Produce() returned error: %w", err)
+	}
+
+	logger.Logger().Debugw("Producer.SendFollowerNotifyEvent: event was sent", "event", event)
+
+	return nil
+}
+
+func (p *Producer) startErrorLogger(ctx context.Context) {
 	go func() {
 		for {
 			select {

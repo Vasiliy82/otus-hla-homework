@@ -34,15 +34,17 @@ func NewDBCluster(masterPool *pgxpool.Pool, replicaPools []*pgxpool.Pool) *DBClu
 	}
 }
 
-func InitDBCluster(ctx context.Context, cfg *config.DatabaseConfig) (*DBCluster, error) {
-	master, err := initDBInstance(ctx, cfg.Master)
+func InitDBCluster(ctx context.Context, cfg *config.DatabaseConfig, appName string) (*DBCluster, error) {
+	masterAppName := fmt.Sprintf("%s-master", appName)
+	master, err := initDBInstance(ctx, cfg.Master, masterAppName)
 	if err != nil {
 		logger.Logger().Debugw("Error in InitDBCluster: initDBInstance(master)", "err", err)
 		return nil, fmt.Errorf("in InitDBCluster: initDBInstance(master) returned %w", err)
 	}
 	var replicas []*pgxpool.Pool
 	for i, rcfg := range cfg.Replicas {
-		replica, err := initDBInstance(ctx, rcfg)
+		slaveAppName := fmt.Sprintf("%s-slave-%d", appName, i)
+		replica, err := initDBInstance(ctx, rcfg, slaveAppName)
 		if err != nil {
 			logger.Logger().Warnw(fmt.Sprintf("in InitDBCluster: initDBInstance(replica[%d])", i), "err", err)
 			continue
@@ -98,10 +100,11 @@ func (c *DBCluster) Close() {
 	wg.Wait()
 }
 
-func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig) (*pgxpool.Pool, error) {
+func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig, appName string) (*pgxpool.Pool, error) {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", cfg.User, cfg.Pass, cfg.Host, cfg.Port, cfg.Name)
 	val := url.Values{}
 	val.Add("sslmode", "disable")
+	val.Add("application_name", appName)
 	dsn := fmt.Sprintf("%s?%s", connStr, val.Encode())
 
 	poolConfig, err := pgxpool.ParseConfig(dsn)
@@ -109,8 +112,8 @@ func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig) (*pgxpool
 		return nil, fmt.Errorf("failed to parse pool config: %w", err)
 	}
 
-	poolConfig.MaxConns = int32(cfg.MaxOpenConns)
-	poolConfig.MinConns = int32(cfg.MaxIdleConns)
+	poolConfig.MaxConns = int32(cfg.MaxConns)
+	poolConfig.MinConns = int32(cfg.MinConns)
 	poolConfig.MaxConnIdleTime = cfg.MaxConnIdleTime
 	poolConfig.MaxConnLifetime = cfg.MaxConnLifetime
 

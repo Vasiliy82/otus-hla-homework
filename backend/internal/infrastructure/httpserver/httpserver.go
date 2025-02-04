@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/wsreverseproxy"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
@@ -16,7 +18,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNetworkHandler, jwtSvc domain.JWTService, snSvc domain.SocialNetworkService) error {
+func Start(ctx context.Context,
+	cfg *config.Config,
+	snHandler services.SocialNetworkHandler,
+	jwtSvc domain.JWTService,
+	snSvc domain.SocialNetworkService,
+	proxyMessages *httputil.ReverseProxy,
+	jwtService domain.JWTService,
+) error {
 
 	// Start Server
 	address := cfg.API.ServerAddress
@@ -36,9 +45,14 @@ func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNet
 
 	e.Use(counterMiddleware)
 
+	// Публикация статического файла index.html
+	e.File("/", "./frontend-demo/index.html")
+
 	// Роуты
 	e.POST("/api/login", snHandler.Login)
 	e.POST("/api/user/register", snHandler.CreateUser)
+
+	e.GET("/ws", wsreverseproxy.WebSocketHandler(cfg.SocialNetwork.SvcPostsWsURL, jwtService))
 
 	// protected routes
 	apiGroup := e.Group("/api")
@@ -56,6 +70,10 @@ func Start(ctx context.Context, cfg *config.Config, snHandler services.SocialNet
 	apiGroup.PUT("/post/:post_id", snHandler.UpdatePost)
 	apiGroup.DELETE("/post/:post_id", snHandler.DeletePost)
 	apiGroup.GET("/post/feed", snHandler.GetFeed)
+
+	// Проксирование маршрутов для микросервиса сообщений
+	dialogGroup := apiGroup.Group("/dialog")
+	dialogGroup.Use(middleware.ReverseProxyMiddleware(proxyMessages))
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))

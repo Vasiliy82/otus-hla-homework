@@ -145,6 +145,15 @@ func (s *socialNetworkService) RemoveFriend(my_id, friend_id domain.UserKey) err
 	return nil
 }
 
+func (s *socialNetworkService) GetFriendsIds(user_id domain.UserKey) ([]domain.UserKey, error) {
+	ids, err := s.userRepo.GetFriendsIds(user_id)
+	if err != nil {
+		return nil, fmt.Errorf("socialNetworkService.GetFriendsIds: s.userRepo.GetFriendsIds() returned error: %w", err)
+	}
+	return ids, nil
+
+}
+
 func (s *socialNetworkService) Logout(token *jwt.Token) error {
 
 	if err := s.jwtService.RevokeToken(token); err != nil {
@@ -163,12 +172,12 @@ func (s *socialNetworkService) ListPosts(userId domain.UserKey, limit int, lastP
 
 // Создание нового поста
 func (s *socialNetworkService) CreatePost(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
-	postId, err := s.postRepo.Create(userId, message)
+	post, err := s.postRepo.Create(userId, message)
 	if err != nil {
 		return 0, apperrors.NewInternalServerError("postService.Create: s.postRepo.Create returned error", err)
 	}
-	s.sendRecalculationEvent(userId, domain.EventPostCreated)
-	return postId, nil
+	s.sendPostChangedEvent(post, domain.EventPostCreated)
+	return post.Id, nil
 }
 
 // Получение поста по ID
@@ -189,14 +198,14 @@ func (s *socialNetworkService) UpdatePost(userId domain.UserKey, postId domain.P
 		return apperrors.New(403, "Wrong post owner", nil)
 	}
 
-	err := s.postRepo.UpdateMessage(postId, newMessage)
+	post, err := s.postRepo.UpdateMessage(postId, newMessage)
 	if err != nil {
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return apperrors.NewNotFoundError("Post not found")
 		}
 		return apperrors.NewInternalServerError("postService.Update: s.postRepo.Update returned error", err)
 	}
-	s.sendRecalculationEvent(userId, domain.EventPostEdited)
+	s.sendPostChangedEvent(post, domain.EventPostEdited)
 	return nil
 }
 
@@ -205,7 +214,6 @@ func (s *socialNetworkService) DeletePost(userId domain.UserKey, postId domain.P
 	if err := s.checkOwner(userId, postId); err != nil {
 		return apperrors.New(403, "Wrong post owner", nil)
 	}
-
 	err := s.postRepo.Delete(postId)
 	if err != nil {
 		if errors.Is(err, domain.ErrObjectNotFound) {
@@ -213,7 +221,7 @@ func (s *socialNetworkService) DeletePost(userId domain.UserKey, postId domain.P
 		}
 		return apperrors.NewInternalServerError("postService.Delete: s.postRepo.Delete returned error", err)
 	}
-	s.sendRecalculationEvent(userId, domain.EventPostDeleted)
+	s.sendPostChangedEvent(&domain.Post{Id: postId, UserId: userId}, domain.EventPostDeleted)
 	return nil
 }
 
@@ -259,20 +267,20 @@ func (s *socialNetworkService) checkOwner(userId domain.UserKey, postId domain.P
 	return nil
 }
 
-func (s *socialNetworkService) sendRecalculationEvent(userId domain.UserKey, eventType domain.EventType) error {
+func (s *socialNetworkService) sendPostChangedEvent(post *domain.Post, event domain.EventType) error {
 	if s.producer == nil {
 		return nil
 	}
 
 	// Создаем и сериализуем событие
-	event := domain.EventInvalidateCache{
-		UserID:    userId,
-		EventType: eventType,
+	ev := domain.EventPostModified{
+		Event: event,
+		Post:  post,
 	}
 
 	// Отправляем событие в Kafka
-	if err := s.producer.SendCacheEvent(event); err != nil {
-		log.Logger().Errorw("Ошибка отправки события в Kafka", "userId", userId, "err", err)
+	if err := s.producer.SendPostModifiedEvent(ev); err != nil {
+		log.Logger().Errorw("Ошибка отправки события в Kafka", "post", post, "err", err)
 		return err
 	}
 

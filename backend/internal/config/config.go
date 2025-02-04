@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -9,7 +10,8 @@ import (
 )
 
 type Config struct {
-	WebSocket     *WebSocketConfig     `yaml:"websocket"`
+	Kafka         *KafkaConfig         `yaml:"kafka"`
+	Posts         *PostsConfig         `yaml:"posts"`
 	JWT           *JWTConfig           `yaml:"jwt"`
 	SQLServer     *DatabaseConfig      `yaml:"database"`
 	API           *APIConfig           `yaml:"api"`
@@ -28,14 +30,10 @@ type APIConfig struct {
 	FeedMaxPageSize     int           `yaml:"feed_max_page_size"`
 }
 type CacheConfig struct {
-	Redis                   *RedisConfig  `yaml:"redis"`
-	Kafka                   *KafkaConfig  `yaml:"kafka"`
-	Expiry                  time.Duration `yaml:"expiry"`
-	InvalidateNumWorkers    int           `yaml:"invalidate_num_workers"`
-	InvalidateTopic         string        `yaml:"invalidate_topic"`
-	InvalidateConsumerGroup string        `yaml:"invalidate_consumer_group"`
-	CacheWarmupEnabled      bool          `yaml:"cache_warmup_enabled"`
-	CacheWarmupPeriod       time.Duration `yaml:"cache_warmup_period"`
+	Redis              *RedisConfig  `yaml:"redis"`
+	Expiry             time.Duration `yaml:"expiry"`
+	CacheWarmupEnabled bool          `yaml:"cache_warmup_enabled"`
+	CacheWarmupPeriod  time.Duration `yaml:"cache_warmup_period"`
 }
 
 type JWTConfig struct {
@@ -49,7 +47,11 @@ type MetricsConfig struct {
 	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
 }
 type SocialNetworkConfig struct {
-	FeedLength int `yaml:"feed_length"`
+	FeedLength              int    `yaml:"feed_length"`
+	SvcMessagesURL          string `yaml:"svc_messages_url"`
+	SvcPostsWsURL           string `yaml:"svc_posts_ws_url"`
+	MaxPostCreatedPerWorker int    `yaml:"max_post_created_per_worker"`
+	PostCreatedPacketSize   int    `yaml:"post_created_packet_size"`
 }
 
 type RedisConfig struct {
@@ -59,16 +61,25 @@ type RedisConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers           string `yaml:"brokers"`
-	Acks              string `yaml:"acks"`               // Гарантия доставки
-	Retries           int    `yaml:"retries"`            // Количество повторов в случае ошибки
-	LingerMs          int    `yaml:"linger_ms"`          // Снижение нагрузки за счет небольшого ожидания перед отправкой
-	EnableIdempotence bool   `yaml:"enable_idempotence"` // Идемпотентность продюсера
+	Brokers                  string `yaml:"brokers"`
+	Acks                     string `yaml:"acks"`               // Гарантия доставки
+	Retries                  int    `yaml:"retries"`            // Количество повторов в случае ошибки
+	LingerMs                 int    `yaml:"linger_ms"`          // Снижение нагрузки за счет небольшого ожидания перед отправкой
+	EnableIdempotence        bool   `yaml:"enable_idempotence"` // Идемпотентность продюсера
+	TopicPostModified        string `yaml:"topic_post_modified"`
+	TopicFeedChanged         string `yaml:"topic_feed_changed"`
+	TopicFollowerNotify      string `yaml:"topic_follower_notify"`
+	CGPostModified           string `yaml:"consumergroup_post_modified"`
+	CGFeedChanged            string `yaml:"consumergroup_feed_changed"`
+	CGFollowerNotify         string `yaml:"consumergroup_follower_notify"`
+	NumWorkersPostModified   int    `yaml:"num_workers_post_modified"`
+	NumWorkersFeedChanged    int    `yaml:"num_workers_feed_changed"`
+	NumWorkersFollowerNotify int    `yaml:"num_workers_follower_notify"`
 }
 
-type WebSocketConfig struct {
-	PingInterval time.Duration `yaml:"ping_interval"` // как часто сервер пингует клиента
-	PongWait     time.Duration `yaml:"pong_wait"`     // время ожидания ответа (pong) от клиента
+type PostsConfig struct {
+	WebsocketPingInterval time.Duration `yaml:"websocket_ping_interval"` // как часто сервер пингует клиента
+	WebsocketPongWait     time.Duration `yaml:"websocket_pong_wait"`     // время ожидания ответа (pong) от клиента
 
 }
 
@@ -80,12 +91,15 @@ type LogConfig struct {
 func LoadConfig(configPath string) (*Config, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read configuration file %s: %w", configPath, err)
 	}
 
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse configuration file %s: %w", configPath, err)
+	}
+	if config.Log == nil {
+		return nil, fmt.Errorf("missing required 'log' section in file %s", configPath)
 	}
 
 	return &config, nil
