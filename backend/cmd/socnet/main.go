@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,6 +29,7 @@ const (
 	defaultTimeout        = 30
 	defaultAddress        = ":9090"
 	defaultConfigFilename = "socnet.yaml"
+	appName               = "socnet"
 )
 
 func main() {
@@ -58,10 +61,20 @@ func main() {
 		log.Logger().Fatalf("Error loading config: %v", err)
 	}
 
+	// Валидируем конфигурацию
+	validationErrors := cfg.Validate()
+	if len(validationErrors) > 0 {
+		fmt.Println("Configuration validation failed with the following errors:")
+		for i, vErr := range validationErrors {
+			fmt.Printf("%d. %s\n", i+1, vErr.Error())
+		}
+		log.Logger().Fatal("Config validation failure")
+	}
+
 	// log.Logger().Debugw("Config", "cfg", cfg)
 
 	log.Logger().Debug("main: init postgresql...")
-	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer)
+	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer, appName)
 	if err != nil {
 		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
 		return
@@ -104,18 +117,11 @@ func main() {
 	postCache := cache.NewPostCache(cfg.Cache, redis)
 	log.Logger().Debugln("done")
 	log.Logger().Debug("main: init Producer...")
-	prod, err := broker.NewKafkaProducer(cfg.Cache.Kafka)
+	prod, err := broker.NewKafkaProducer(cfg.Kafka)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
-	bprod := broker.NewProducer(prod, cfg.Cache.InvalidateTopic)
-	bprod.StartErrorLogger(ctx)
-	log.Logger().Debugln("done")
-
-	log.Logger().Debug("main: init Cache Invalidator...")
-	cacheInv := services.NewCacheInvalidator(cfg.Cache, cfg.SocialNetwork, userRepo, postRepo, postCache, bprod)
-	cacheInv.ListenAndProcessEvents(ctx)
-	cacheInv.CacheWarmup(ctx)
+	bprod := broker.NewProducer(ctx, prod, cfg)
 	log.Logger().Debugln("done")
 
 	log.Logger().Debug("main: init User Service...")
@@ -125,11 +131,37 @@ func main() {
 	userHandler := rest.NewSocialNetworkHandler(snService, cfg.API)
 	log.Logger().Debugln("done")
 
-	log.Logger().Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService)
+	log.Logger().Debug("main: init Event processor (Post modified) ...")
+	procPostModified := services.NewPostModifiedProcessor(cfg, snService, bprod)
+	procPostModified.Start(ctx)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: init Event processor (Feed Changed) ...")
+	procFeedChanged := services.NewFeedChangedProcessor(cfg, postRepo, postCache)
+	procFeedChanged.Start(ctx)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: Warm up cache...")
+	cacheWarmup := services.NewCacheWarmup(cfg.Cache, userRepo, bprod)
+	cacheWarmup.CacheWarmup(ctx)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debug("main: init reverse proxy (messages)...")
+	rpMessagesTarget, err := url.Parse(cfg.SocialNetwork.SvcMessagesURL)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
-	cacheInv.WaitForDone()
+	rpMessages := httputil.NewSingleHostReverseProxy(rpMessagesTarget)
+	log.Logger().Debugln("done")
+
+	log.Logger().Debugln("Starting HTTP server...")
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, rpMessages, jwtService)
+	cancel()
+	procFeedChanged.Wait()
+	procPostModified.Wait()
+
+	if err != nil {
+		log.Logger().Fatalf("Error: %v", err)
+	}
 	log.Logger().Debug("main: main: otus-hla-homework succesfully stopped")
 }

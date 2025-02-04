@@ -31,7 +31,7 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
 			}
 
-			logger.Logger().Debugf("Token successfully validated", "token", token, "user_id", claims.Subject)
+			logger.Logger().Debugw("Token successfully validated", "user_id", claims.Subject)
 
 			// Сохранение токена в контексте
 			c.Set("token", token)

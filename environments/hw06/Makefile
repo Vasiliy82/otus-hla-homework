@@ -5,15 +5,19 @@ POSTGRES_PORT ?= 5432
 POSTGRES_DATABASE ?= hw
 POSTGRES_USER ?= app_hw
 POSTGRES_PASSWORD ?= Passw0rd
-KAFKA_TOPIC_NAME ?= mysocnet-cache-invalidate-feed
+KAFKA_TOPIC_NAME_1 ?= mysocnet-cache-feed-changed
+KAFKA_TOPIC_NAME_2 ?= mysocnet-posts-post-modified
+KAFKA_TOPIC_NAME_3 ?= mysocnet-posts-follower-notify
 
 # Задача: запуск всех контейнеров
 .PHONY: up
 up:
 	@echo "Запуск контейнеров...";
 	docker compose run --rm --entrypoint "sh -c 'rm -rf /var/lib/grafana/* && tar -vxf /tmp/configuration.tar.gz -C /'" grafana;
-	docker compose -f $(DOCKER_COMPOSE_FILE) up -d;
-	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092"
+	docker compose -f $(DOCKER_COMPOSE_FILE) up -d --build;
+	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_1) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";
+	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_2) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";
+	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_3) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";
 	$(MAKE) migrate;
 
 # Задача: накатывание миграций с использованием goose

@@ -24,10 +24,10 @@ type UserRepository interface {
 //go:generate mockery --name PostRepository
 type PostRepository interface {
 	List(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
-	Create(userId UserKey, message PostMessage) (PostKey, error)
+	Create(userId UserKey, message PostMessage) (*Post, error)
 	Get(postId PostKey) (*Post, error)
 	GetPostOwner(postId PostKey) (UserKey, error)
-	UpdateMessage(postId PostKey, newMessage PostMessage) error
+	UpdateMessage(postId PostKey, newMessage PostMessage) (*Post, error)
 	Delete(id PostKey) error
 	GetFeed(userId UserKey, limit int) ([]*Post, error)
 }
@@ -53,6 +53,7 @@ type SocialNetworkService interface {
 	Login(username, password string) (TokenString, error)
 	AddFriend(my_id, friend_id UserKey) error
 	RemoveFriend(my_id, friend_id UserKey) error
+	GetFriendsIds(user_id UserKey) ([]UserKey, error)
 	Logout(token *jwt.Token) error
 	ListPosts(userId UserKey, limit int, lastPostId PostKey) ([]*Post, error)
 	CreatePost(userId UserKey, message PostMessage) (PostKey, error)

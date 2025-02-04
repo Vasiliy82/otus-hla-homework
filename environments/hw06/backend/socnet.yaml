@@ -1,28 +1,38 @@
+kafka:
+  brokers: "kafka:29092"
+  acks: "all"
+  retries: 3
+  linger_ms: 100
+  enable_idempotence: true
+  topic_post_modified: mysocnet-posts-post-modified
+  topic_feed_changed: mysocnet-cache-feed-changed
+  topic_follower_notify: mysocnet-posts-follower-notify
+  consumergroup_post_modified: socnet
+  consumergroup_feed_changed: socnet
+  consumergroup_follower_notify: socnet
+  num_workers_post_modified: 2
+  num_workers_feed_changed: 2
+  num_workers_follower_notify: 2
 api:
   server_address: ":8080"
   context_timeout: 2s
   shutdown_timeout: 5s
-
+  feed_default_page_size: 20
+  feed_max_page_size: 100
 cache:
   redis:
-     host: redis
-     port: 6379
-     password: ""
-  kafka:
-    brokers: "kafka:29092"
-    acks: "all"
-    retries: 3
-    linger_ms: 100
-    enable_idempotence: true
+    host: redis
+    port: 6379
+    password: ""
   expiry: 1h
-  invalidate_topic: mysocnet-cache-invalidate-feed
-  invalidate_consumer_group: cache-invalidate-feed
-  invalidate_num_workers: 1
   cache_warmup_enabled: true
-  cache_warmup_period: 1h
+  cache_warmup_period: 8760h
 social_network:
   feed_length: 1000
-
+  svc_messages_url: http://messages:8080
+  svc_posts_ws_url: ws://posts-ws:8080/ws
+  max_post_created_per_worker: 30
+  post_created_packet_size: 20  
 database:
   master:
     host: postgres
@@ -30,10 +40,10 @@ database:
     user: app_hw
     password: Passw0rd
     name: hw
-    max_open_conns: 100
-    max_idle_conns: 100
-    max_conn_lifetime: 10m
+    max_conns: 100
+    min_conns: 2
     max_conn_idle_time: 1m
+    max_conn_lifetime: 10m
   # replicas:
   #   - host: postgres_slave1
   #     port: 5432
@@ -97,6 +107,23 @@ jwt:
   token_expiry: 1440m
   permissions_claim: "permissions"
   serial_claim: "serial"
-
 metrics:
   update_interval: 1s
+  buckets_http_request_duration:
+    - 0.01
+    - 0.05
+    - 0.1
+    - 0.2
+    - 0.5
+    - 1.0
+    - 5.0
+    - 10.0  
+
+post_handler:
+  feed_default_page_size: 50
+  feed_max_page_size: 200
+log:
+  level: 1
+posts:
+  websocket_ping_interval: 7s
+  websocket_pong_wait: 20s

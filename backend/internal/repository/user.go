@@ -20,13 +20,13 @@ const (
         AND uf2.friend_id = uf1.id
     WHERE uf1.id = $1
 )
-SELECT friends.id FROM friends`
+SELECT friends.id FROM friends ORDER BY friends.id;`
 
 	setLastActivity_query = `INSERT INTO users_last_activity (id, last_activity) 
 VALUES($1, NOW())
 ON CONFLICT (id) DO UPDATE SET last_activity = EXCLUDED.last_activity;`
 
-	getUsersActiveSince_query = "SELECT id FROM users_last_activity WHERE last_activity >= NOW() - INTERVAL '1 second' * $1;"
+	getUsersActiveSince_query = "SELECT id FROM users_last_activity WHERE last_activity >= NOW() - INTERVAL '1 second' * $1 ORDER BY id;"
 )
 
 type userRepository struct {
