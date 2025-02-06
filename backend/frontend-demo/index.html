@@ -59,6 +59,16 @@
     <label for="serverAddressInput">Адрес сервера:</label>
     <input id="serverAddressInput" type="text" value="http://localhost:8080" />
 
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const serverAddressInput = document.getElementById('serverAddressInput');
+    
+        if (!serverAddressInput.value || serverAddressInput.value === "http://localhost:8080") {
+          serverAddressInput.value = window.location.origin;
+        }
+      });
+    </script>    
+
     <label for="endpointInput">WebSocket endpoint:</label>
     <input id="endpointInput" type="text" value="/ws" />
 
