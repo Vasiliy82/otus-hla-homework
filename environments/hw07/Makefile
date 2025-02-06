@@ -81,7 +81,7 @@ run-tests:
 		    --add-host=host.docker.internal:host-gateway \
 			--rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
 			-n -t $(JMETER_FILE) \
-			-JHOST=host.docker.internal \
+			-JHOSTNAME=host.docker.internal \
 			-JPORT=8081 \
 			-JTHREADS=$$THREADS \
 			-JDURATION=$(TEST_DURATION) \
@@ -100,7 +100,7 @@ run-tests:
 		    --add-host=host.docker.internal:host-gateway \
 		    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
 			-n -t $(JMETER_FILE) \
-			-JHOST=host.docker.internal \
+			-JHOSTNAME=host.docker.internal \
 			-JPORT=8081 \
 			-JTHREADS=$$THREADS \
 			-JDURATION=$(TEST_DURATION) \
