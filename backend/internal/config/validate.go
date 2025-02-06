@@ -161,7 +161,7 @@ func (c *SocialNetworkConfig) Validate() []error {
 		errs = append(errs, fmt.Errorf("social_network.post_created_packet_size must be greater than 1"))
 	}
 	if c.SvcMessagesURL == "" {
-		errs = append(errs, fmt.Errorf("social_network.svc_messages_url must not be empty"))
+		errs = append(errs, fmt.Errorf("social_network.svc_dialogs_url must not be empty"))
 	}
 	if c.SvcPostsWsURL == "" {
 		errs = append(errs, fmt.Errorf("social_network.svc_posts_ws_url must not be empty"))

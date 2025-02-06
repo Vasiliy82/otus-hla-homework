@@ -29,7 +29,7 @@ cache:
   cache_warmup_period: 8760h
 social_network:
   feed_length: 1000
-  svc_messages_url: http://messages:8080
+  svc_dialogs_url: http://messages:8080
   svc_posts_ws_url: ws://posts-ws:8080/ws
   max_post_created_per_worker: 30
   post_created_packet_size: 20  
