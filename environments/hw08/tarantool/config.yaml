@@ -1,0 +1,17 @@
+credentials:
+  users:
+    guest:
+      roles: []  # Убираем права у гостя
+    admin:
+      roles: [super]  # Полные права администратора
+
+iproto:
+  listen:
+    - uri: 0.0.0.0:3301
+
+groups:
+  group-001:
+    replicasets:
+      replicaset-001:
+        instances:
+          instance-001: { }

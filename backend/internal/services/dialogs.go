@@ -32,21 +32,21 @@ func (s *dialogService) SendMessage(ctx context.Context, myId, partnerId domain.
 // GetDialog получает диалог между двумя пользователями
 func (s *dialogService) GetDialog(ctx context.Context, myId, partnerId domain.UserKey, limit, offset int) ([]domain.DialogMessage, error) {
 
-	messages, err := s.repository.GetDialog(ctx, myId, partnerId, limit, offset)
+	dialog, err := s.repository.GetDialog(ctx, myId, partnerId, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve messages %w", err)
+		return nil, fmt.Errorf("failed to retrieve dialog %w", err)
 	}
 
-	return messages, nil
+	return dialog, nil
 }
 
 // GetDialog получает диалог между двумя пользователями
 func (s *dialogService) GetDialogs(ctx context.Context, myId domain.UserKey, limit, offset int) ([]domain.Dialog, error) {
 
-	messages, err := s.repository.GetDialogs(ctx, myId, limit, offset)
+	dialogs, err := s.repository.GetDialogs(ctx, myId, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve messages %w", err)
+		return nil, fmt.Errorf("failed to retrieve dialogs %w", err)
 	}
 
-	return messages, nil
+	return dialogs, nil
 }

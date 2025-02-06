@@ -30,11 +30,11 @@ func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId dom
 	// Вызов Lua-функции get_dialog
 	resp, err := r.conn.Call("get_dialog", []interface{}{myId, partnerId, limit, offset})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get messages: %w", err)
+		return nil, fmt.Errorf("failed to get dialog: %w", err)
 	}
 
 	// Преобразуем результат
-	var messages []domain.DialogMessage
+	var dialog []domain.DialogMessage
 	for _, tuple := range resp.Data {
 		resp_arr := tuple.([]interface{})
 		if len(resp_arr) == 0 {
@@ -50,10 +50,10 @@ func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId dom
 			Message:   resp_arr[3].(string),
 			Datetime:  datetime,
 		}
-		messages = append(messages, msg)
+		dialog = append(dialog, msg)
 	}
 
-	return messages, nil
+	return dialog, nil
 }
 
 func (r *dialogRepositoryTar) GetDialogs(ctx context.Context, myId domain.UserKey, limit, offset int) ([]domain.Dialog, error) {

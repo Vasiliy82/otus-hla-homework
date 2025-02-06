@@ -7,7 +7,7 @@ COPY backend/ /app
 
 # Build binaries for each service
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /build/posts-ws ./cmd/posts-ws/.
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /build/messages ./cmd/messages/.
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /build/dialogs ./cmd/dialogs/.
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o /build/socnet ./cmd/socnet/.
 
 # Stage 2: Run the app
