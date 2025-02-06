@@ -56,7 +56,7 @@ func (r *postRepository) List(userId domain.UserKey, limit int, lastPostId domai
 
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt); err != nil {
+		if err := rows.Scan(&post.Id, &post.UserId, &post.Text, &post.CreatedAt, &post.ModifiedAt); err != nil {
 			return nil, fmt.Errorf("postRepository.List: rows.Scan returned error: %w", err)
 		}
 		posts = append(posts, &post)
@@ -80,7 +80,7 @@ func (r *postRepository) Create(userId domain.UserKey, message domain.PostText) 
 	var post domain.Post
 
 	err = db.QueryRow(r.ctx, "INSERT INTO posts (user_id, message) VALUES ($1, $2) RETURNING id, user_id, message, created_at, modified_at",
-		userId, message).Scan(&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
+		userId, message).Scan(&post.Id, &post.UserId, &post.Text, &post.CreatedAt, &post.ModifiedAt)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.CreatePost: r.db.QueryRow returned error %w", err)
 	}
@@ -97,7 +97,7 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 	}
 
 	err = db.QueryRow(r.ctx, "SELECT id, user_id, message, created_at, modified_at FROM posts WHERE id = $1", id).Scan(
-		&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
+		&post.Id, &post.UserId, &post.Text, &post.CreatedAt, &post.ModifiedAt)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.Get: r.db.QueryRow returned error %w", err)
 	}
@@ -105,18 +105,18 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 }
 
 // Обновление сообщения поста по ID
-func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostText) (*domain.Post, error) {
+func (r *postRepository) UpdatePost(postId domain.PostKey, newMessage domain.PostText) (*domain.Post, error) {
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
-		return nil, fmt.Errorf("postRepository.UpdateMessage: r.dbCluster.GetDB returned error %w", err)
+		return nil, fmt.Errorf("postRepository.UpdatePost: r.dbCluster.GetDB returned error %w", err)
 	}
 	var post domain.Post
 	err = db.QueryRow(r.ctx,
 		"UPDATE posts SET message = $1, modified_at = NOW() WHERE id = $2 RETURNING id, user_id, message, created_at, modified_at", newMessage, postId).Scan(
-		&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt)
+		&post.Id, &post.UserId, &post.Text, &post.CreatedAt, &post.ModifiedAt)
 
 	if err != nil {
-		return nil, fmt.Errorf("postRepository.UpdateMessage: db.Exec returned error %w", err)
+		return nil, fmt.Errorf("postRepository.UpdatePost: db.Exec returned error %w", err)
 	}
 	return &post, nil
 }
@@ -171,7 +171,7 @@ func (r *postRepository) GetFeed(userId domain.UserKey, limit int) ([]*domain.Po
 
 	for rows.Next() {
 		var post domain.Post
-		if err := rows.Scan(&post.Id, &post.UserId, &post.Message, &post.CreatedAt, &post.ModifiedAt); err != nil {
+		if err := rows.Scan(&post.Id, &post.UserId, &post.Text, &post.CreatedAt, &post.ModifiedAt); err != nil {
 			return nil, fmt.Errorf("postRepository.GetFeed: rows.Scan returned error: %w", err)
 		}
 		posts = append(posts, &post)

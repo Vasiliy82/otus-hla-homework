@@ -198,7 +198,7 @@ func (s *socialNetworkService) UpdatePost(userId domain.UserKey, postId domain.P
 		return apperrors.New(403, "Wrong post owner", nil)
 	}
 
-	post, err := s.postRepo.UpdateMessage(postId, newMessage)
+	post, err := s.postRepo.UpdatePost(postId, newMessage)
 	if err != nil {
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return apperrors.NewNotFoundError("Post not found")

@@ -26,7 +26,7 @@ type EventPostModified struct {
 type Post struct {
 	Id         PostKey    `json:"id"`
 	UserId     UserKey    `json:"user_id"`
-	Message    PostText   `json:"text"`
+	Text       PostText   `json:"text"`
 	CreatedAt  time.Time  `json:"created_at"`
 	ModifiedAt *time.Time `json:"modified_at"`
 }

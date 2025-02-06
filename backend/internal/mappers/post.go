@@ -14,14 +14,14 @@ func ToPostMessage(request *dto.CreateOrUpdatePostRequest) domain.PostText {
 func ToPostResponse(post *domain.Post) *dto.GetPostResponse {
 	return &dto.GetPostResponse{
 		Id:         int64(post.Id),
-		Message:    string(post.Message),
+		Message:    string(post.Text),
 		CreatedAt:  post.CreatedAt,
 		ModifiedAt: post.ModifiedAt,
 	}
 }
 
 func ToUpdatedPost(post *domain.Post, request *dto.CreateOrUpdatePostRequest) {
-	post.Message = domain.PostText(request.Message)
+	post.Text = domain.PostText(request.Message)
 	modifiedAt := time.Now()
 	post.ModifiedAt = &modifiedAt
 }
