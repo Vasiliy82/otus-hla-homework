@@ -59,11 +59,17 @@ func (c *Config) Validate() []error {
 		errs = append(errs, fmt.Errorf("missing log configuration"))
 	}
 
-	// if c.Dialogs != nil {
-	// 	errs = append(errs, c.Dialogs.Validate()...)
-	// } else {
-	// 	errs = append(errs, fmt.Errorf("missing dialogs configuration"))
-	// }
+	if c.Dialogs != nil {
+		errs = append(errs, c.Dialogs.Validate()...)
+	} else {
+		errs = append(errs, fmt.Errorf("missing dialogs configuration"))
+	}
+
+	if c.Tarantool != nil {
+		errs = append(errs, c.Tarantool.Validate()...)
+	} else {
+		errs = append(errs, fmt.Errorf("missing tarantool configuration"))
+	}
 
 	return errs
 }
@@ -172,6 +178,7 @@ func (c *DialogServiceConfig) Validate() []error {
 	if c.MaxPageSize <= 0 || c.MaxPageSize < c.DefaultPageSize {
 		errs = append(errs, fmt.Errorf("dialogs.max_page_size must be greater than zero and not less than default_page_size"))
 	}
+	// No need to validate UseInmem as it's a boolean
 	return errs
 }
 
@@ -272,6 +279,24 @@ func (c *PostsConfig) Validate() []error {
 	}
 	if c.WebsocketPongWait <= 0 {
 		errs = append(errs, fmt.Errorf("posts.websocket_pong_wait must be greater than zero"))
+	}
+	return errs
+}
+
+// Validate проверяет корректность конфигурации Tarantool
+func (c *TarantoolConfig) Validate() []error {
+	var errs []error
+	if c.Host == "" {
+		errs = append(errs, fmt.Errorf("tarantool.host must not be empty"))
+	}
+	if c.Port <= 0 {
+		errs = append(errs, fmt.Errorf("tarantool.port must be greater than zero"))
+	}
+	if c.User == "" {
+		errs = append(errs, fmt.Errorf("tarantool.login must not be empty"))
+	}
+	if c.Password == "" {
+		errs = append(errs, fmt.Errorf("tarantool.password must not be empty"))
 	}
 	return errs
 }

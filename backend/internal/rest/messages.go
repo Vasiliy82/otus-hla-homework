@@ -95,6 +95,46 @@ func (h *dialogHandler) GetDialog(c echo.Context) error {
 	return c.JSON(http.StatusOK, dialog)
 }
 
+func (h *dialogHandler) GetDialogs(c echo.Context) error {
+
+	// Извлечение user_id из заголовка X-User-Id
+	userIdHeader := c.Request().Header.Get("X-User-Id")
+	if userIdHeader == "" {
+		return handleError(c, &apperrors.AppError{
+			Type:    apperrors.ClientError,
+			Message: "missing X-User-Id header",
+		})
+	}
+
+	myId := domain.UserKey(userIdHeader)
+
+	// Чтение offset и limit из query parameters
+	offset, err := parseQueryParam(c, "offset", 0)
+	if err != nil {
+		return handleError(c, &apperrors.AppError{
+			Type:    apperrors.ValidationError,
+			Message: "invalid offset value",
+			Err:     err,
+		})
+	}
+
+	limit, err := parseQueryParam(c, "limit", 20) // Значение по умолчанию — 20
+	if err != nil {
+		return handleError(c, &apperrors.AppError{
+			Type:    apperrors.ValidationError,
+			Message: "invalid limit value",
+			Err:     err,
+		})
+	}
+
+	dialogs, err := h.dialogService.GetDialogs(c.Request().Context(), myId, limit, offset)
+	if err != nil {
+		return handleError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, dialogs)
+}
+
 // parseQueryParam парсит числовые параметры из query string
 func parseQueryParam(c echo.Context, key string, defaultValue int) (int, error) {
 	param := c.QueryParam(key)

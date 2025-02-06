@@ -39,3 +39,14 @@ func (s *dialogService) GetDialog(ctx context.Context, myId, partnerId domain.Us
 
 	return messages, nil
 }
+
+// GetDialog получает диалог между двумя пользователями
+func (s *dialogService) GetDialogs(ctx context.Context, myId domain.UserKey, limit, offset int) ([]domain.Dialog, error) {
+
+	messages, err := s.repository.GetDialogs(ctx, myId, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve messages %w", err)
+	}
+
+	return messages, nil
+}
