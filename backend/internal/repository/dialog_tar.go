@@ -27,8 +27,8 @@ func (r *dialogRepositoryTar) SaveMessage(ctx context.Context, myId, partnerId d
 }
 
 func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId domain.UserKey, limit, offset int) ([]domain.DialogMessage, error) {
-	// Вызов Lua-функции get_messages
-	resp, err := r.conn.Call("get_messages", []interface{}{myId, partnerId, limit, offset})
+	// Вызов Lua-функции get_dialog
+	resp, err := r.conn.Call("get_dialog", []interface{}{myId, partnerId, limit, offset})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get messages: %w", err)
 	}

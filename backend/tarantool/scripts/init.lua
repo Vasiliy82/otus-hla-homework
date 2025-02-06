@@ -81,7 +81,7 @@ function save_message(my_id, partner_id, message)
 end
 
 -- Функция для получения сообщений
-function get_messages(my_id, partner_id, limit, offset)
+function get_dialog(my_id, partner_id, limit, offset)
     local dialog_id = my_id < partner_id and my_id .. ':' .. partner_id or partner_id .. ':' .. my_id
 
     local result = box.space.messages.index.primary:select({dialog_id}, {
@@ -110,7 +110,7 @@ end
 
 -- Регистрируем функции
 box.schema.func.create('save_message', {language = 'Lua', if_not_exists = true})
-box.schema.func.create('get_messages', {language = 'Lua', if_not_exists = true})
+box.schema.func.create('get_dialog', {language = 'Lua', if_not_exists = true})
 box.schema.func.create('get_dialogs', {language = 'Lua', if_not_exists = true})
 
 log.info("Tarantool setup complete!")
