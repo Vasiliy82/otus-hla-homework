@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
@@ -23,17 +21,6 @@ func (r *dialogRepository) getDialogId(myId, partnerId domain.UserKey) string {
 		return fmt.Sprintf("%s:%s", partnerId, myId)
 	}
 	return fmt.Sprintf("%s:%s", myId, partnerId)
-}
-
-// calculateShardKey вычисляет ключ для шардирования
-func (r *dialogRepository) calculateShardKey(id1, id2 string) int {
-	// Генерируем хеш
-	data := []byte(id1 + "-" + id2)
-	hash := sha256.Sum256(data)
-
-	// Берем первые 2 байта (16 бит)
-	shardKey := binary.BigEndian.Uint16(hash[:2])
-	return int(shardKey)
 }
 
 // SaveMessage сохраняет сообщение в таблицу
@@ -101,7 +88,7 @@ func (r *dialogRepository) GetMessages(ctx context.Context, myId, partnerId doma
 	dialogId := r.getDialogId(myId, partnerId)
 
 	query := `
-		SELECT dialog_id, author_id, datetime, message
+		SELECT dialog_id, message_id, author_id, datetime, message
 		FROM messages
 		WHERE dialog_id = $1
 		ORDER BY datetime DESC
@@ -117,7 +104,7 @@ func (r *dialogRepository) GetMessages(ctx context.Context, myId, partnerId doma
 	var messages []domain.DialogMessage
 	for rows.Next() {
 		var msg domain.DialogMessage
-		if err := rows.Scan(&msg.DialogId, &msg.AuthorId, &msg.Datetime, &msg.Message); err != nil {
+		if err := rows.Scan(&msg.DialogId, &msg.MessageId, &msg.AuthorId, &msg.Datetime, &msg.Message); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		messages = append(messages, msg)
@@ -128,4 +115,42 @@ func (r *dialogRepository) GetMessages(ctx context.Context, myId, partnerId doma
 	}
 
 	return messages, nil
+}
+
+// GetDialogs получает список диалогов для данного пользователя
+func (r *dialogRepository) GetDialogs(ctx context.Context, myId domain.UserKey, limit, offset int) ([]domain.Dialog, error) {
+
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pool from cluster: %w", err)
+	}
+
+	query := `
+		SELECT user_id, dialog_id
+		FROM dialogs
+		WHERE user_id = $1
+		ORDER BY dialog_id
+		LIMIT $2 OFFSET $3;
+	`
+
+	rows, err := db.Query(ctx, query, myId, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dialogs: %w", err)
+	}
+	defer rows.Close()
+
+	var dialogs []domain.Dialog
+	for rows.Next() {
+		var dlg domain.Dialog
+		if err := rows.Scan(&dlg.UserId, &dlg.DialogId); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		dialogs = append(dialogs, dlg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration error: %w", err)
+	}
+
+	return dialogs, nil
 }

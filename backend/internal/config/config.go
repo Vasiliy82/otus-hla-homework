@@ -20,6 +20,7 @@ type Config struct {
 	SocialNetwork *SocialNetworkConfig `yaml:"social_network"`
 	Log           *LogConfig           `yaml:"log"`
 	Dialogs       *DialogServiceConfig `yaml:"dialogs"`
+	Tarantool     *TarantoolConfig     `yaml:"tarantool"`
 }
 
 type APIConfig struct {
@@ -81,6 +82,13 @@ type PostsConfig struct {
 	WebsocketPingInterval time.Duration `yaml:"websocket_ping_interval"` // как часто сервер пингует клиента
 	WebsocketPongWait     time.Duration `yaml:"websocket_pong_wait"`     // время ожидания ответа (pong) от клиента
 
+}
+
+type TarantoolConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 }
 
 // LogConfig представляет настройки логирования
