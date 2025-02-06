@@ -146,16 +146,16 @@ func main() {
 	cacheWarmup.CacheWarmup(ctx)
 	log.Logger().Debugln("done")
 
-	log.Logger().Debug("main: init reverse proxy (messages)...")
-	rpMessagesTarget, err := url.Parse(cfg.SocialNetwork.SvcMessagesURL)
+	log.Logger().Debug("main: init reverse proxy (dialogs)...")
+	rpDialogsTarget, err := url.Parse(cfg.SocialNetwork.SvcDialogsURL)
 	if err != nil {
 		log.Logger().Fatalf("Error: %v", err)
 	}
-	rpMessages := httputil.NewSingleHostReverseProxy(rpMessagesTarget)
+	rpDialogs := httputil.NewSingleHostReverseProxy(rpDialogsTarget)
 	log.Logger().Debugln("done")
 
 	log.Logger().Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, rpMessages, jwtService)
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, rpDialogs, jwtService)
 	cancel()
 	procFeedChanged.Wait()
 	procPostModified.Wait()

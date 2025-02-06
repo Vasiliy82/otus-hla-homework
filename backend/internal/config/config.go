@@ -49,7 +49,7 @@ type MetricsConfig struct {
 }
 type SocialNetworkConfig struct {
 	FeedLength              int    `yaml:"feed_length"`
-	SvcMessagesURL          string `yaml:"svc_dialogs_url"`
+	SvcDialogsURL           string `yaml:"svc_dialogs_url"`
 	SvcPostsWsURL           string `yaml:"svc_posts_ws_url"`
 	MaxPostCreatedPerWorker int    `yaml:"max_post_created_per_worker"`
 	PostCreatedPacketSize   int    `yaml:"post_created_packet_size"`

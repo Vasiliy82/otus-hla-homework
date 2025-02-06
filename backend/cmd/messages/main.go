@@ -22,7 +22,7 @@ import (
 
 const (
 	defaultConfigFilename = "socnet.yaml"
-	appName               = "messages"
+	appName               = "dialogs"
 )
 
 func main() {

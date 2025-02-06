@@ -28,8 +28,8 @@ type DialogRepository interface {
 	// SaveMessage сохраняет сообщение
 	SaveMessage(ctx context.Context, myId, partnerId UserKey, message string) error
 
-	// GetMessages получает сообщения между двумя пользователями
-	GetMessages(ctx context.Context, myId, partnerId UserKey, limit, offset int) ([]DialogMessage, error)
+	// GetDialogs получает сообщения между двумя пользователями
+	GetDialog(ctx context.Context, myId, partnerId UserKey, limit, offset int) ([]DialogMessage, error)
 
 	// GetDialogs получает список диалогов для данного пользователя
 	GetDialogs(ctx context.Context, myId UserKey, limit, offset int) ([]Dialog, error)

@@ -23,7 +23,7 @@ func Start(ctx context.Context,
 	snHandler services.SocialNetworkHandler,
 	jwtSvc domain.JWTService,
 	snSvc domain.SocialNetworkService,
-	proxyMessages *httputil.ReverseProxy,
+	proxyDialogs *httputil.ReverseProxy,
 	jwtService domain.JWTService,
 ) error {
 
@@ -73,7 +73,7 @@ func Start(ctx context.Context,
 
 	// Проксирование маршрутов для микросервиса сообщений
 	dialogGroup := apiGroup.Group("/dialog")
-	dialogGroup.Use(middleware.ReverseProxyMiddleware(proxyMessages))
+	dialogGroup.Use(middleware.ReverseProxyMiddleware(proxyDialogs))
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))

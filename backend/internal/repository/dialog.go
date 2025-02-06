@@ -77,8 +77,8 @@ func (r *dialogRepository) SaveMessage(ctx context.Context, myId, partnerId doma
 	return nil
 }
 
-// GetMessages получает все сообщения между двумя пользователями
-func (r *dialogRepository) GetMessages(ctx context.Context, myId, partnerId domain.UserKey, limit, offset int) ([]domain.DialogMessage, error) {
+// GetDialog получает все сообщения между двумя пользователями
+func (r *dialogRepository) GetDialog(ctx context.Context, myId, partnerId domain.UserKey, limit, offset int) ([]domain.DialogMessage, error) {
 
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
