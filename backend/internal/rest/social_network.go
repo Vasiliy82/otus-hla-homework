@@ -351,7 +351,7 @@ func (h *socialNetworkHandler) UpdatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	err = h.snService.UpdatePost(userId, postId, domain.PostMessage(postReq.Message))
+	err = h.snService.UpdatePost(userId, postId, domain.PostText(postReq.Message))
 	if err != nil {
 		log.Logger().Errorw("postHandler.Update: h.postService.Update returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {

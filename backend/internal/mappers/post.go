@@ -7,8 +7,8 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 )
 
-func ToPostMessage(request *dto.CreateOrUpdatePostRequest) domain.PostMessage {
-	return domain.PostMessage(request.Message)
+func ToPostMessage(request *dto.CreateOrUpdatePostRequest) domain.PostText {
+	return domain.PostText(request.Message)
 }
 
 func ToPostResponse(post *domain.Post) *dto.GetPostResponse {
@@ -21,7 +21,7 @@ func ToPostResponse(post *domain.Post) *dto.GetPostResponse {
 }
 
 func ToUpdatedPost(post *domain.Post, request *dto.CreateOrUpdatePostRequest) {
-	post.Message = domain.PostMessage(request.Message)
+	post.Message = domain.PostText(request.Message)
 	modifiedAt := time.Now()
 	post.ModifiedAt = &modifiedAt
 }

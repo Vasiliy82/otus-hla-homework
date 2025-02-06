@@ -5,7 +5,7 @@ import (
 )
 
 type PostKey int64
-type PostMessage string
+type PostText string
 
 // EventType определяет тип события.
 type EventType string
@@ -24,11 +24,11 @@ type EventPostModified struct {
 }
 
 type Post struct {
-	Id         PostKey     `json:"id"`
-	UserId     UserKey     `json:"user_id"`
-	Message    PostMessage `json:"text"`
-	CreatedAt  time.Time   `json:"created_at"`
-	ModifiedAt *time.Time  `json:"modified_at"`
+	Id         PostKey    `json:"id"`
+	UserId     UserKey    `json:"user_id"`
+	Message    PostText   `json:"text"`
+	CreatedAt  time.Time  `json:"created_at"`
+	ModifiedAt *time.Time `json:"modified_at"`
 }
 
 type EventFollowerNotifyContent struct {

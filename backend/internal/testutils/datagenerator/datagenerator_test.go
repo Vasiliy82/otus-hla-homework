@@ -125,7 +125,7 @@ func generateTestData(generator datagenerator.DataGenerator, numUsers, numFriend
 		wg.Add(1)
 		go func(userId domain.UserKey, i int) {
 			defer func() { <-sem; wg.Done() }()
-			_, err := generator.CreatePost(userId, domain.PostMessage(fmt.Sprintf("Test post %d. %v", i, faker.Paragraph())))
+			_, err := generator.CreatePost(userId, domain.PostText(fmt.Sprintf("Test post %d. %v", i, faker.Paragraph())))
 			if err != nil {
 				fmt.Printf("failed to create post %v: %v\n", userId, err)
 			}

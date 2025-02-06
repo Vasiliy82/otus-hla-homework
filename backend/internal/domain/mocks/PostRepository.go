@@ -13,7 +13,7 @@ type PostRepository struct {
 }
 
 // Create provides a mock function with given fields: userId, message
-func (_m *PostRepository) Create(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
+func (_m *PostRepository) Create(userId domain.UserKey, message domain.PostText) (domain.PostKey, error) {
 	ret := _m.Called(userId, message)
 
 	if len(ret) == 0 {
@@ -22,16 +22,16 @@ func (_m *PostRepository) Create(userId domain.UserKey, message domain.PostMessa
 
 	var r0 domain.PostKey
 	var r1 error
-	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.PostMessage) (domain.PostKey, error)); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.PostText) (domain.PostKey, error)); ok {
 		return rf(userId, message)
 	}
-	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.PostMessage) domain.PostKey); ok {
+	if rf, ok := ret.Get(0).(func(domain.UserKey, domain.PostText) domain.PostKey); ok {
 		r0 = rf(userId, message)
 	} else {
 		r0 = ret.Get(0).(domain.PostKey)
 	}
 
-	if rf, ok := ret.Get(1).(func(domain.UserKey, domain.PostMessage) error); ok {
+	if rf, ok := ret.Get(1).(func(domain.UserKey, domain.PostText) error); ok {
 		r1 = rf(userId, message)
 	} else {
 		r1 = ret.Error(1)
@@ -177,7 +177,7 @@ func (_m *PostRepository) List(userId domain.UserKey, limit int, lastPostId doma
 }
 
 // UpdateMessage provides a mock function with given fields: postId, newMessage
-func (_m *PostRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostMessage) error {
+func (_m *PostRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostText) error {
 	ret := _m.Called(postId, newMessage)
 
 	if len(ret) == 0 {
@@ -185,7 +185,7 @@ func (_m *PostRepository) UpdateMessage(postId domain.PostKey, newMessage domain
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(domain.PostKey, domain.PostMessage) error); ok {
+	if rf, ok := ret.Get(0).(func(domain.PostKey, domain.PostText) error); ok {
 		r0 = rf(postId, newMessage)
 	} else {
 		r0 = ret.Error(0)

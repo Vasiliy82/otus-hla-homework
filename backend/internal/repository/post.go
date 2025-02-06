@@ -71,7 +71,7 @@ func (r *postRepository) List(userId domain.UserKey, limit int, lastPostId domai
 }
 
 // Добавление нового поста
-func (r *postRepository) Create(userId domain.UserKey, message domain.PostMessage) (*domain.Post, error) {
+func (r *postRepository) Create(userId domain.UserKey, message domain.PostText) (*domain.Post, error) {
 
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
@@ -105,7 +105,7 @@ func (r *postRepository) Get(id domain.PostKey) (*domain.Post, error) {
 }
 
 // Обновление сообщения поста по ID
-func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostMessage) (*domain.Post, error) {
+func (r *postRepository) UpdateMessage(postId domain.PostKey, newMessage domain.PostText) (*domain.Post, error) {
 	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
 	if err != nil {
 		return nil, fmt.Errorf("postRepository.UpdateMessage: r.dbCluster.GetDB returned error %w", err)

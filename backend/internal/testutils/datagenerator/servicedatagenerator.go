@@ -16,7 +16,7 @@ func (s *ServiceDataGenerator) CreateUser(user *domain.User) (domain.UserKey, er
 	return s.userService.CreateUser(user)
 }
 
-func (s *ServiceDataGenerator) CreatePost(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
+func (s *ServiceDataGenerator) CreatePost(userId domain.UserKey, message domain.PostText) (domain.PostKey, error) {
 	return s.userService.CreatePost(userId, message)
 }
 

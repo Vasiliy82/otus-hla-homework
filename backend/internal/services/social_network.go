@@ -171,7 +171,7 @@ func (s *socialNetworkService) ListPosts(userId domain.UserKey, limit int, lastP
 }
 
 // Создание нового поста
-func (s *socialNetworkService) CreatePost(userId domain.UserKey, message domain.PostMessage) (domain.PostKey, error) {
+func (s *socialNetworkService) CreatePost(userId domain.UserKey, message domain.PostText) (domain.PostKey, error) {
 	post, err := s.postRepo.Create(userId, message)
 	if err != nil {
 		return 0, apperrors.NewInternalServerError("postService.Create: s.postRepo.Create returned error", err)
@@ -193,7 +193,7 @@ func (s *socialNetworkService) GetPost(userId domain.UserKey, id domain.PostKey)
 }
 
 // Обновление поста
-func (s *socialNetworkService) UpdatePost(userId domain.UserKey, postId domain.PostKey, newMessage domain.PostMessage) error {
+func (s *socialNetworkService) UpdatePost(userId domain.UserKey, postId domain.PostKey, newMessage domain.PostText) error {
 	if err := s.checkOwner(userId, postId); err != nil {
 		return apperrors.New(403, "Wrong post owner", nil)
 	}
