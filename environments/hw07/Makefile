@@ -72,14 +72,16 @@ run-tests:
 
 	cp $(SOCNET_PG_CONFIG) ./backend/socnet.yaml;
 	docker compose -f $(DOCKER_COMPOSE_FILE) down messages;
-	docker compose -f $(DOCKER_COMPOSE_FILE) up --build -d messages;
+	docker compose -f $(DOCKER_COMPOSE_FILE) up -d messages;
 
 	# Тестирование для PostgreSQL
 	for THREADS in $(THREADS_LIST); do \
 		echo "Тестирование PostgreSQL с потоками: $$THREADS"; \
-		docker run --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		docker run \
+		    --add-host=host.docker.internal:host-gateway \
+			--rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
 			-n -t $(JMETER_FILE) \
-			-JHOST=localhost \
+			-JHOST=host.docker.internal \
 			-JPORT=8081 \
 			-JTHREADS=$$THREADS \
 			-JDURATION=$(TEST_DURATION) \
@@ -89,14 +91,16 @@ run-tests:
 
 	cp $(SOCNET_TARANTOOL_CONFIG) ./backend/socnet.yaml;
 	docker compose -f $(DOCKER_COMPOSE_FILE) down messages;
-	docker compose -f $(DOCKER_COMPOSE_FILE) up --build -d messages;
+	docker compose -f $(DOCKER_COMPOSE_FILE) up -d messages;
 
 	# Тестирование для Tarantool
 	for THREADS in $(THREADS_LIST); do \
 		echo "Тестирование Tarantool с потоками: $$THREADS"; \
-		docker run --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		docker run \
+		    --add-host=host.docker.internal:host-gateway \
+		    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
 			-n -t $(JMETER_FILE) \
-			-JHOST=localhost \
+			-JHOST=host.docker.internal \
 			-JPORT=8081 \
 			-JTHREADS=$$THREADS \
 			-JDURATION=$(TEST_DURATION) \
