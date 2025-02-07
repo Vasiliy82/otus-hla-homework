@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
+	"github.com/google/uuid"
 )
 
 // GetRequestID извлекает x-request-id из контекста
@@ -21,4 +22,9 @@ func AddRequestIDToOutgoing(ctx context.Context, req *http.Request) {
 	if requestID != "" {
 		req.Header.Set("x-request-id", requestID)
 	}
+}
+
+// generateRequestID генерирует уникальный идентификатор запроса (UUID v4)
+func GenerateID() string {
+	return uuid.New().String()
 }

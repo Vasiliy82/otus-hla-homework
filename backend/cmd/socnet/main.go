@@ -12,6 +12,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository/cache"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
@@ -38,7 +39,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// Инициализация базового логгера
-	log := logger.InitLogger(appName, logger.GenerateID())
+	log := logger.InitLogger(appName, utils.GenerateID())
 	// Сохранение логгера в контекст
 	ctx = logger.WithContext(ctx, log)
 	// Локальный логгер с дополнительным контекстом

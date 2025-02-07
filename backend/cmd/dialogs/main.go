@@ -17,6 +17,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -31,7 +32,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// Инициализация базового логгера
-	log := logger.InitLogger(appName, logger.GenerateID())
+	log := logger.InitLogger(appName, utils.GenerateID())
 
 	// Сохранение логгера в контекст
 	ctx = logger.WithContext(ctx, log)
