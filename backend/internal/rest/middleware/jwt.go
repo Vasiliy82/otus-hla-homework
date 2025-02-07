@@ -15,6 +15,7 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+				logger.Logger().Debug("middleware.JWTMiddleware: missing or invalid Authorization header", "err")
 				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("missing or invalid Authorization header"))
 			}
 
@@ -23,11 +24,13 @@ func JWTMiddleware(jwtService domain.JWTService) echo.MiddlewareFunc {
 			// Валидация токена
 			token, err := jwtService.ValidateToken(domain.TokenString(tokenString))
 			if err != nil {
+				logger.Logger().Warnw("middleware.JWTMiddleware: token validation error", "err", err, "tokenString", tokenString)
 				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
 			}
 
 			claims, err := jwtService.ExtractClaims(token)
 			if err != nil {
+				logger.Logger().Warnw("middleware.JWTMiddleware: jwtService.ExtractClaims() returned error", "err", err, "token", token)
 				return c.JSON(http.StatusUnauthorized, apperrors.NewUnauthorizedError("invalid token"))
 			}
 

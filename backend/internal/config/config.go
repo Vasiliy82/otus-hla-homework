@@ -47,12 +47,14 @@ type MetricsConfig struct {
 	UpdateInterval             time.Duration `yaml:"update_interval"`
 	BucketsHttpRequestDuration []float64     `yaml:"buckets_http_request_duration"`
 }
+
 type SocialNetworkConfig struct {
-	FeedLength              int    `yaml:"feed_length"`
-	SvcDialogsURL           string `yaml:"svc_dialogs_url"`
-	SvcPostsWsURL           string `yaml:"svc_posts_ws_url"`
-	MaxPostCreatedPerWorker int    `yaml:"max_post_created_per_worker"`
-	PostCreatedPacketSize   int    `yaml:"post_created_packet_size"`
+	RoutingConfig           []*RouteConfig `yaml:"routing"`
+	FeedLength              int            `yaml:"feed_length"`
+	SvcDialogsURL           string         `yaml:"svc_dialogs_url"`
+	SvcPostsWsURL           string         `yaml:"svc_posts_ws_url"`
+	MaxPostCreatedPerWorker int            `yaml:"max_post_created_per_worker"`
+	PostCreatedPacketSize   int            `yaml:"post_created_packet_size"`
 }
 
 type RedisConfig struct {

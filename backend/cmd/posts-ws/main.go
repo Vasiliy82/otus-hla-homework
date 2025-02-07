@@ -18,18 +18,22 @@ import (
 )
 
 const (
+	appName               = "posts-ws"
 	defaultConfigFilename = "socnet.yaml"
 )
 
 func main() {
-	// Инициализация логгера
-	logger.SetLogger(logger.NewStdOut(nil))
-	log := logger.Logger()
-
-	// Создаем контекст с возможностью отмены
+	// Создание основного контекста с возможностью отмены
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	// Инициализация базового логгера
+	log := logger.InitLogger(appName, logger.GenerateID())
+	// Сохранение логгера в контекст
+	ctx = logger.WithContext(ctx, log)
+	// Локальный логгер с дополнительным контекстом
+	log = log.With("func", logger.GetFuncName())
 
+	log.Debug("Started")
 	// Обработка системных сигналов
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -48,8 +52,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-
-	logger.SetLevel(getLogLevel(cfg.Log.Level))
 
 	// Настраиваем Kafka Consumer
 	// consumer, err := broker.NewKafkaConsumer(cfg.Broker.Brokers, cfg.Broker.Group, cfg.Broker.Topic, log)

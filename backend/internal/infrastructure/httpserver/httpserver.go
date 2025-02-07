@@ -11,6 +11,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/wsreverseproxy"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/labstack/echo/v4"
@@ -26,12 +27,21 @@ func Start(ctx context.Context,
 	proxyDialogs *httputil.ReverseProxy,
 	jwtService domain.JWTService,
 ) error {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 
 	// Start Server
 	address := cfg.API.ServerAddress
 
+	// prepare router
+	router, err := rest.NewProxyRouter(cfg.SocialNetwork)
+	if err != nil {
+		return fmt.Errorf("httpserver.Start: rest.NewProxyRouter returned error: %w", err)
+	}
+
 	// prepare echo
 	e := echo.New()
+
+	e.Use(middleware.RequestIDMiddleware)
 
 	// Настройка middleware CORS
 	middleware.CORSConfig(e)
@@ -70,26 +80,28 @@ func Start(ctx context.Context,
 	apiGroup.PUT("/post/:post_id", snHandler.UpdatePost)
 	apiGroup.DELETE("/post/:post_id", snHandler.DeletePost)
 	apiGroup.GET("/post/feed", snHandler.GetFeed)
-
+	routerHandler := router.RouterHandler(cfg.SocialNetwork)
 	// Проксирование маршрутов для микросервиса сообщений
-	dialogGroup := apiGroup.Group("/dialog")
-	dialogGroup.Use(middleware.ReverseProxyMiddleware(proxyDialogs))
+	apiGroup.Any("/*", routerHandler)
 
 	// Добавляем эндпоинт для метрик Prometheus
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
-	logger.Logger().Infof("Otus HLA Homework server starting at %s", address)
+	// проксирование прочих маршрутов
+	e.Any("/*", routerHandler, middleware.JWTMiddleware(jwtSvc))
+
+	log.Infof("Otus HLA Homework server starting at %s", address)
 
 	// Запуск сервера в горутине
 	go func() {
 		if err := e.Start(address); err != nil && err != http.ErrServerClosed {
-			logger.Logger().Errorf("error while starting server: %v", err)
+			log.Errorf("error while starting server: %v", err)
 		}
 	}()
 
 	// Ожидание завершения контекста
 	<-ctx.Done()
-	logger.Logger().Info("Shutting down server...")
+	log.Info("Shutting down server...")
 
 	// Установка таймаута для завершения
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.API.ShutdownTimeout)*time.Second)
@@ -100,6 +112,6 @@ func Start(ctx context.Context,
 		return fmt.Errorf("error while shutting down server: %w", err)
 	}
 
-	logger.Logger().Info("Server shutdown gracefully")
+	log.Info("Server shutdown gracefully")
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
-	log "github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository/cache"
 	"github.com/redis/go-redis/v9"
 
@@ -36,10 +36,17 @@ func main() {
 	var jwtService domain.JWTService
 	var err error
 
-	log.Logger().Debug("main: starting otus-hla-homework")
-
 	// Создание основного контекста с возможностью отмены
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	// Инициализация базового логгера
+	log := logger.InitLogger(appName, logger.GenerateID())
+	// Сохранение логгера в контекст
+	ctx = logger.WithContext(ctx, log)
+	// Локальный логгер с дополнительным контекстом
+	log = log.With("func", logger.GetFuncName())
+
+	log.Debug("Started")
 
 	// Создаем канал для получения системных сигналов
 	sigs := make(chan os.Signal, 1)
@@ -48,7 +55,7 @@ func main() {
 	// Горутинa для обработки системных сигналов
 	go func() {
 		sig := <-sigs
-		log.Logger().Infof("Received signal: %s, shutting down...\n", sig)
+		log.Infof("Received signal: %s, shutting down...\n", sig)
 		cancel() // Отмена контекста при получении сигнала
 	}()
 
@@ -58,7 +65,7 @@ func main() {
 
 	cfg, err := config.LoadConfig(*configPath)
 	if err != nil {
-		log.Logger().Fatalf("Error loading config: %v", err)
+		log.Fatalf("Error loading config: %v", err)
 	}
 
 	// Валидируем конфигурацию
@@ -68,15 +75,15 @@ func main() {
 		for i, vErr := range validationErrors {
 			fmt.Printf("%d. %s\n", i+1, vErr.Error())
 		}
-		log.Logger().Fatal("Config validation failure")
+		log.Fatal("Config validation failure")
 	}
 
-	// log.Logger().Debugw("Config", "cfg", cfg)
+	// log.Debugw("Config", "cfg", cfg)
 
-	log.Logger().Debug("main: init postgresql...")
+	log.Debug("main: init postgresql...")
 	db, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer, appName)
 	if err != nil {
-		log.Logger().Errorf("main: postgresqldb.InitDB returned error: %v", err)
+		log.Errorf("main: postgresqldb.InitDB returned error: %v", err)
 		return
 	}
 
@@ -91,77 +98,77 @@ func main() {
 	// Проверяем подключение к Redis
 	_, err = redis.Ping(context.Background()).Result()
 	if err != nil {
-		log.Logger().Fatalw("Ошибка подключения к Redis:", "err", err)
+		log.Fatalw("Ошибка подключения к Redis:", "err", err)
 		return
 	}
 
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init metrics...")
+	log.Debug("main: init metrics...")
 	postgresqldb.StartMonitoring(db, cfg.Metrics.UpdateInterval)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init JWT Service...")
+	log.Debug("main: init JWT Service...")
 	if jwtService, err = services.NewJWTService(cfg.JWT, repository.NewBlacklistRepository(ctx, db)); err != nil {
-		log.Logger().Fatalf("Error: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init User Repository...")
+	log.Debug("main: init User Repository...")
 	userRepo := repository.NewUserRepository(ctx, db)
-	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init Post Repository...")
+	log.Debugln("done")
+	log.Debug("main: init Post Repository...")
 	postRepo := repository.NewPostRepository(ctx, db)
-	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init Post Cache...")
+	log.Debugln("done")
+	log.Debug("main: init Post Cache...")
 	postCache := cache.NewPostCache(cfg.Cache, redis)
-	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init Producer...")
+	log.Debugln("done")
+	log.Debug("main: init Producer...")
 	prod, err := broker.NewKafkaProducer(cfg.Kafka)
 	if err != nil {
-		log.Logger().Fatalf("Error: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
 	bprod := broker.NewProducer(ctx, prod, cfg)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init User Service...")
+	log.Debug("main: init User Service...")
 	snService := services.NewSocialNetworkService(cfg, userRepo, postRepo, postCache, jwtService, bprod)
-	log.Logger().Debugln("done")
-	log.Logger().Debug("main: init User Handler...")
+	log.Debugln("done")
+	log.Debug("main: init User Handler...")
 	userHandler := rest.NewSocialNetworkHandler(snService, cfg.API)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init Event processor (Post modified) ...")
+	log.Debug("main: init Event processor (Post modified) ...")
 	procPostModified := services.NewPostModifiedProcessor(cfg, snService, bprod)
 	procPostModified.Start(ctx)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init Event processor (Feed Changed) ...")
+	log.Debug("main: init Event processor (Feed Changed) ...")
 	procFeedChanged := services.NewFeedChangedProcessor(cfg, postRepo, postCache)
 	procFeedChanged.Start(ctx)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: Warm up cache...")
+	log.Debug("main: Warm up cache...")
 	cacheWarmup := services.NewCacheWarmup(cfg.Cache, userRepo, bprod)
 	cacheWarmup.CacheWarmup(ctx)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debug("main: init reverse proxy (dialogs)...")
+	log.Debug("main: init reverse proxy (dialogs)...")
 	rpDialogsTarget, err := url.Parse(cfg.SocialNetwork.SvcDialogsURL)
 	if err != nil {
-		log.Logger().Fatalf("Error: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
 	rpDialogs := httputil.NewSingleHostReverseProxy(rpDialogsTarget)
-	log.Logger().Debugln("done")
+	log.Debugln("done")
 
-	log.Logger().Debugln("Starting HTTP server...")
+	log.Debugln("Starting HTTP server...")
 	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, rpDialogs, jwtService)
 	cancel()
 	procFeedChanged.Wait()
 	procPostModified.Wait()
 
 	if err != nil {
-		log.Logger().Fatalf("Error: %v", err)
+		log.Fatalf("Error: %v", err)
 	}
-	log.Logger().Debug("main: main: otus-hla-homework succesfully stopped")
+	log.Debug("main: main: otus-hla-homework succesfully stopped")
 }

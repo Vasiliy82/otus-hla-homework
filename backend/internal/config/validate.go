@@ -151,6 +151,18 @@ func (c *MetricsConfig) Validate() []error {
 // SocialNetworkConfig validation
 func (c *SocialNetworkConfig) Validate() []error {
 	var errs []error
+
+	if len(c.RoutingConfig) == 0 {
+		errs = append(errs, fmt.Errorf("routing configuration is empty"))
+	} else {
+		for i, route := range c.RoutingConfig {
+			routeErrs := route.Validate()
+			for _, err := range routeErrs {
+				errs = append(errs, fmt.Errorf("route %d: %v", i+1, err))
+			}
+		}
+	}
+
 	if c.FeedLength <= 0 {
 		errs = append(errs, fmt.Errorf("social_network.feed_length must be greater than zero"))
 	}

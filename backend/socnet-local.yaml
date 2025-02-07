@@ -28,6 +28,40 @@ cache:
   cache_warmup_enabled: true
   cache_warmup_period: 8760h
 social_network:
+  routing:
+    - path: ^/api/dialog$
+      methods:
+        - GET
+      services:
+        - service_name: dialogs
+          url: http://localhost:8081
+          supported_versions:
+            - vnd.dialogs.v2+json
+        - service_name: dialogs-legacy
+          url: http://localhost:8084
+          supported_versions:
+            - default
+            - vnd.dialogs.v1+json
+    - path: ^/api/dialog/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/list$
+      methods:
+        - GET
+      services:
+        - service_name: dialogs-list
+          url: http://localhost:8081
+          supported_versions:
+            - default
+            - vnd.dialogs.v1+json
+            - vnd.dialogs.v2+json
+    - path: ^/api/dialog/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/send$
+      methods:
+        - POST
+      services:
+        - service_name: dialogs-send
+          url: http://localhost:8081
+          supported_versions:
+            - default
+            - vnd.dialogs.v1+json
+            - vnd.dialogs.v2+json
   feed_length: 1000
   svc_dialogs_url: http://localhost:8081
   svc_posts_ws_url: ws://localhost:8082/ws
@@ -127,3 +161,14 @@ log:
 posts:
   websocket_ping_interval: 7s
   websocket_pong_wait: 20s
+
+dialogs:
+  default_page_size: 20
+  max_page_size: 200
+  use_inmem: true
+
+tarantool:
+  host: tarantool
+  port: 3301
+  user: admin
+  password: Passw0rd
