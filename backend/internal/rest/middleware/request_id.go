@@ -30,9 +30,16 @@ func RequestIDMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		c.SetRequest(req.WithContext(ctx))
 
-		// Добавление x-request-id в заголовок ответа для трассировки
-		c.Response().Header().Set("x-request-id", requestID)
+		// // Добавление x-request-id в заголовок ответа для трассировки
+		// c.Response().Header().Set("x-request-id", requestID)
 
-		return next(c)
+		err := next(c)
+
+		if c.Response().Header().Get("x-request-id") == "" {
+			c.Response().Header().Set("x-request-id", requestID)
+		}
+
+		return err
+
 	}
 }
