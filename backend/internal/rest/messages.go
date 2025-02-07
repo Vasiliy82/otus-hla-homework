@@ -7,6 +7,7 @@ import (
 
 	apperrors "github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors2"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,12 +22,17 @@ func NewDialogHandler(dialogService domain.DialogService) *dialogHandler {
 
 // SendMessage обрабатывает POST /dialog/:partnerId/send
 func (h *dialogHandler) SendMessage(c echo.Context) error {
+	req := c.Request()
+	ctx := req.Context()
+	log := logger.FromContext(ctx)
+
 	partnerId := domain.UserKey(c.Param("partnerId"))
 
-	var req struct {
+	var reqBody struct {
 		Text string `json:"text"`
 	}
-	if err := c.Bind(&req); err != nil {
+	if err := c.Bind(&reqBody); err != nil {
+		log.Warnw("Error parsing request body", "reqBody", reqBody, "err", err)
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ValidationError,
 			Message: "invalid request body",
@@ -37,6 +43,7 @@ func (h *dialogHandler) SendMessage(c echo.Context) error {
 	// Извлечение user_id из заголовка X-User-Id
 	userIdHeader := c.Request().Header.Get("X-User-Id")
 	if userIdHeader == "" {
+		log.Warn("missing X-User-Id header")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ClientError,
 			Message: "missing X-User-Id header",
@@ -44,8 +51,9 @@ func (h *dialogHandler) SendMessage(c echo.Context) error {
 	}
 
 	myId := domain.UserKey(userIdHeader)
+	ctx = logger.WithContext(ctx, logger.FromContext(ctx).With("userID", myId))
 
-	err := h.dialogService.SendMessage(c.Request().Context(), myId, partnerId, req.Text)
+	err := h.dialogService.SendMessage(ctx, myId, partnerId, reqBody.Text)
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -55,11 +63,15 @@ func (h *dialogHandler) SendMessage(c echo.Context) error {
 
 // GetDialog обрабатывает GET /dialog/:partnerId/list
 func (h *dialogHandler) GetDialog(c echo.Context) error {
+	req := c.Request()
+	ctx := req.Context()
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	partnerId := domain.UserKey(c.Param("partnerId"))
 
 	// Извлечение user_id из заголовка X-User-Id
-	userIdHeader := c.Request().Header.Get("X-User-Id")
+	userIdHeader := req.Header.Get("X-User-Id")
 	if userIdHeader == "" {
+		log.Warn("missing X-User-Id header")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ClientError,
 			Message: "missing X-User-Id header",
@@ -67,10 +79,12 @@ func (h *dialogHandler) GetDialog(c echo.Context) error {
 	}
 
 	myId := domain.UserKey(userIdHeader)
+	ctx = logger.WithContext(ctx, logger.FromContext(ctx).With("userID", myId))
 
 	// Чтение offset и limit из query parameters
 	offset, err := parseQueryParam(c, "offset", 0)
 	if err != nil {
+		log.Warn("invalid offset value")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ValidationError,
 			Message: "invalid offset value",
@@ -80,6 +94,7 @@ func (h *dialogHandler) GetDialog(c echo.Context) error {
 
 	limit, err := parseQueryParam(c, "limit", 20) // Значение по умолчанию — 20
 	if err != nil {
+		log.Warn("invalid limit value")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ValidationError,
 			Message: "invalid limit value",
@@ -87,8 +102,9 @@ func (h *dialogHandler) GetDialog(c echo.Context) error {
 		})
 	}
 
-	dialog, err := h.dialogService.GetDialog(c.Request().Context(), myId, partnerId, limit, offset)
+	dialog, err := h.dialogService.GetDialog(ctx, myId, partnerId, limit, offset)
 	if err != nil {
+		log.Warn("h.dialogService.GetDialog() returned error")
 		return handleError(c, err)
 	}
 
@@ -96,10 +112,14 @@ func (h *dialogHandler) GetDialog(c echo.Context) error {
 }
 
 func (h *dialogHandler) GetDialogs(c echo.Context) error {
+	req := c.Request()
+	ctx := req.Context()
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 
 	// Извлечение user_id из заголовка X-User-Id
-	userIdHeader := c.Request().Header.Get("X-User-Id")
+	userIdHeader := req.Header.Get("X-User-Id")
 	if userIdHeader == "" {
+		log.Warn("missing X-User-Id header")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ClientError,
 			Message: "missing X-User-Id header",
@@ -107,10 +127,12 @@ func (h *dialogHandler) GetDialogs(c echo.Context) error {
 	}
 
 	myId := domain.UserKey(userIdHeader)
+	ctx = logger.WithContext(ctx, logger.FromContext(ctx).With("userID", myId))
 
 	// Чтение offset и limit из query parameters
 	offset, err := parseQueryParam(c, "offset", 0)
 	if err != nil {
+		log.Warn("invalid offset value")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ValidationError,
 			Message: "invalid offset value",
@@ -120,6 +142,7 @@ func (h *dialogHandler) GetDialogs(c echo.Context) error {
 
 	limit, err := parseQueryParam(c, "limit", 20) // Значение по умолчанию — 20
 	if err != nil {
+		log.Warn("invalid limit value")
 		return handleError(c, &apperrors.AppError{
 			Type:    apperrors.ValidationError,
 			Message: "invalid limit value",
@@ -127,8 +150,9 @@ func (h *dialogHandler) GetDialogs(c echo.Context) error {
 		})
 	}
 
-	dialogs, err := h.dialogService.GetDialogs(c.Request().Context(), myId, limit, offset)
+	dialogs, err := h.dialogService.GetDialogs(ctx, myId, limit, offset)
 	if err != nil {
+		log.Warn("h.dialogService.GetDialogs() returned error", "err", err)
 		return handleError(c, err)
 	}
 
@@ -156,9 +180,6 @@ func parseQueryParam(c echo.Context, key string, defaultValue int) (int, error) 
 
 // handleError обрабатывает ошибку, логирует цепочку и возвращает корректный HTTP-ответ
 func handleError(c echo.Context, err error) error {
-	// Логируем всю цепочку ошибок
-	logErrorChain(c, err)
-
 	// Пытаемся найти бизнес-ошибку (AppError)
 	var appErr *apperrors.AppError
 	if errors.As(err, &appErr) {
@@ -175,12 +196,4 @@ func handleError(c echo.Context, err error) error {
 
 	// Если бизнес-ошибка не найдена, возвращаем общую ошибку сервиса
 	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
-}
-
-// logErrorChain логирует всю цепочку ошибок
-func logErrorChain(c echo.Context, err error) {
-	for err != nil {
-		c.Logger().Error(err.Error()) // Используем логгер Echo
-		err = errors.Unwrap(err)
-	}
 }

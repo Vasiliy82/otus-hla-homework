@@ -35,10 +35,11 @@ func NewDBCluster(masterPool *pgxpool.Pool, replicaPools []*pgxpool.Pool) *DBClu
 }
 
 func InitDBCluster(ctx context.Context, cfg *config.DatabaseConfig, appName string) (*DBCluster, error) {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	masterAppName := fmt.Sprintf("%s-master", appName)
 	master, err := initDBInstance(ctx, cfg.Master, masterAppName)
 	if err != nil {
-		logger.Logger().Debugw("Error in InitDBCluster: initDBInstance(master)", "err", err)
+		log.Debugw("Error in InitDBCluster: initDBInstance(master)", "err", err)
 		return nil, fmt.Errorf("in InitDBCluster: initDBInstance(master) returned %w", err)
 	}
 	var replicas []*pgxpool.Pool
@@ -46,7 +47,7 @@ func InitDBCluster(ctx context.Context, cfg *config.DatabaseConfig, appName stri
 		slaveAppName := fmt.Sprintf("%s-slave-%d", appName, i)
 		replica, err := initDBInstance(ctx, rcfg, slaveAppName)
 		if err != nil {
-			logger.Logger().Warnw(fmt.Sprintf("in InitDBCluster: initDBInstance(replica[%d])", i), "err", err)
+			log.Warnw(fmt.Sprintf("in InitDBCluster: initDBInstance(replica[%d])", i), "err", err)
 			continue
 		}
 		replicas = append(replicas, replica)
@@ -101,6 +102,7 @@ func (c *DBCluster) Close() {
 }
 
 func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig, appName string) (*pgxpool.Pool, error) {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", cfg.User, cfg.Pass, cfg.Host, cfg.Port, cfg.Name)
 	val := url.Values{}
 	val.Add("sslmode", "disable")
@@ -122,7 +124,7 @@ func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig, appName s
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
 
-	logger.Logger().Infof("postgresqldb.initDBInstance: connection pool established: %s", connStr)
+	log.Infof("connection pool established: %s", connStr)
 
 	return pool, nil
 }

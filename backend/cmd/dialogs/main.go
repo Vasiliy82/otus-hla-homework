@@ -26,11 +26,19 @@ const (
 )
 
 func main() {
-	log := logger.Logger()
 
-	// Создаем контекст с возможностью отмены
+	// Создание основного контекста с возможностью отмены
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	// Инициализация базового логгера
+	log := logger.InitLogger(appName, logger.GenerateID())
+
+	// Сохранение логгера в контекст
+	ctx = logger.WithContext(ctx, log)
+	// Локальный логгер с дополнительным контекстом
+	log = log.With("func", logger.GetFuncName())
+
+	log.Debug("Started")
 
 	// Обработка системных сигналов
 	sigs := make(chan os.Signal, 1)
@@ -79,7 +87,7 @@ func main() {
 		// Инициализация кластера базы данных
 		dbCluster, err := postgresqldb.InitDBCluster(ctx, cfg.SQLServer, appName)
 		if err != nil {
-			logger.Logger().Fatalw("Failed to initialize database cluster", "err", err)
+			log.Fatalw("Failed to initialize database cluster", "err", err)
 		}
 		defer dbCluster.Close()
 
@@ -91,13 +99,14 @@ func main() {
 
 	// Инициализация Echo
 	e := echo.New()
+	e.Use(middleware.RequestIDMiddleware)
 	e.Use(middleware.SetRequestContextWithTimeout(cfg.API.ContextTimeout))
 	middleware.CORSConfig(e)
 
 	// Роутинг
-	e.POST("/api/dialog/:partnerId/send", dialogHandler.SendMessage)
-	e.GET("/api/dialog/:partnerId/list", dialogHandler.GetDialog)
 	e.GET("/api/dialog", dialogHandler.GetDialogs)
+	e.GET("/api/dialog/:partnerId/list", dialogHandler.GetDialog)
+	e.POST("/api/dialog/:partnerId/send", dialogHandler.SendMessage)
 
 	// Запуск HTTP-сервера
 	go func() {

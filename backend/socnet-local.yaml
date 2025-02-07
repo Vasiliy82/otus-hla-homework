@@ -38,7 +38,7 @@ social_network:
           supported_versions:
             - vnd.dialogs.v2+json
         - service_name: dialogs-legacy
-          url: http://localhost:8084
+          url: http://localhost:8081
           supported_versions:
             - default
             - vnd.dialogs.v1+json

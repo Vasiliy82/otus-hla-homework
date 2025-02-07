@@ -14,12 +14,12 @@
             "cwd": "${workspaceFolder}/backend"
         },
         {
-            "name": "Lanuch messages",
+            "name": "Lanuch dialogs",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/backend/cmd/messages/main.go",
-            "args": ["-config", "./messages-local.yaml"],
+            "program": "${workspaceFolder}/backend/cmd/dialogs/main.go",
+            "args": ["-config", "./dialogs-local.yaml"],
             "cwd": "${workspaceFolder}/backend"
         },
         {
@@ -36,6 +36,10 @@
     {
       "name": "socnet+posts-ws",
       "configurations": ["Lanuch socnet", "Lanuch posts-ws"] // Указываем оба процесса
+    },
+    {
+        "name": "socnet+dialogs",
+        "configurations": ["Lanuch socnet", "Lanuch dialogs"] // Указываем оба процесса
     }
   ]
 }

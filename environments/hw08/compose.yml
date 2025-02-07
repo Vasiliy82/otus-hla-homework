@@ -78,6 +78,23 @@ services:
     links:
       - kafka
       - redis
+  dialogs-legacy:
+    container_name: dialogs-legacy
+    hostname: dialogs-legacy
+    build:
+      context: ./../..
+      dockerfile: environments/hw08/backend/Dockerfile
+    ports:
+      - "8084:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+    command: ["./dialogs"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
 
 
   posts-ws:

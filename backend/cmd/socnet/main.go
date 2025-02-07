@@ -4,8 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -153,16 +151,8 @@ func main() {
 	cacheWarmup.CacheWarmup(ctx)
 	log.Debugln("done")
 
-	log.Debug("main: init reverse proxy (dialogs)...")
-	rpDialogsTarget, err := url.Parse(cfg.SocialNetwork.SvcDialogsURL)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-	rpDialogs := httputil.NewSingleHostReverseProxy(rpDialogsTarget)
-	log.Debugln("done")
-
 	log.Debugln("Starting HTTP server...")
-	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, rpDialogs, jwtService)
+	err = httpserver.Start(ctx, cfg, userHandler, jwtService, snService, jwtService)
 	cancel()
 	procFeedChanged.Wait()
 	procPostModified.Wait()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
@@ -24,7 +23,6 @@ func Start(ctx context.Context,
 	snHandler services.SocialNetworkHandler,
 	jwtSvc domain.JWTService,
 	snSvc domain.SocialNetworkService,
-	proxyDialogs *httputil.ReverseProxy,
 	jwtService domain.JWTService,
 ) error {
 	log := logger.FromContext(ctx).With("func", logger.GetFuncName())

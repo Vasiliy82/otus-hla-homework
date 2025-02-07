@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/tarantool/go-tarantool"
 )
 
@@ -18,20 +19,28 @@ func NewdialogRepositoryTar(conn *tarantool.Connection) domain.DialogRepository 
 }
 
 func (r *dialogRepositoryTar) SaveMessage(ctx context.Context, myId, partnerId domain.UserKey, message string) error {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	// Вызов Lua-функции save_message
+	log.Debug("Calling tarantool: save_message")
 	_, err := r.conn.Call("save_message", []interface{}{myId, partnerId, message})
 	if err != nil {
+		log.Debug("Calling tarantool: save_message error", "err", err)
 		return fmt.Errorf("failed to save message: %w", err)
 	}
+	log.Debug("Calling tarantool: save_message success")
 	return nil
 }
 
 func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId domain.UserKey, limit, offset int) ([]domain.DialogMessage, error) {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	// Вызов Lua-функции get_dialog
+	log.Debug("Calling tarantool: get_dialog")
 	resp, err := r.conn.Call("get_dialog", []interface{}{myId, partnerId, limit, offset})
 	if err != nil {
+		log.Debug("Calling tarantool: get_dialog error", "err", err)
 		return nil, fmt.Errorf("failed to get dialog: %w", err)
 	}
+	log.Debug("Calling tarantool: get_dialog success")
 
 	// Преобразуем результат
 	var dialog []domain.DialogMessage
@@ -40,8 +49,23 @@ func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId dom
 		if len(resp_arr) == 0 {
 			return nil, nil
 		}
-		datetimeFloat := resp_arr[4].(float64)
-		datetime := time.Unix(int64(datetimeFloat), int64((datetimeFloat-float64(int64(datetimeFloat)))*1e9))
+
+		var datetime time.Time
+
+		switch v := resp_arr[4].(type) {
+		case float64:
+			// Если значение float64, преобразуем к int64
+			dtInt64 := int64(v)
+			datetime = time.Unix(dtInt64, int64((v-float64(dtInt64))*1e9))
+		case uint64:
+			// Если значение uint64, преобразуем напрямую
+			dtInt64 := int64(v)
+			datetime = time.Unix(dtInt64, 0)
+
+		default:
+			log.Warnw("Unexpected type for datetime", "type", fmt.Sprintf("%T", v))
+			datetime = time.Unix(0, 0)
+		}
 
 		msg := domain.DialogMessage{
 			DialogId:  domain.DialogKey(resp_arr[0].(string)),
@@ -52,16 +76,20 @@ func (r *dialogRepositoryTar) GetDialog(ctx context.Context, myId, partnerId dom
 		}
 		dialog = append(dialog, msg)
 	}
-
+	log.Debug("Tarantool get_dialog response successfully parsed")
 	return dialog, nil
 }
 
 func (r *dialogRepositoryTar) GetDialogs(ctx context.Context, myId domain.UserKey, limit, offset int) ([]domain.Dialog, error) {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	// Вызов Lua-функции get_dialogs
+	log.Debug("Calling tarantool: get_dialogs")
 	resp, err := r.conn.Call("get_dialogs", []interface{}{myId, limit, offset})
 	if err != nil {
+		log.Debug("Calling tarantool: get_dialogs error", "err", err)
 		return nil, fmt.Errorf("failed to get dialogs: %w", err)
 	}
+	log.Debug("Calling tarantool: get_dialogs success")
 
 	// Преобразуем результат
 	var dialogs []domain.Dialog
@@ -76,6 +104,6 @@ func (r *dialogRepositoryTar) GetDialogs(ctx context.Context, myId domain.UserKe
 		}
 		dialogs = append(dialogs, dlg)
 	}
-
+	log.Debug("Tarantool get_dialogs response successfully parsed")
 	return dialogs, nil
 }

@@ -14,7 +14,6 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/stretchr/testify v1.9.0
 )
 
 require (
