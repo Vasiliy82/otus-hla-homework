@@ -12,7 +12,7 @@ import (
 )
 
 type FollowerNotifyProcessor struct {
-	w   broker.Worker
+	w   broker.WorkerPool
 	cfg *config.Config
 	ws  *WSService
 }
@@ -24,20 +24,22 @@ func NewFollowerNotifyProcessor(cfg *config.Config, wsService *WSService) *Follo
 	}
 }
 func (p *FollowerNotifyProcessor) Start(ctx context.Context) {
-	w := broker.NewWorker(&broker.WorkerConfig{
-		Topic:         p.cfg.Kafka.TopicFollowerNotify,
-		NumWorkers:    p.cfg.Kafka.NumWorkersFollowerNotify,
-		FuncProcessor: p.process,
-		ConsumerConfig: &kafka.ConfigMap{
-			"bootstrap.servers":     p.cfg.Kafka.Brokers,
-			"enable.auto.commit":    false,
-			"group.id":              p.cfg.Kafka.CGFollowerNotify,
-			"auto.offset.reset":     "earliest",
-			"session.timeout.ms":    6000,  // 6 секунд
-			"max.poll.interval.ms":  60000, // 60 секунд
-			"heartbeat.interval.ms": 2000,  // 1 секунд
-		},
-	})
+	w := broker.NewWorker(
+		broker.NewWorkerConfig(
+			p.cfg.Kafka.TopicFollowerNotify,
+			p.cfg.Kafka.NumWorkersFollowerNotify,
+			p.process,
+			&kafka.ConfigMap{
+				"bootstrap.servers":     p.cfg.Kafka.Brokers,
+				"enable.auto.commit":    false,
+				"group.id":              p.cfg.Kafka.CGFollowerNotify,
+				"auto.offset.reset":     "earliest",
+				"session.timeout.ms":    6000,  // 6 секунд
+				"max.poll.interval.ms":  60000, // 60 секунд
+				"heartbeat.interval.ms": 2000,  // 1 секунд
+			},
+		),
+	)
 	w.Start(ctx)
 }
 

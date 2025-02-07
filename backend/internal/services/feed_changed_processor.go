@@ -13,7 +13,7 @@ import (
 )
 
 type FeedChangedProcessor struct {
-	w         broker.Worker
+	w         *broker.WorkerPool
 	cfg       *config.Config
 	postRepo  domain.PostRepository
 	postCache domain.PostCache
@@ -29,21 +29,21 @@ func NewFeedChangedProcessor(cfg *config.Config, postRepo domain.PostRepository,
 	}
 }
 func (p *FeedChangedProcessor) Start(ctx context.Context) {
-	w := broker.NewWorker(&broker.WorkerConfig{
-		Topic:         p.cfg.Kafka.TopicFeedChanged,
-		NumWorkers:    p.cfg.Kafka.NumWorkersFeedChanged,
-		FuncProcessor: p.process,
-		ConsumerConfig: &kafka.ConfigMap{
-			"bootstrap.servers":     p.cfg.Kafka.Brokers,
-			"enable.auto.commit":    false,
-			"group.id":              p.cfg.Kafka.CGFeedChanged,
-			"auto.offset.reset":     "earliest",
-			"session.timeout.ms":    6000,  // 6 секунд
-			"max.poll.interval.ms":  60000, // 60 секунд
-			"heartbeat.interval.ms": 2000,  // 1 секунд
-		},
-	})
-	w.Start(ctx)
+	p.w = broker.NewWorker(
+		broker.NewWorkerConfig(p.cfg.Kafka.TopicFeedChanged,
+			p.cfg.Kafka.NumWorkersFeedChanged,
+			p.process,
+			&kafka.ConfigMap{
+				"bootstrap.servers":     p.cfg.Kafka.Brokers,
+				"enable.auto.commit":    false,
+				"group.id":              p.cfg.Kafka.CGFeedChanged,
+				"auto.offset.reset":     "earliest",
+				"session.timeout.ms":    6000,  // 6 секунд
+				"max.poll.interval.ms":  60000, // 60 секунд
+				"heartbeat.interval.ms": 2000,  // 1 секунд
+			}),
+	)
+	p.w.Start(ctx)
 }
 
 func (p *FeedChangedProcessor) process(ctx context.Context, msg *kafka.Message, workerId int) error {
