@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -50,7 +51,7 @@ type SocialNetworkService interface {
 	CreateUser(user *User) (UserKey, error)
 	GetUser(id UserKey) (*User, error)
 	Search(firstName, lastName string) ([]*User, error)
-	Login(username, password string) (TokenString, error)
+	Login(ctx context.Context, username, password string) (TokenString, error)
 	AddFriend(my_id, friend_id UserKey) error
 	RemoveFriend(my_id, friend_id UserKey) error
 	GetFriendsIds(user_id UserKey) ([]UserKey, error)

@@ -4,23 +4,30 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/google/uuid"
 )
 
 // GetRequestID извлекает x-request-id из контекста
 func GetRequestID(ctx context.Context) string {
-	if reqID, ok := ctx.Value(middleware.RequestIDKey).(string); ok {
+	if reqID, ok := ctx.Value(domain.RequestIDKey).(string); ok {
 		return reqID
 	}
 	return ""
 }
 
-// AddRequestIDToOutgoing добавляет x-request-id в исходящий HTTP-запрос
-func AddRequestIDToOutgoing(ctx context.Context, req *http.Request) {
+// AddRequestIDToOutgoing добавляет x-request-id в HTTP header
+func AddRequestIDToHeader(ctx context.Context, hdr http.Header) {
+	log := logger.FromContext(ctx)
 	requestID := GetRequestID(ctx)
 	if requestID != "" {
-		req.Header.Set("x-request-id", requestID)
+
+		headerRequestID := hdr.Get(domain.RequestIDHeader)
+		if headerRequestID != "" {
+			log.Warnw("X-Request-ID already exists", "headerRequestID", headerRequestID)
+		}
+		hdr.Set("x-request-id", requestID)
 	}
 }
 

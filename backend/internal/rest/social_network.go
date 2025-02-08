@@ -13,7 +13,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/mappers"
-	log "github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/validators"
 	"github.com/golang-jwt/jwt/v5"
@@ -36,10 +36,11 @@ func NewSocialNetworkHandler(userService domain.SocialNetworkService, cfg *confi
 }
 
 func (h *socialNetworkHandler) CreateUser(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	var userReq dto.RegisterUserRequest
 	var user domain.User
 	var err error
-	log.Logger().Debug("UserHandler.RegisterUser")
+	log.Debug("UserHandler.RegisterUser")
 
 	if err = c.Bind(&userReq); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
@@ -48,21 +49,21 @@ func (h *socialNetworkHandler) CreateUser(c echo.Context) error {
 	if err = validators.ValidateRegisterUserRequest(userReq); err != nil {
 		var appverr *apperrors.ValidationError
 		if errors.As(err, &appverr) {
-			log.Logger().Warnw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned ValidationError", "err", err)
+			log.Warnw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned ValidationError", "err", err)
 			return c.JSON(http.StatusBadRequest, appverr)
 		}
-		log.Logger().Errorw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned error", "err", err)
+		log.Errorw("userHandler.RegisterUser: validators.ValidateRegisterUserRequest returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	if user, err = mappers.ToUser(userReq); err != nil {
-		log.Logger().Errorw("userHandler.RegisterUser: mappers.ToUser returned error", "err", err)
+		log.Errorw("userHandler.RegisterUser: mappers.ToUser returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	userId, err := h.snService.CreateUser(&user)
 	if err != nil {
-		log.Logger().Errorw("userHandler.RegisterUser: h.userService.RegisterUser returned error", "err", err)
+		log.Errorw("userHandler.RegisterUser: h.userService.RegisterUser returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, apperr)
@@ -75,36 +76,41 @@ func (h *socialNetworkHandler) CreateUser(c echo.Context) error {
 }
 
 func (h *socialNetworkHandler) Login(c echo.Context) error {
-
+	ctx := c.Request().Context()
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
 	var req dto.LoginRequest
 	var err error
 
-	log.Logger().Debug("UserHandler.Login")
+	log.Debug("Started")
 
 	if err = c.Bind(&req); err != nil {
+		log.Debug("c.Bind() returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 	if err = validators.ValidateLoginRequest(req); err != nil {
+		log.Debug("validators.ValidateLoginRequest() returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	token, err := h.snService.Login(req.Username, req.Password)
+	token, err := h.snService.Login(ctx, req.Username, req.Password)
 
 	if err != nil {
-		log.Logger().Errorw("userHandler.Login: h.userService.Login returned error", "err", err)
+		log.Debug("h.snService.Login() returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": err.Error()})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
+	log.Debug("Finished")
 	return c.JSON(http.StatusOK, map[string]string{"token": string(token)})
 }
 
 func (h *socialNetworkHandler) GetUser(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	var err error
 
-	log.Logger().Debug("UserHandler.Get")
+	log.Debug("UserHandler.Get")
 
 	id := domain.UserKey(c.Param("id"))
 
@@ -114,7 +120,7 @@ func (h *socialNetworkHandler) GetUser(c echo.Context) error {
 
 	user, err := h.snService.GetUser(id)
 	if err != nil {
-		log.Logger().Errorw("userHandler.Get: h.userService.GetById returned error", "err", err)
+		log.Errorw("userHandler.Get: h.userService.GetById returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
@@ -125,6 +131,7 @@ func (h *socialNetworkHandler) GetUser(c echo.Context) error {
 }
 
 func (h *socialNetworkHandler) Search(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	// Извлечение query параметров first_name и last_name
 	firstName := c.QueryParam("first_name")
 	lastName := c.QueryParam("last_name")
@@ -139,7 +146,7 @@ func (h *socialNetworkHandler) Search(c echo.Context) error {
 
 	users, err := h.snService.Search(firstName, lastName)
 	if err != nil {
-		log.Logger().Errorw("userHandler.Search: h.userService.Search returned error", "err", err)
+		log.Errorw("userHandler.Search: h.userService.Search returned error", "err", err)
 		var apperr *apperrors.AppError
 		if errors.As(err, &apperr) {
 			return c.JSON(apperr.Code, map[string]string{"error": apperr.Error()})
@@ -150,7 +157,8 @@ func (h *socialNetworkHandler) Search(c echo.Context) error {
 }
 
 func (h *socialNetworkHandler) AddFriend(c echo.Context) error {
-	log.Logger().Debug("UserHandler.AddFriend")
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
+	log.Debug("UserHandler.AddFriend")
 
 	var err error
 
@@ -174,23 +182,24 @@ func (h *socialNetworkHandler) AddFriend(c echo.Context) error {
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {
-		log.Logger().Errorw("userHandler.AddFriend: validators.ValidateUserId returned error", "err", err)
+		log.Errorw("userHandler.AddFriend: validators.ValidateUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
 	if err = h.snService.AddFriend(my_id, friend_id); err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrFriendAlreadyExists) {
-			log.Logger().Warnw("userHandler.AddFriend: h.userService.AddFriend returned ErrUserNotFound", "err", err)
+			log.Warnw("userHandler.AddFriend: h.userService.AddFriend returned ErrUserNotFound", "err", err)
 			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
 		}
-		log.Logger().Errorw("userHandler.AddFriend: h.userService.AddFriend returned error", "err", err)
+		log.Errorw("userHandler.AddFriend: h.userService.AddFriend returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 	return c.JSON(http.StatusNoContent, nil)
 }
 
 func (h *socialNetworkHandler) RemoveFriend(c echo.Context) error {
-	log.Logger().Debug("UserHandler.RemoveFriend")
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
+	log.Debug("UserHandler.RemoveFriend")
 
 	var err error
 
@@ -214,23 +223,24 @@ func (h *socialNetworkHandler) RemoveFriend(c echo.Context) error {
 
 	// Эту проверку имеет смысл вынести в middleware, чтобы валидировать в одном месте
 	if err = validators.ValidateUserId(my_id); err != nil {
-		log.Logger().Errorw("userHandler.RemoveFriend: validators.ValidateUserId returned error", "err", err)
+		log.Errorw("userHandler.RemoveFriend: validators.ValidateUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
 	if err = h.snService.RemoveFriend(my_id, friend_id); err != nil {
 		if errors.Is(err, domain.ErrFriendNotFound) {
-			log.Logger().Warnw("userHandler.RemoveFriend: h.userService.RemoveFriend returned ErrFriendNotFound", "err", err)
+			log.Warnw("userHandler.RemoveFriend: h.userService.RemoveFriend returned ErrFriendNotFound", "err", err)
 			return c.JSON(http.StatusBadRequest, apperrors.NewBadRequestError(err.Error()))
 		}
-		log.Logger().Errorw("userHandler.RemoveFriend: h.userService.RemoveFriend returned error", "err", err)
+		log.Errorw("userHandler.RemoveFriend: h.userService.RemoveFriend returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 	return c.JSON(http.StatusNoContent, nil)
 }
 
 func (h *socialNetworkHandler) Logout(c echo.Context) error {
-	log.Logger().Debug("UserHandler.Logout")
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
+	log.Debug("UserHandler.Logout")
 	// Извлекаем токен из контекста
 	token, ok := c.Get("token").(*jwt.Token)
 	if !ok {
@@ -239,7 +249,7 @@ func (h *socialNetworkHandler) Logout(c echo.Context) error {
 	}
 
 	if err := h.snService.Logout(token); err != nil {
-		log.Logger().Errorw("userHandler.Logout: h.userService.Logout returned error", "err", err)
+		log.Errorw("userHandler.Logout: h.userService.Logout returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, apperrors.NewInternalServerError("Internal server error", err))
 	}
 
@@ -247,19 +257,20 @@ func (h *socialNetworkHandler) Logout(c echo.Context) error {
 }
 
 func (h *socialNetworkHandler) ListPosts(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.List: getUserId returned error", "err", err)
+		log.Errorw("postHandler.List: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 	limit, lastPostId, err := h.getLimits(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
+		log.Errorw("postHandler.Feed: h.getLimits returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	posts, err := h.snService.ListPosts(userId, limit, lastPostId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.snService.ListPosts returned error", "err", err)
+		log.Errorw("postHandler.Feed: h.snService.ListPosts returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -270,29 +281,30 @@ func (h *socialNetworkHandler) ListPosts(c echo.Context) error {
 
 // Создание нового поста (POST /posts)
 func (h *socialNetworkHandler) CreatePost(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Create: getUserId returned error", "err", err)
+		log.Errorw("postHandler.Create: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	var postReq dto.CreateOrUpdatePostRequest
 
 	if err = c.Bind(&postReq); err != nil {
-		log.Logger().Errorw("postHandler.Create: c.Bind returned error", "err", err)
+		log.Errorw("postHandler.Create: c.Bind returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	// Валидация запроса
 	if err = validators.ValidateCreateOrUpdatePostRequest(postReq); err != nil {
-		log.Logger().Warnw("postHandler.Create: validators.ValidateCreateOrUpdatePostRequest returned error", "err", err)
+		log.Warnw("postHandler.Create: validators.ValidateCreateOrUpdatePostRequest returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
 	postMsg := mappers.ToPostMessage(&postReq)
 	postId, err := h.snService.CreatePost(userId, postMsg)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Create: h.postService.Create returned error", "err", err)
+		log.Errorw("postHandler.Create: h.postService.Create returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
@@ -301,21 +313,22 @@ func (h *socialNetworkHandler) CreatePost(c echo.Context) error {
 
 // Получение поста по ID (GET /posts/{id})
 func (h *socialNetworkHandler) GetPost(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Get: getUserId returned error", "err", err)
+		log.Errorw("postHandler.Get: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	postId, err := getPostId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Get: getPostId returned error", "err", err)
+		log.Errorw("postHandler.Get: getPostId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	post, err := h.snService.GetPost(userId, postId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Get: h.postService.Get returned error", "err", err)
+		log.Errorw("postHandler.Get: h.postService.Get returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -327,33 +340,34 @@ func (h *socialNetworkHandler) GetPost(c echo.Context) error {
 
 // Обновление поста по ID (PUT /posts/{id})
 func (h *socialNetworkHandler) UpdatePost(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Update: getUserId returned error", "err", err)
+		log.Errorw("postHandler.Update: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	var postReq dto.CreateOrUpdatePostRequest
 	postId, err := getPostId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Update: getPostId returned error", "err", err)
+		log.Errorw("postHandler.Update: getPostId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	if err := c.Bind(&postReq); err != nil {
-		log.Logger().Errorw("postHandler.Update: c.Bind returned error", "err", err)
+		log.Errorw("postHandler.Update: c.Bind returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	// Валидация запроса
 	if err := validators.ValidateCreateOrUpdatePostRequest(postReq); err != nil {
-		log.Logger().Warnw("postHandler.Update: validators.ValidateCreateOrUpdatePostRequest returned error", "err", err)
+		log.Warnw("postHandler.Update: validators.ValidateCreateOrUpdatePostRequest returned error", "err", err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	err = h.snService.UpdatePost(userId, postId, domain.PostText(postReq.Message))
 	if err != nil {
-		log.Logger().Errorw("postHandler.Update: h.postService.Update returned error", "err", err)
+		log.Errorw("postHandler.Update: h.postService.Update returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -365,21 +379,22 @@ func (h *socialNetworkHandler) UpdatePost(c echo.Context) error {
 
 // Удаление поста по ID (DELETE /posts/{id})
 func (h *socialNetworkHandler) DeletePost(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Delete: getUserId returned error", "err", err)
+		log.Errorw("postHandler.Delete: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	postId, err := getPostId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Delete: getPostId returned error", "err", err)
+		log.Errorw("postHandler.Delete: getPostId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 
 	err = h.snService.DeletePost(userId, postId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Delete: h.postService.Delete returned error", "err", err)
+		log.Errorw("postHandler.Delete: h.postService.Delete returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -391,14 +406,15 @@ func (h *socialNetworkHandler) DeletePost(c echo.Context) error {
 
 // Получение ленты
 func (h *socialNetworkHandler) GetFeed(c echo.Context) error {
+	log := logger.FromContext(c.Request().Context()).With("func", logger.GetFuncName())
 	userId, err := getUserId(c)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: getUserId returned error", "err", err)
+		log.Errorw("postHandler.Feed: getUserId returned error", "err", err)
 		return c.JSON(http.StatusInternalServerError, nil)
 	}
 	posts, err := h.snService.GetFeed(userId)
 	if err != nil {
-		log.Logger().Errorw("postHandler.Feed: h.snService.GetFeed returned error", "err", err)
+		log.Errorw("postHandler.Feed: h.snService.GetFeed returned error", "err", err)
 		if errors.Is(err, domain.ErrObjectNotFound) {
 			return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 		}
@@ -412,7 +428,7 @@ func getUserId(c echo.Context) (domain.UserKey, error) {
 	claims, ok := c.Get("claims").(*domain.UserClaims)
 	if !ok {
 		// Теоретически, такого не должно случиться, т.к. токен проверяется в Middleware
-		// log.Logger().Warnw("rest.getUserID: c.Get(\"claims\").(*domain.UserClaims) returned missing or invalid token")
+		// log.Warnw("rest.getUserID: c.Get(\"claims\").(*domain.UserClaims) returned missing or invalid token")
 		// залогируется выше
 		return "", errors.New("missing or invalid token")
 	}

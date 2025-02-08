@@ -102,7 +102,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.RequestIDMiddleware)
 	e.Use(middleware.SetRequestContextWithTimeout(cfg.API.ContextTimeout))
-	middleware.CORSConfig(e)
+	// middleware.CORSConfig(e)
 
 	// Роутинг
 	e.GET("/api/dialog", dialogHandler.GetDialogs)

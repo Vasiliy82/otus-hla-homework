@@ -1,16 +1,16 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
-	log "github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
-
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/apperrors"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
@@ -87,24 +87,31 @@ func (s *socialNetworkService) GetUser(id domain.UserKey) (*domain.User, error) 
 
 }
 
-func (s *socialNetworkService) Login(username, password string) (domain.TokenString, error) {
+func (s *socialNetworkService) Login(ctx context.Context, username, password string) (domain.TokenString, error) {
+	log := logger.FromContext(ctx)
 	// Проверка пароля
 	user, err := s.userRepo.GetByUsername(username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", apperrors.NewNotFoundError("User not found")
+			newErr := apperrors.NewNotFoundError("User not found")
+			log.Warnw("Error", "err", newErr, "username", username)
+			return "", newErr
 		}
+		log.Warnw("Error", "err", err, "username", username)
 		return "", apperrors.NewInternalServerError("UserService.Login: s.userRepo.GetByUserName returned unknown error", err)
 	}
+
 	if !user.CheckPassword(password) {
+		log.Warnw("Error", "err", err, "username", username)
 		return "", apperrors.NewUnauthorizedError("Wrong password")
 	}
 
 	token, err := s.jwtService.GenerateToken(user.ID, []domain.Permission{domain.PermissionUserGet})
 	if err != nil {
+		log.Warnw("Error", "err", err, "username", username)
 		return "", apperrors.NewInternalServerError("UserSevice.Login: s.sessionRepo.CreateSession returned unknown error", err)
 	}
-
+	log.Infow("Success", "username", username)
 	return token, nil
 }
 
@@ -230,7 +237,7 @@ func (s *socialNetworkService) GetFeed(userId domain.UserKey) ([]*domain.Post, e
 	if s.postCache != nil {
 		cache, err := s.postCache.GetFeed(userId, s.cfg.FeedLength)
 		if err != nil {
-			log.Logger().Warnw("postService.Feed: s.postCache.GetFeed returned error", "err", err)
+			logger.Logger().Warnw("postService.Feed: s.postCache.GetFeed returned error", "err", err)
 		} else if cache != nil {
 			return cache, nil
 		}
@@ -243,7 +250,7 @@ func (s *socialNetworkService) GetFeed(userId domain.UserKey) ([]*domain.Post, e
 	}
 	if s.postCache != nil {
 		if err = s.postCache.UpdateFeed(userId, posts); err != nil {
-			log.Logger().Warnw("postService.Feed: s.postCache.UpdateFeed returned error", "err", err)
+			logger.Logger().Warnw("postService.Feed: s.postCache.UpdateFeed returned error", "err", err)
 		}
 	}
 	return posts, nil
@@ -280,7 +287,7 @@ func (s *socialNetworkService) sendPostChangedEvent(post *domain.Post, event dom
 
 	// Отправляем событие в Kafka
 	if err := s.producer.SendPostModifiedEvent(ev); err != nil {
-		log.Logger().Errorw("Ошибка отправки события в Kafka", "post", post, "err", err)
+		logger.Logger().Errorw("Ошибка отправки события в Kafka", "post", post, "err", err)
 		return err
 	}
 

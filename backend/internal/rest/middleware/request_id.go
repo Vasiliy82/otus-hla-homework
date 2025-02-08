@@ -3,15 +3,12 @@ package middleware
 import (
 	"context"
 
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
-
-// ContextKey для хранения x-request-id в контексте
-type contextKey string
-
-const RequestIDKey contextKey = "x-request-id"
 
 // RequestIDMiddleware извлекает x-request-id из заголовков и сохраняет в контекст
 func RequestIDMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -20,24 +17,20 @@ func RequestIDMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		ctx := req.Context()
 
 		// Извлечение x-request-id из заголовка или генерация нового
-		requestID := req.Header.Get("x-request-id")
+		requestID := req.Header.Get(domain.RequestIDHeader)
 		if requestID == "" {
 			requestID = uuid.New().String()
 		}
 
 		// Сохранение x-request-id в контекст
-		ctx = logger.WithContext(context.WithValue(ctx, RequestIDKey, requestID), logger.FromContext(ctx).With("requestID", requestID))
+		ctx = logger.WithContext(context.WithValue(ctx, domain.RequestIDKey, requestID), logger.FromContext(ctx).With("requestID", requestID))
 
 		c.SetRequest(req.WithContext(ctx))
 
-		// // Добавление x-request-id в заголовок ответа для трассировки
-		// c.Response().Header().Set("x-request-id", requestID)
+		// Добавление x-request-id в заголовок ответа
+		utils.AddRequestIDToHeader(ctx, c.Response().Header())
 
 		err := next(c)
-
-		if c.Response().Header().Get("x-request-id") == "" {
-			c.Response().Header().Set("x-request-id", requestID)
-		}
 
 		return err
 

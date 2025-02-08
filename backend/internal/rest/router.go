@@ -9,7 +9,6 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -35,7 +34,18 @@ func NewProxyRouter(cfg *config.SocialNetworkConfig) (*ProxyRouter, error) {
 					return nil, err
 				}
 
-				proxies[route.Path][service.URL] = httputil.NewSingleHostReverseProxy(target)
+				newproxy := httputil.NewSingleHostReverseProxy(target)
+
+				newproxy.ModifyResponse = func(resp *http.Response) error {
+					requestID := resp.Header.Get("X-Request-ID")
+					if requestID != "" {
+						// Если заголовок уже есть, удаляем
+						resp.Header.Del("X-Request-ID")
+					}
+					return nil
+				}
+
+				proxies[route.Path][service.URL] = newproxy
 
 				// Здесь могут быть настроены всевозможные кастомные параметры транспорта: таймауты,
 				// idle time, keepalive, и прочее.
@@ -71,8 +81,9 @@ func (pr *ProxyRouter) RouterHandler(cfg *config.SocialNetworkConfig) echo.Handl
 							// Здесь можно прописать circuit breaker
 							log.Debugw("Route matched",
 								"requestMethod", requestMethod, "requestPath", requestPath, "requestURL", requestURL,
-								"acceptHeader", acceptHeader, "version", version,
-								"routeIdx", routeIdx, "serviceIdx", serviceIdx, "route.Path", route.Path, "version", version)
+								"acceptHeader", acceptHeader, "version", version, "routeIdx", routeIdx,
+								"serviceIdx", serviceIdx, "service.ServiceName", service.ServiceName,
+								"route.Path", route.Path, "version", version)
 							return proxyRequest(c, proxy)
 						}
 					}
@@ -154,11 +165,11 @@ func proxyRequest(c echo.Context, proxy *httputil.ReverseProxy) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Missing user ID in claims")
 	}
 
-	c.Request().Header.Set("X-User-Id", userID)
-	utils.AddRequestIDToOutgoing(ctx, c.Request())
+	hdr := c.Request().Header
+	hdr.Set("X-User-Id", userID)
+	// utils.AddRequestIDToHeader(ctx, c.Request().Header)
 
 	// Здесь могут быть добавлены retry
-
 	proxy.ServeHTTP(c.Response(), c.Request())
 
 	return nil
