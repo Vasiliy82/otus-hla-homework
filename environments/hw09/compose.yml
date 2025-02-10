@@ -26,6 +26,8 @@ services:
           cpus: '1.0'
         reservations:
           cpus: '1.0' 
+    networks:
+      - app_net
 
   postgres_slave1:
     image: postgres:latest
@@ -46,7 +48,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "5433:5432"
+      - "5434:5432"
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
@@ -59,6 +61,8 @@ services:
           cpus: '1.0'
         reservations:
           cpus: '1.0' 
+    networks:
+      - app_net
 
   postgres_slave2:
     image: postgres:latest
@@ -79,7 +83,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "5434:5432"
+      - "5435:5432"
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
@@ -92,6 +96,8 @@ services:
           cpus: '1.0'
         reservations:
           cpus: '1.0' 
+    networks:
+      - app_net
  
   goose:
     container_name: goose
@@ -107,15 +113,17 @@ services:
       POSTGRES_PORT: 5432
     volumes:
       - ./../../backend/migrations:/app/migrations
+    networks:
+      - app_net
   
-  socnet:
-    container_name: socnet
-    hostname: socnet
+  socnet-1:
+    container_name: socnet-1
+    hostname: socnet-1
     build:
       context: ./../..
-      dockerfile: environments/hw08/backend/Dockerfile
+      dockerfile: environments/hw09/backend/Dockerfile
     ports:
-      - "8080:8080" # REST service
+      - "8081:8080" # REST service
     volumes:
       - ./backend/socnet.yaml:/app/socnet.yaml
       - ./../../backend/frontend-demo:/app/frontend-demo
@@ -126,15 +134,38 @@ services:
     links:
       - kafka
       - redis
+    networks:
+      - app_net
 
-  dialogs:
-    container_name: dialogs
-    hostname: dialogs
+  socnet-2:
+    container_name: socnet-2
+    hostname: socnet-2
     build:
       context: ./../..
-      dockerfile: environments/hw08/backend/Dockerfile
+      dockerfile: environments/hw09/backend/Dockerfile
     ports:
-      - "8081:8080" # REST service
+      - "8082:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+      - ./../../backend/frontend-demo:/app/frontend-demo
+    command: ["./socnet"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
+    networks:
+      - app_net
+
+  dialogs-1:
+    container_name: dialogs-1
+    hostname: dialogs-1
+    build:
+      context: ./../..
+      dockerfile: environments/hw09/backend/Dockerfile
+    ports:
+      - "8083:8080" # REST service
     volumes:
       - ./backend/socnet.yaml:/app/socnet.yaml
     command: ["./dialogs"]
@@ -144,12 +175,15 @@ services:
     links:
       - kafka
       - redis
-  dialogs-legacy:
-    container_name: dialogs-legacy
-    hostname: dialogs-legacy
+    networks:
+      - app_net
+
+  dialogs-2:
+    container_name: dialogs-2
+    hostname: dialogs-2
     build:
       context: ./../..
-      dockerfile: environments/hw08/backend/Dockerfile
+      dockerfile: environments/hw09/backend/Dockerfile
     ports:
       - "8084:8080" # REST service
     volumes:
@@ -161,25 +195,8 @@ services:
     links:
       - kafka
       - redis
-
-
-  posts-ws:
-    container_name: posts-ws
-    hostname: posts-ws
-    build:
-      context: ./../..
-      dockerfile: environments/hw08/backend/Dockerfile
-    ports:
-      - "8082:8080" # REST service
-    volumes:
-      - ./backend/socnet.yaml:/app/socnet.yaml
-    command: ["./posts-ws"]
-    depends_on:
-      postgres:
-        condition: service_healthy
-    links:
-      - kafka
-      - redis
+    networks:
+      - app_net
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
@@ -193,6 +210,8 @@ services:
       - "9187:9187"
     command:
       - "--no-collector.stat_bgwriter"
+    networks:
+      - app_net
   
   prometheus:
     image: prom/prometheus
@@ -204,6 +223,8 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
     ports:
       - "9090:9090"
+    networks:
+      - app_net
 
   grafana:
     image: grafana/grafana
@@ -215,12 +236,14 @@ services:
       - ./grafana/configuration.tar.gz:/tmp/configuration.tar.gz
     depends_on:
       - prometheus
+    networks:
+      - app_net
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.49.1
     container_name: cadvisor
     ports:
-      - "8083:8080"
+      - "8085:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /sys:/sys:ro
@@ -232,6 +255,8 @@ services:
     #   - postgres_slave1
     #   - postgres_slave2
     #   - backend
+    networks:
+      - app_net
 
   redis:
     image: redis:latest
@@ -240,6 +265,8 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    networks:
+      - app_net
 
   kafka:
     build: "./kafka"
@@ -265,6 +292,8 @@ services:
       KAFKA_OPTS: "-javaagent:/usr/app/jmx_prometheus_javaagent.jar=9102:/etc/jmx-agent/prom-jmx-agent-config.yml"
     volumes:
       - kafka-data:/var/lib/kafka/data  # Для хранения данных
+    networks:
+      - app_net
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
@@ -275,6 +304,8 @@ services:
       REDIS_ADDR: "redis:6379"  # Адрес Redis сервера
     depends_on:
       - redis
+    networks:
+      - app_net
 
   tarantool:
     image: tarantool/tarantool:latest  # Используем последнюю версию Tarantool
@@ -289,6 +320,45 @@ services:
       TARANTOOL_USER_NAME: "admin"
       TARANTOOL_USER_PASSWORD: "Passw0rd"
     command: ["tarantool", "/opt/tarantool/init.lua"]
+    networks:
+      - app_net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "8086:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - socnet-1
+      - socnet-2
+      - dialogs-1
+      - dialogs-2
+    networks:
+      app_net:
+        aliases:
+          - dialogs
+          - socnet
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    ports:
+      - "8404:8404"  # Порт для статистики HAProxy
+      - "5433:5432"  # Порт для подключения к PostgreSQL через HAProxy
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      postgres_slave1:
+        condition: service_healthy      
+      postgres_slave2:
+        condition: service_healthy      
+    networks:
+      app_net:
+        aliases:
+          - postgres-slaves
 
 volumes:
   postgres-data:
@@ -296,3 +366,9 @@ volumes:
   prometheus-data:
   redis-data:
   kafka-data:
+  postgres-slave1-data:
+  postgres-slave2-data:
+
+networks:
+  app_net:
+    driver: bridge

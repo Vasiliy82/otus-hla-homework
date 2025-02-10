@@ -58,54 +58,74 @@ pg-backup:
 	docker compose exec postgres pg_dump -U app_hw -d hw | gzip > ~/Projects/2024-11-01-hw_backup.gz
 	@echo "завершено"
 
-# Задача: запуск нагрузочного теста с HTML-отчетами
 .PHONY: run-tests
+
 run-tests:
-	@echo "Запуск нагрузочного теста для PostgreSQL и Tarantool..."
+	@echo "Запуск нагрузочного теста с последовательным отключением сервисов..."
 
 	# Создаем директории для отчетов
-	mkdir -p $(RESULTS_DIR)/postgresql
-	mkdir -p $(RESULTS_DIR)/tarantool
-	mkdir -p $(HTML_REPORT_DIR)/postgresql
-	mkdir -p $(HTML_REPORT_DIR)/tarantool
+	mkdir -p $(RESULTS_DIR)/step1
+	mkdir -p $(RESULTS_DIR)/step2
+	mkdir -p $(RESULTS_DIR)/step3
+	mkdir -p $(RESULTS_DIR)/step4
 
+	# Шаг 1: Тестирование на начальной конфигурации
+	echo "Шаг 1: Тестирование системы без отказов";
+	docker run \
+	    --add-host=host.docker.internal:host-gateway \
+	    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		-n -t $(JMETER_FILE) \
+		-JHOSTNAME=host.docker.internal \
+		-JPORT=8080 \
+		-JTHREADS=1 \
+		-JDURATION=$(TEST_DURATION) \
+		-l $(RESULTS_DIR)/step1/result.jtl \
+		-e -o $(RESULTS_DIR)/step1/report;
 
-	cp $(SOCNET_PG_CONFIG) ./backend/socnet.yaml;
-	docker compose -f $(DOCKER_COMPOSE_FILE) down dialogs;
-	docker compose -f $(DOCKER_COMPOSE_FILE) up -d dialogs;
+	# Шаг 2: Отключение postgres_slave1 и повторное тестирование
+	echo "Отключение postgres_slave1 и повторное тестирование";
+	docker compose kill postgres_slave1;
+	docker run \
+	    --add-host=host.docker.internal:host-gateway \
+	    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		-n -t $(JMETER_FILE) \
+		-JHOSTNAME=host.docker.internal \
+		-JPORT=8080 \
+		-JTHREADS=1 \
+		-JDURATION=$(TEST_DURATION) \
+		-l $(RESULTS_DIR)/step2/result.jtl \
+		-e -o $(RESULTS_DIR)/step2/report;
 
-	# Тестирование для PostgreSQL
-	for THREADS in $(THREADS_LIST); do \
-		echo "Тестирование PostgreSQL с потоками: $$THREADS"; \
-		docker run \
-		    --add-host=host.docker.internal:host-gateway \
-			--rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
-			-n -t $(JMETER_FILE) \
-			-JHOSTNAME=host.docker.internal \
-			-JPORT=8081 \
-			-JTHREADS=$$THREADS \
-			-JDURATION=$(TEST_DURATION) \
-			-l $(RESULTS_DIR)/postgresql/result_$$THREADS.jtl \
-			-e -o $(HTML_REPORT_DIR)/postgresql/report_$$THREADS; \
-	done
+	# Шаг 3: Отключение dialogs-1 и повторное тестирование
+	echo "Отключение dialogs-1 и повторное тестирование";
+	docker compose kill dialogs-1;
+	docker run \
+	    --add-host=host.docker.internal:host-gateway \
+	    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		-n -t $(JMETER_FILE) \
+		-JHOSTNAME=host.docker.internal \
+		-JPORT=8080 \
+		-JTHREADS=1 \
+		-JDURATION=$(TEST_DURATION) \
+		-l $(RESULTS_DIR)/step3/result.jtl \
+		-e -o $(RESULTS_DIR)/step3/report;
 
-	cp $(SOCNET_TARANTOOL_CONFIG) ./backend/socnet.yaml;
-	docker compose -f $(DOCKER_COMPOSE_FILE) down dialogs;
-	docker compose -f $(DOCKER_COMPOSE_FILE) up -d dialogs;
+	# Шаг 4: Отключение socnet-1 и повторное тестирование
+	echo "Отключение socnet-1 и повторное тестирование";
+	docker compose kill socnet-1;
+	docker run \
+	    --add-host=host.docker.internal:host-gateway \
+	    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
+		-n -t $(JMETER_FILE) \
+		-JHOSTNAME=host.docker.internal \
+		-JPORT=8080 \
+		-JTHREADS=1 \
+		-JDURATION=$(TEST_DURATION) \
+		-l $(RESULTS_DIR)/step4/result.jtl \
+		-e -o $(RESULTS_DIR)/step4/report;
 
-	# Тестирование для Tarantool
-	for THREADS in $(THREADS_LIST); do \
-		echo "Тестирование Tarantool с потоками: $$THREADS"; \
-		docker run \
-		    --add-host=host.docker.internal:host-gateway \
-		    --rm -v $$(pwd):/jmeter -w /jmeter $(JMETER_IMAGE) \
-			-n -t $(JMETER_FILE) \
-			-JHOSTNAME=host.docker.internal \
-			-JPORT=8081 \
-			-JTHREADS=$$THREADS \
-			-JDURATION=$(TEST_DURATION) \
-			-l $(RESULTS_DIR)/tarantool/result_$$THREADS.jtl \
-			-e -o $(HTML_REPORT_DIR)/tarantool/report_$$THREADS; \
-	done
+	# Восстановление всех сервисов
+	echo "Восстановление всех остановленных сервисов...";
+	docker compose up -d postgres_slave1 dialogs-1 socnet-1;
 
-	@echo "Нагрузочные тесты завершены. HTML-отчеты сохранены в $(HTML_REPORT_DIR)."
+	@echo "Нагрузочные тесты завершены. HTML-отчеты сохранены в $(RESULTS_DIR)."

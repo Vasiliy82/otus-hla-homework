@@ -36,12 +36,7 @@ social_network:
         - service_name: dialogs
           url: http://dialogs:8080
           supported_versions:
-            - vnd.dialogs.v2+json
-        - service_name: dialogs-legacy
-          url: http://dialogs-legacy:8080
-          supported_versions:
             - default
-            - vnd.dialogs.v1+json
     - path: ^/api/dialog/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/list$
       methods:
         - GET
@@ -50,12 +45,6 @@ social_network:
           url: http://dialogs:8080
           supported_versions:
             - default
-            - vnd.dialogs.v2+json
-        - service_name: dialogs-list-legacy
-          url: http://dialogs-legacy:8080
-          supported_versions:
-            - default
-            - vnd.dialogs.v1+json
     - path: ^/api/dialog/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/send$
       methods:
         - POST
@@ -64,8 +53,6 @@ social_network:
           url: http://dialogs:8080
           supported_versions:
             - default
-            - vnd.dialogs.v1+json
-            - vnd.dialogs.v2+json
   feed_length: 1000
   svc_posts_ws_url: ws://posts-ws:8080/ws
   max_post_created_per_worker: 30
@@ -81,25 +68,25 @@ database:
     min_conns: 2
     max_conn_idle_time: 1m
     max_conn_lifetime: 10m
-  # replicas:
-  #   - host: postgres_slave1
-  #     port: 5432
-  #     user: app_hw
-  #     password: Passw0rd
-  #     name: hw
-  #     max_open_conns: 100
-  #     max_idle_conns: 100
-  #     max_conn_lifetime: 10m
-  #     max_conn_idle_time: 1m
-  #   - host: postgres_slave2
-  #     port: 5432
-  #     user: app_hw
-  #     password: Passw0rd
-  #     name: hw
-  #     max_open_conns: 100
-  #     max_idle_conns: 100
-  #     max_conn_lifetime: 10m
-  #     max_conn_idle_time: 1m
+  replicas:
+    - host: postgres-slaves
+      port: 5432
+      user: app_hw
+      password: Passw0rd
+      name: hw
+      max_conns: 80
+      min_conns: 2
+      max_conn_idle_time: 1m
+      max_conn_lifetime: 10m
+    # - host: postgres_slave2
+    #   port: 5432
+    #   user: app_hw
+    #   password: Passw0rd
+    #   name: hw
+    #   max_conns: 80
+    #   min_conns: 2
+    #   max_conn_idle_time: 1m
+    #   max_conn_lifetime: 10m
 
 jwt:
   private_key: |
@@ -170,7 +157,7 @@ posts:
 dialogs:
   default_page_size: 20
   max_page_size: 200
-  use_inmem: true
+  use_inmem: false
 
 tarantool:
   host: tarantool
