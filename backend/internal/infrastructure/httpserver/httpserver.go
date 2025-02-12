@@ -13,6 +13,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
+	cmw "github.com/Vasiliy82/otus-hla-homework/common/infrastructure/http/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -39,7 +40,7 @@ func Start(ctx context.Context,
 	// prepare echo
 	e := echo.New()
 
-	e.Use(middleware.RequestIDMiddleware)
+	e.Use(cmw.RequestIDMiddleware)
 
 	// Настройка middleware CORS
 	middleware.CORSConfig(e)
