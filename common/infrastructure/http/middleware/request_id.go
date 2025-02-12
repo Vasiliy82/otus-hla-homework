@@ -3,9 +3,9 @@ package middleware
 import (
 	"context"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
+	"github.com/Vasiliy82/otus-hla-homework/common/domain"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )

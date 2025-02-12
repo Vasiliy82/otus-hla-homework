@@ -18,6 +18,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
+	commw "github.com/Vasiliy82/otus-hla-homework/common/infrastructure/http/middleware"
 	"github.com/labstack/echo/v4"
 )
 
@@ -100,7 +101,7 @@ func main() {
 
 	// Инициализация Echo
 	e := echo.New()
-	e.Use(middleware.RequestIDMiddleware)
+	e.Use(commw.RequestIDMiddleware)
 	e.Use(middleware.SetRequestContextWithTimeout(cfg.API.ContextTimeout))
 	// middleware.CORSConfig(e)
 
