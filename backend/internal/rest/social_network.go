@@ -13,9 +13,9 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/dto"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/mappers"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/validators"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )

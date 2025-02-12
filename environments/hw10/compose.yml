@@ -1,0 +1,168 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgres/init-master.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
+    networks:
+      - app_net
+
+  postgres-counters:
+    image: postgres:latest
+    container_name: postgres-counters
+    hostname: postgres-counters
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgres/init-master.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-counters-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d hw"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+        reservations:
+          cpus: '1.0' 
+    networks:
+      - app_net
+
+  goose:
+    container_name: goose
+    build:
+      context: ./goose
+    profiles:
+      - migration
+    networks:
+      - app_net
+  
+  dialogs:
+    container_name: dialogs
+    hostname: dialogs
+    build:
+      context: ./../../backend
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "8081:8080" # REST service
+    volumes:
+      - ./backend/socnet.yaml:/app/socnet.yaml
+    command: ["./dialogs"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
+    networks:
+      - app_net
+
+  counters:
+    container_name: counters
+    hostname: counters
+    build:
+      context: ./../../counters
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "8082:8080" # REST service
+    volumes:
+      - ./counters/counters.yaml:/app/counters.yaml
+    command: ["./counters"]
+    depends_on:
+      postgres-counters:
+        condition: service_healthy
+    links:
+      - kafka
+      - redis
+    networks:
+      - app_net
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app_net
+
+  redis-counters:
+    image: redis:latest
+    container_name: redis-counters
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-counters-data:/data
+    networks:
+      - app_net
+
+
+  kafka:
+    build: "./kafka"
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"    # для хоста
+      - "9101:9101"    # JMX
+      - "9102:9102"    # Prometheus metrics
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: kafka
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: 'MZwa-fURSkiW8PG4ISQe8Q'  # Убедитесь, что это значение актуально
+      KAFKA_OPTS: "-javaagent:/usr/app/jmx_prometheus_javaagent.jar=9102:/etc/jmx-agent/prom-jmx-agent-config.yml"
+    volumes:
+      - kafka-data:/var/lib/kafka/data  # Для хранения данных
+    networks:
+      - app_net
+
+volumes:
+  postgres-data:
+  redis-data:
+  postgres-counters-data:
+  redis-counters-data:
+  kafka-data:
+
+networks:
+  app_net:
+    driver: bridge

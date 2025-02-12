@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 

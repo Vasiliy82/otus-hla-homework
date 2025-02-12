@@ -1,0 +1,28 @@
+postgres:
+  host: postgres-counters
+  port: 5432
+  user: app_hw
+  password: Passw0rd
+  name: hw
+  max_conns: 80
+  min_conns: 2
+  max_conn_idle_time: 1m
+  max_conn_lifetime: 10m
+kafka:
+  brokers: "kafka:29092"
+  acks: "all"
+  retries: 3
+  linger_ms: 100
+  enable_idempotence: true
+  topic_saga_bus: mysocnet-saga-bus
+  consumergroup_saga_bus: counters
+  num_workers_saga_bus: 2
+redis:
+  host: redis-counters
+  port: 6379
+  password: ""
+api:
+  server_address: ":8080"
+  context_timeout: 30s
+  shutdown_timeout: 10s
+  

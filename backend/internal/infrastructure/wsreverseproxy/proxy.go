@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )

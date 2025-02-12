@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/tarantool/go-tarantool"
 )
 

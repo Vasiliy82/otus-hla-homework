@@ -30,16 +30,31 @@
             "program": "${workspaceFolder}/backend/cmd/posts-ws/main.go",
             "args": ["-config", "./posts-local.yaml"],
             "cwd": "${workspaceFolder}/backend"
+        },
+        {
+            "name": "Lanuch counters",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/counters/cmd/main.go",
+            "args": ["-config", "./counters-local.yaml"],
+            "cwd": "${workspaceFolder}/counters"
         }        
+        
+
     ]
     , "compounds": [
-    {
-      "name": "socnet+posts-ws",
-      "configurations": ["Lanuch socnet", "Lanuch posts-ws"] // Указываем оба процесса
-    },
-    {
-        "name": "socnet+dialogs",
-        "configurations": ["Lanuch socnet", "Lanuch dialogs"] // Указываем оба процесса
-    }
+        {
+            "name": "socnet+posts-ws",
+            "configurations": ["Lanuch socnet", "Lanuch posts-ws"] // Указываем оба процесса
+        },
+        {
+            "name": "dialogs+counters",
+            "configurations": ["Lanuch dialogs", "Lanuch counters"]
+        },
+        {
+            "name": "socnet+dialogs",
+            "configurations": ["Lanuch socnet", "Lanuch dialogs"]
+        }
   ]
 }

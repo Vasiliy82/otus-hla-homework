@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

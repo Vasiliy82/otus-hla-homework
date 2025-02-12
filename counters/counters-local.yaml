@@ -1,0 +1,28 @@
+postgres:
+  host: localhost
+  port: 5433
+  user: app_hw
+  password: Passw0rd
+  name: hw
+  max_conns: 80
+  min_conns: 2
+  max_conn_idle_time: 1m
+  max_conn_lifetime: 10m
+kafka:
+  brokers: "localhost:9092"
+  acks: "all"
+  retries: 3
+  linger_ms: 100
+  enable_idempotence: true
+  topic_saga_bus: mysocnet-saga-bus
+  consumergroup_saga_bus: socnet
+  num_workers_saga_bus: 2
+redis:
+  host: localhost
+  port: 6380
+  password: ""
+api:
+  server_address: ":8082"
+  context_timeout: 30s
+  shutdown_timeout: 10s
+  

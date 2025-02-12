@@ -12,12 +12,12 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/tarantool"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/labstack/echo/v4"
 )
 

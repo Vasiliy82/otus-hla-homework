@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	echo "github.com/labstack/echo/v4"
 )
 

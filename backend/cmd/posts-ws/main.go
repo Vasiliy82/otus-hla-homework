@@ -8,10 +8,10 @@ import (
 	"syscall"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

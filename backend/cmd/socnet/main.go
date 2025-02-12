@@ -10,9 +10,9 @@ import (
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
-	"github.com/Vasiliy82/otus-hla-homework/backend/internal/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository/cache"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
