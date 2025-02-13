@@ -6,7 +6,6 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/common/domain"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/common/utils"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,7 +18,7 @@ func RequestIDMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		// Извлечение x-request-id из заголовка или генерация нового
 		requestID := req.Header.Get(domain.RequestIDHeader)
 		if requestID == "" {
-			requestID = uuid.New().String()
+			requestID = utils.GenerateID()
 		}
 
 		// Сохранение x-request-id в контекст

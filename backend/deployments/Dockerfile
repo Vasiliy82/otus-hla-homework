@@ -10,6 +10,7 @@ RUN echo "Обновление пакетов..." && \
     pkg-config
 
 COPY go.mod go.sum ./
+RUN sed -i '/replace/d' go.mod
 RUN go mod download
 COPY . /app
 

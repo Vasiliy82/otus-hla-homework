@@ -17,6 +17,8 @@ KAFKA_TOPIC_NAME_2 ?= mysocnet-posts-post-modified
 KAFKA_TOPIC_NAME_3 ?= mysocnet-posts-follower-notify
 KAFKA_TOPIC_NAME_4 ?= mysocnet-saga-bus
 
+BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
+
 # Массив потоков
 THREADS_LIST=100
 TEST_DURATION=5
@@ -25,7 +27,11 @@ TEST_DURATION=5
 .PHONY: up
 up:
 	@echo "Запуск контейнеров...";
-	docker compose -f $(DOCKER_COMPOSE_FILE) up -d --build;
+	@echo "Current branch: $(BRANCH)...";
+
+
+	docker compose build --build-arg BRANCH=$(BRANCH) ;
+	docker compose -f $(DOCKER_COMPOSE_FILE) up -d;
 	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_1) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";
 	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_2) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";
 	docker compose -f $(DOCKER_COMPOSE_FILE) exec kafka /bin/bash -c "unset KAFKA_OPTS && kafka-topics --create --topic $(KAFKA_TOPIC_NAME_3) --partitions 3  --replication-factor 1 --bootstrap-server kafka:29092";

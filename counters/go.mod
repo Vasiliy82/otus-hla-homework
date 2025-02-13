@@ -3,7 +3,7 @@ module github.com/Vasiliy82/otus-hla-homework/counters
 go 1.23.6
 
 require (
-	github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212132443-c8d506e344c0
+	github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212233207-b168a2748eb1
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.2
@@ -33,4 +33,4 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 )
 
-// replace github.com/Vasiliy82/otus-hla-homework/common => ../common
+replace github.com/Vasiliy82/otus-hla-homework/common => ../common

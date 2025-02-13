@@ -12,8 +12,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/Microsoft/hcsshim v0.11.5 h1:haEcLNpj9Ka1gd3B3tAEs9CpE0c+1IhoL59w/exYU38=
 github.com/Microsoft/hcsshim v0.11.5/go.mod h1:MV8xMfmECjl5HdO7U/3/hFVnkmSBjAjmA09d4bExKcU=
-github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212132443-c8d506e344c0 h1:w69IE9fQRe2R0LgDtuzscj3MXNIc4FsAljbq7dm3ufA=
-github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212132443-c8d506e344c0/go.mod h1:Frx/9vrS3HMx/TzPuIiYSwEjLwTWjPosAmFUodecLbA=
+github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212233821-a733ab042815 h1:bUjRsgSSHJQX/9ogjsfRazp6jpZNUXW1oOWSpWJ/zIs=
+github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212233821-a733ab042815/go.mod h1:ZdDnoE+Q+8ZV/OQTZyl65kBApD7hEZ2SIz4vISeyJAg=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=

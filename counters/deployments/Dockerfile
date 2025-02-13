@@ -1,3 +1,4 @@
+
 # Stage 1: Build the Go app
 FROM golang:1.23 AS build
 
@@ -10,6 +11,13 @@ RUN echo "Обновление пакетов..." && \
     pkg-config
 
 COPY go.mod go.sum ./
+RUN sed -i '/replace/d' go.mod
+# Т.к. в пакете common нет управления версиями, каждый раз получаем его из main, или из указанной ветки
+RUN go mod edit -droprequire github.com/Vasiliy82/otus-hla-homework/common
+ARG BRANCH=main
+RUN go get github.com/Vasiliy82/otus-hla-homework/common@${BRANCH}
+RUN go mod tidy
+
 RUN go mod download
 COPY . /app
 

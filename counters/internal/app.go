@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	commw "github.com/Vasiliy82/otus-hla-homework/common/infrastructure/http/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	httpAdapter "github.com/Vasiliy82/otus-hla-homework/counters/internal/adapters/http"
 	config "github.com/Vasiliy82/otus-hla-homework/counters/internal/config-counters"
@@ -127,6 +128,7 @@ func initDBInstance(ctx context.Context, cfg *config.DBInstanceConfig, appName s
 // initializeHTTPServer настройка HTTP роутов и серверов
 func initializeHTTPServer(counterService domain.CounterService) *echo.Echo {
 	e := echo.New()
+	e.Use(commw.RequestIDMiddleware)
 	handler := httpAdapter.NewCounterHTTPHandler(counterService)
 	handler.RegisterRoutes(e)
 	return e
