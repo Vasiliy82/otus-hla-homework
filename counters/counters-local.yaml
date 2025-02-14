@@ -15,7 +15,7 @@ kafka:
   linger_ms: 100
   enable_idempotence: true
   topic_saga_bus: mysocnet-saga-bus
-  consumergroup_saga_bus: socnet
+  consumergroup_saga_bus: counters
   num_workers_saga_bus: 2
 redis:
   host: localhost
