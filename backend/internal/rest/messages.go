@@ -53,7 +53,7 @@ func (h *dialogHandler) SendMessage(c echo.Context) error {
 	myId := domain.UserKey(userIdHeader)
 	ctx = logger.WithContext(ctx, logger.FromContext(ctx).With("userID", myId))
 
-	err := h.dialogService.SendMessage(ctx, myId, partnerId, reqBody.Text)
+	_, err := h.dialogService.SendMessage(ctx, myId, partnerId, reqBody.Text)
 	if err != nil {
 		return handleError(c, err)
 	}

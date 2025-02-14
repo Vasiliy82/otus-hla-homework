@@ -7,12 +7,15 @@ kafka:
   topic_post_modified: mysocnet-posts-post-modified
   topic_feed_changed: mysocnet-cache-feed-changed
   topic_follower_notify: mysocnet-posts-follower-notify
+  topic_saga_bus: mysocnet-saga-bus
   consumergroup_post_modified: socnet
   consumergroup_feed_changed: socnet
   consumergroup_follower_notify: socnet
+  consumergroup_saga_bus: socnet
   num_workers_post_modified: 2
   num_workers_feed_changed: 2
   num_workers_follower_notify: 2
+  num_workers_saga_bus: 2
 api:
   server_address: ":8080"
   context_timeout: 2s

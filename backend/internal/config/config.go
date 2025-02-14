@@ -71,12 +71,15 @@ type KafkaConfig struct {
 	TopicPostModified        string `yaml:"topic_post_modified"`
 	TopicFeedChanged         string `yaml:"topic_feed_changed"`
 	TopicFollowerNotify      string `yaml:"topic_follower_notify"`
+	TopicSagaBus             string `yaml:"topic_saga_bus"`
 	CGPostModified           string `yaml:"consumergroup_post_modified"`
 	CGFeedChanged            string `yaml:"consumergroup_feed_changed"`
 	CGFollowerNotify         string `yaml:"consumergroup_follower_notify"`
+	CGSagaBus                string `yaml:"consumergroup_saga_bus"`
 	NumWorkersPostModified   int    `yaml:"num_workers_post_modified"`
 	NumWorkersFeedChanged    int    `yaml:"num_workers_feed_changed"`
 	NumWorkersFollowerNotify int    `yaml:"num_workers_follower_notify"`
+	NumWorkersSagaBus        int    `yaml:"num_workers_saga_bus"`
 }
 
 type PostsConfig struct {

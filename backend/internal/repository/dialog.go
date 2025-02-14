@@ -112,11 +112,13 @@ func (r *dialogRepository) GetDialog(ctx context.Context, myId, partnerId domain
 		SELECT dialog_id, message_id, author_id, datetime, message
 		FROM messages
 		WHERE dialog_id = $1
+		    AND saga_status = $2
 		ORDER BY datetime DESC
-		LIMIT $2 OFFSET $3;
+		LIMIT $3 OFFSET $4;
 	`
-	log.Debugw("db.Query()", "query", query, "$1", dialogId, "$2", limit, "$3", offset)
-	rows, err := db.Query(ctx, query, dialogId, limit, offset)
+
+	log.Debugw("db.Query()", "query", query, "$1", dialogId, "$2", domain.TxCommitted, "$3", limit, "$4", offset)
+	rows, err := db.Query(ctx, query, dialogId, domain.TxCommitted, limit, offset)
 	if err != nil {
 		log.Debugw("db.Query() returned error", "err", err)
 		return nil, fmt.Errorf("failed to query messages: %w", err)
@@ -183,4 +185,101 @@ func (r *dialogRepository) GetDialogs(ctx context.Context, myId domain.UserKey, 
 	}
 	log.Debug("finished")
 	return dialogs, nil
+}
+
+// UpdateSagaStatus обновляет статус SAGA транзакции
+func (r *dialogRepository) UpdateSagaStatus(ctx context.Context, transactionID string, status string) error {
+
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
+
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
+	if err != nil {
+		log.Debugw("r.dbCluster.GetDBPool() returned error", err)
+		return fmt.Errorf("failed to get pool from cluster: %w", err)
+	}
+
+	query := `
+		UPDATE messages
+		SET saga_status = $1
+		WHERE transaction_id = $2;`
+
+	log.Debugw("db.Exec()", "query", query, "$1", status, "$2", transactionID)
+
+	_, err = db.Exec(ctx, query, status, transactionID)
+	if err != nil {
+		log.Debug("db.Exec() returned error", "err", err)
+		return fmt.Errorf("failed to update transaction status: %w", err)
+	}
+	log.Debug("db.Exec() finished")
+
+	// Успешная транзакция
+	log.Debug("finished")
+	return nil
+}
+
+func (r *dialogRepository) SaveMessageWithSaga(ctx context.Context, myId, partnerId domain.UserKey, message, transactionID string) error {
+	log := logger.FromContext(ctx).With("func", logger.GetFuncName())
+	log.Debugw("started", "myId", myId, "partnerId", partnerId, "message", message, "transactionID", transactionID)
+
+	db, err := r.dbCluster.GetDBPool(postgresqldb.ReadWrite)
+	if err != nil {
+		log.Errorw("r.dbCluster.GetDBPool() returned error", "err", err)
+		return fmt.Errorf("failed to get pool from cluster: %w", err)
+	}
+
+	dialogId := r.getDialogId(myId, partnerId)
+	log.Debugw("r.getDialogId()", "dialogId", dialogId)
+
+	// Начало транзакции
+	log.Debugw("Tran begin")
+	tx, err := db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback(ctx) // Откат в случае паники
+			log.Debugw("Tran rollback (panic)")
+			panic(p) // Переподнимаем панику
+		} else if err != nil {
+			_ = tx.Rollback(ctx) // Откат в случае ошибки
+			log.Debugw("Tran rollback")
+		} else {
+			err = tx.Commit(ctx) // Фиксация транзакции
+			if err != nil {
+				log.Errorw("Tran commit failed", "err", err)
+			} else {
+				log.Debugw("Tran commit successful")
+			}
+		}
+	}()
+
+	// Вставляем данные в `dialogs`
+	query := `
+		INSERT INTO dialogs (dialog_id, user_id)
+		VALUES ($1, $2), ($1, $3)
+		ON CONFLICT DO NOTHING;
+	`
+	log.Debugw("tx.Exec()", "query", query, "$1", dialogId, "$2", myId, "$3", partnerId)
+	_, err = tx.Exec(ctx, query, dialogId, myId, partnerId)
+	if err != nil {
+		log.Errorw("tx.Exec() failed to insert into dialogs", "err", err)
+		return fmt.Errorf("failed to create dialog: %w", err)
+	}
+
+	// Вставляем данные в `messages` с `transaction_id` и `saga_status`
+	query = `
+		INSERT INTO messages (dialog_id, author_id, message, transaction_id, saga_status)
+		VALUES ($1, $2, $3, $4, 'pending');
+	`
+	log.Debugw("tx.Exec()", "query", query, "$1", dialogId, "$2", myId, "$3", message, "$4", transactionID)
+	_, err = tx.Exec(ctx, query, dialogId, myId, message, transactionID)
+	if err != nil {
+		log.Errorw("tx.Exec() failed to insert message", "err", err)
+		return fmt.Errorf("failed to insert message: %w", err)
+	}
+
+	// Успешная транзакция
+	log.Debug("finished")
+	return nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
@@ -107,6 +108,32 @@ func (p *Producer) SendFollowerNotifyEvent(event domain.EventFollowerNotify) err
 	}
 
 	logger.Logger().Debugw("Producer.SendFollowerNotifyEvent: event was sent", "event", event)
+
+	return nil
+}
+
+func (p *Producer) SendSagaEvent(ctx context.Context, event domain.SagaEvent) error {
+	eventData, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("Producer.SendSagaEvent: json.Marshal() returned error: %w", err)
+	}
+
+	headers := []kafka.Header{}
+	utils.AddRequestIDToKafka(ctx, &headers)
+
+	// Отправляем событие в Kafka
+	err = p.producer.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &p.cfg.Kafka.TopicSagaBus, Partition: kafka.PartitionAny},
+		Key:            []byte(event.TransactionID),
+		Value:          eventData,
+		Headers:        headers,
+	}, nil)
+
+	if err != nil {
+		return fmt.Errorf("Producer.SendSagaEvent: p.producer.Produce() returned error: %w", err)
+	}
+
+	logger.Logger().Debugw("Producer.SendSagaEvent: event was sent", "event", event)
 
 	return nil
 }

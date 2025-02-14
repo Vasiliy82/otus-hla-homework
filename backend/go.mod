@@ -6,7 +6,7 @@ toolchain go1.23.6
 
 require (
 	github.com/Vasiliy82/otus-hla-homework/common v0.0.0-20250212233821-a733ab042815
-	github.com/confluentinc/confluent-kafka-go/v2 v2.6.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/go-faker/faker/v4 v4.5.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -65,4 +65,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-// replace github.com/Vasiliy82/otus-hla-homework/common => ../common
+replace github.com/Vasiliy82/otus-hla-homework/common => ../common

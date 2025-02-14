@@ -5,3 +5,9 @@ type contextKey string
 
 const RequestIDKey contextKey = "x-request-id"
 const RequestIDHeader = "X-Request-ID"
+
+const (
+	TxPending   = "pending"
+	TxCommitted = "committed"
+	TxFailed    = "failed"
+)

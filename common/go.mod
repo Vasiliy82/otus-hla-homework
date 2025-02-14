@@ -3,6 +3,7 @@ module github.com/Vasiliy82/otus-hla-homework/common
 go 1.22.5
 
 require (
+	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.3
 	go.uber.org/zap v1.27.0

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
+	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
@@ -99,6 +100,9 @@ func (w *WorkerPool) startWorker(ctx context.Context) error {
 						case *kafka.Message:
 
 							logger.Logger().Debugw("WorkerPool.startWorker: Message processing started  >>>", "Topic", w.cfg.Topic, "WorkerId", workerID, "message", (string)(ev.Value))
+
+							msgCtx = utils.AddRequestIDToContext(msgCtx, utils.ExtractRequestIDFromKafka(ev.Headers))
+
 							err := w.cfg.funcProcessor(msgCtx, ev, workerID)
 							if err == nil {
 								consumer.CommitMessage(ev)

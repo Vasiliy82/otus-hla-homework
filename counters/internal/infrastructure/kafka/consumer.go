@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/Vasiliy82/otus-hla-homework/counters/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/counters/internal/usecases"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -39,6 +40,7 @@ func (kc *KafkaConsumer) StartConsuming(ctx context.Context) error {
 		default:
 			msg, err := kc.consumer.ReadMessage(-1)
 			if err == nil {
+				ctx = utils.AddRequestIDToContext(ctx, utils.ExtractRequestIDFromKafka(msg.Headers))
 				var sagaEvent domain.SagaEvent
 				if err := json.Unmarshal(msg.Value, &sagaEvent); err == nil {
 					_ = kc.useCase.Execute(ctx, sagaEvent)

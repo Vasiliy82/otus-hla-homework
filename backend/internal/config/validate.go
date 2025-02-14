@@ -257,6 +257,9 @@ func (c *KafkaConfig) Validate() []error {
 	if c.TopicFollowerNotify == "" {
 		errs = append(errs, fmt.Errorf("kafka.topic_follower_notify must not be empty"))
 	}
+	if c.TopicSagaBus == "" {
+		errs = append(errs, fmt.Errorf("kafka.topic_saga_bus must not be empty"))
+	}
 	if c.CGPostModified == "" {
 		errs = append(errs, fmt.Errorf("kafka.consumergroup_post_modified must not be empty"))
 	}
@@ -266,15 +269,20 @@ func (c *KafkaConfig) Validate() []error {
 	if c.CGFollowerNotify == "" {
 		errs = append(errs, fmt.Errorf("kafka.consumergroup_follower_notify must not be empty"))
 	}
+	if c.CGSagaBus == "" {
+		errs = append(errs, fmt.Errorf("kafka.consumergroup_saga_bus must not be empty"))
+	}
 	if c.NumWorkersPostModified <= 0 {
 		errs = append(errs, fmt.Errorf("kafka.num_workers_post_modified must be greater than zero"))
 	}
 	if c.NumWorkersFeedChanged <= 0 {
 		errs = append(errs, fmt.Errorf("kafka.num_workers_feed_changed must be greater than zero"))
 	}
-
 	if c.NumWorkersFollowerNotify <= 0 {
 		errs = append(errs, fmt.Errorf("kafka.num_workers_follower_notify must be greater than zero"))
+	}
+	if c.NumWorkersSagaBus <= 0 {
+		errs = append(errs, fmt.Errorf("kafka.num_workers_saga_bus must be greater than zero"))
 	}
 	// No need to validate EnableIdempotence as it's a boolean
 	return errs

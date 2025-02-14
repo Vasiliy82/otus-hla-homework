@@ -107,3 +107,11 @@ func (r *dialogRepositoryTar) GetDialogs(ctx context.Context, myId domain.UserKe
 	log.Debug("Tarantool get_dialogs response successfully parsed")
 	return dialogs, nil
 }
+
+func (r *dialogRepositoryTar) SaveMessageWithSaga(ctx context.Context, myId, partnerId domain.UserKey, message, transactionID string) error {
+	return fmt.Errorf("Not implemented")
+}
+
+func (r *dialogRepositoryTar) UpdateSagaStatus(ctx context.Context, transactionID string, status string) error {
+	return fmt.Errorf("Not implemented")
+}

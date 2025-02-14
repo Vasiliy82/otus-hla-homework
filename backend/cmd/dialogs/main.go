@@ -10,12 +10,14 @@ import (
 
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/config"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/domain"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/broker"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/postgresqldb"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/infrastructure/tarantool"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/repository"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/rest/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/services"
+	"github.com/Vasiliy82/otus-hla-homework/backend/internal/usecases"
 	"github.com/Vasiliy82/otus-hla-homework/backend/internal/utils"
 	commw "github.com/Vasiliy82/otus-hla-homework/common/infrastructure/http/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
@@ -96,8 +98,22 @@ func main() {
 		dialogRepository = repository.NewDialogRepository(dbCluster)
 	}
 
+	kafkaProd, err := broker.NewKafkaProducer(cfg.Kafka)
+
+	prod := broker.NewProducer(ctx, kafkaProd, cfg)
+	if err != nil {
+		log.Fatalf("Error init producer: %v", err)
+	}
+
 	dialogService := services.NewDialogService(cfg.Dialogs, dialogRepository)
 	dialogHandler := rest.NewDialogHandler(dialogService)
+
+	sagaOrch := usecases.NewSagaOrchestrator(prod, dialogService)
+
+	dialogService.SetSagaCoordinator(sagaOrch)
+
+	sagaProc := services.NewSagaBusProcessor(cfg, sagaOrch)
+	sagaProc.Start(ctx)
 
 	// Инициализация Echo
 	e := echo.New()
@@ -128,5 +144,6 @@ func main() {
 	if err := e.Shutdown(shutdownCtx); err != nil {
 		log.Infof("Error during server shutdown: %v", err)
 	}
-
+	log.Infof("Waiting Kafka Saga processor")
+	sagaProc.Wait()
 }

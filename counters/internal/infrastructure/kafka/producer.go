@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/Vasiliy82/otus-hla-homework/counters/internal/domain"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
@@ -26,10 +27,13 @@ func (kp *KafkaProducer) PublishSagaEvent(ctx context.Context, event domain.Saga
 	if err != nil {
 		return err
 	}
+	var headers []kafka.Header
+	utils.AddRequestIDToKafka(ctx, &headers)
 
 	return kp.producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &kp.topic, Partition: kafka.PartitionAny},
 		Value:          message,
+		Headers:        headers,
 	}, nil)
 }
 

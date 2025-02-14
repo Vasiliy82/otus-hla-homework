@@ -26,25 +26,39 @@ type DialogMessage struct {
 // DialogRepository определяет интерфейс репозитория для работы с базой данных
 type DialogRepository interface {
 	// SaveMessage сохраняет сообщение
-	SaveMessage(ctx context.Context, myId, partnerId UserKey, message string) error
+	// SaveMessage(ctx context.Context, myId, partnerId UserKey, message string) error
 
-	// GetDialogs получает сообщения между двумя пользователями
+	// SaveMessageWithSaga сохраняет сообщение с TransactionID и SagaStatus
+	SaveMessageWithSaga(ctx context.Context, myId, partnerId UserKey, message, transactionID string) error
+
+	// GetDialog получает сообщения между двумя пользователями
 	GetDialog(ctx context.Context, myId, partnerId UserKey, limit, offset int) ([]DialogMessage, error)
 
 	// GetDialogs получает список диалогов для данного пользователя
 	GetDialogs(ctx context.Context, myId UserKey, limit, offset int) ([]Dialog, error)
+
+	// UpdateSagaStatus обновляет статус SAGA (pending → committed/failed)
+	UpdateSagaStatus(ctx context.Context, transactionID string, status string) error
 }
 
-// DialogService определяет интерфейс для работы с диалогами
+// DialogService определяет интерфейс для работы с диалогами и SAGA
 type DialogService interface {
-	// SendMessage отправляет сообщение
-	SendMessage(ctx context.Context, myId, partnerId UserKey, message string) error
+	// SendMessage отправляет сообщение и возвращает TransactionID (используется в SAGA)
+	SendMessage(ctx context.Context, myId, partnerId UserKey, message string) (string, error)
+
+	// CommitSagaTransaction фиксирует транзакцию SAGA (подтверждает сообщение)
+	CommitSagaTransaction(ctx context.Context, transactionID string) error
+
+	// RollbackSagaTransaction откатывает транзакцию SAGA (удаляет сообщение)
+	RollbackSagaTransaction(ctx context.Context, transactionID string) error
 
 	// GetDialog возвращает диалог для пользователя
 	GetDialog(ctx context.Context, myID, partnerId UserKey, limit, offset int) ([]DialogMessage, error)
 
 	// GetDialogs получает список диалогов для данного пользователя
 	GetDialogs(ctx context.Context, myId UserKey, limit, offset int) ([]Dialog, error)
+
+	SetSagaCoordinator(sagaCoordinator SagaCoordinator)
 }
 
 // DialogHandler определяет интерфейс обработчика запросов для работы с диалогами
