@@ -1,10 +1,7 @@
 package middleware
 
 import (
-	"context"
-
 	"github.com/Vasiliy82/otus-hla-homework/common/domain"
-	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/labstack/echo/v4"
 )
@@ -22,7 +19,8 @@ func RequestIDMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		// Сохранение x-request-id в контекст
-		ctx = logger.WithContext(context.WithValue(ctx, domain.RequestIDKey, requestID), logger.FromContext(ctx).With("requestID", requestID))
+		ctx = utils.AddRequestIDToContext(ctx, requestID)
+		// ctx = logger.WithContext(context.WithValue(ctx, domain.contextKey{}, requestID), logger.FromContext(ctx).With("requestID", requestID))
 
 		c.SetRequest(req.WithContext(ctx))
 

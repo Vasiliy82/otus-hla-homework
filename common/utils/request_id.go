@@ -5,9 +5,13 @@ import (
 	"net/http"
 
 	"github.com/Vasiliy82/otus-hla-homework/common/domain"
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
 )
+
+// ContextKey для хранения x-request-id в контексте
+type contextKey struct{}
 
 // generateRequestID генерирует уникальный идентификатор запроса (UUID v4)
 func GenerateID() string {
@@ -16,7 +20,7 @@ func GenerateID() string {
 
 // ExtractRequestIDFromContext извлекает X-Request-ID из контекста
 func ExtractRequestIDFromContext(ctx context.Context) string {
-	if requestID, ok := ctx.Value(domain.RequestIDKey).(string); ok {
+	if requestID, ok := ctx.Value(contextKey{}).(string); ok {
 		return requestID
 	}
 	return "" // Если нет, генерируем новый
@@ -24,7 +28,16 @@ func ExtractRequestIDFromContext(ctx context.Context) string {
 
 // AddRequestIDToContext добавляет X-Request-ID в контекст
 func AddRequestIDToContext(ctx context.Context, requestID string) context.Context {
-	return context.WithValue(ctx, domain.RequestIDKey, requestID)
+
+	oldRequestId := ExtractRequestIDFromContext(ctx)
+	ctx = context.WithValue(ctx, contextKey{}, requestID)
+
+	if oldRequestId != requestID {
+		newLogger := logger.FromContext(ctx).With(domain.RequestIDVariable, requestID)
+		ctx = logger.WithContext(ctx, newLogger)
+	}
+
+	return ctx
 }
 
 // ExtractRequestIDFromKafka извлекает X-Request-ID из заголовков Kafka

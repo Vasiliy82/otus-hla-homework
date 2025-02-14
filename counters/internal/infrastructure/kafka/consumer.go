@@ -3,7 +3,9 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"time"
 
+	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/Vasiliy82/otus-hla-homework/common/utils"
 	"github.com/Vasiliy82/otus-hla-homework/counters/internal/domain"
 	"github.com/Vasiliy82/otus-hla-homework/counters/internal/usecases"
@@ -36,14 +38,15 @@ func (kc *KafkaConsumer) StartConsuming(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			logger.FromContext(ctx).Infow("Consumer closed", "kc.topic", kc.topic)
 			return kc.consumer.Close()
 		default:
-			msg, err := kc.consumer.ReadMessage(-1)
-			if err == nil {
-				ctx = utils.AddRequestIDToContext(ctx, utils.ExtractRequestIDFromKafka(msg.Headers))
+			msg, err := kc.consumer.ReadMessage(100 * time.Millisecond)
+			if msg != nil && err == nil {
+				newCtx := utils.AddRequestIDToContext(ctx, utils.ExtractRequestIDFromKafka(msg.Headers))
 				var sagaEvent domain.SagaEvent
 				if err := json.Unmarshal(msg.Value, &sagaEvent); err == nil {
-					_ = kc.useCase.Execute(ctx, sagaEvent)
+					_ = kc.useCase.Execute(newCtx, sagaEvent)
 				}
 			}
 		}

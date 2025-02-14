@@ -47,7 +47,9 @@ func (s *SagaOrchestrator) HandleSagaEvent(ctx context.Context, event domain.Sag
 	case domain.SagaCounterIncrementFailed:
 		log.Infow("Processing SagaCounterIncrementFailed")
 		return s.dialogService.RollbackSagaTransaction(ctx, event.TransactionID)
-
+	case domain.SagaMessageSent:
+		log.Debugw("Skipping SagaMessageSent")
+		return nil
 	default:
 		log.Warnw("Unknown SAGA event type, ignoring")
 		return nil
