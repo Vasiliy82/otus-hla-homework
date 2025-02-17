@@ -218,6 +218,68 @@ services:
     networks:
       - app_net
 
+  postgres-zabbix:
+    image: postgres:latest
+    container_name: postgres-zabbix
+    hostname: postgres-zabbix
+    environment:
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./postgres-zabbix/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - postgres-zabbix-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_hw -d postgres"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    networks:
+      - app_net
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-6.4-latest
+    container_name: zabbix-server
+    environment:
+      DB_SERVER_HOST: "postgres-zabbix"
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+    depends_on:
+      postgres-zabbix:
+        condition: service_healthy
+    ports:
+      - "10051:10051"
+    networks:
+      - app_net
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest
+    container_name: zabbix-web
+    environment:
+      DB_SERVER_HOST: "postgres-zabbix"
+      POSTGRES_USER: "app_hw"
+      POSTGRES_PASSWORD: "Passw0rd"
+      POSTGRES_DB: "postgres"
+      ZBX_SERVER_HOST: "zabbix-server"
+    depends_on:
+      - zabbix-server
+    ports:
+      - "8084:8080"
+    networks:
+      - app_net
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-6.4-latest
+    container_name: zabbix-agent
+    environment:
+      ZBX_SERVER_HOST: "zabbix-server"
+    privileged: true
+    networks:
+      - app_net
+
 volumes:
   postgres-data:
   redis-data:
@@ -226,6 +288,7 @@ volumes:
   kafka-data:
   grafana-data:
   prometheus-data:
+  postgres-zabbix-data:
 
 networks:
   app_net:

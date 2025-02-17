@@ -22,6 +22,7 @@ import (
 	commw "github.com/Vasiliy82/otus-hla-homework/common/infrastructure/http/middleware"
 	"github.com/Vasiliy82/otus-hla-homework/common/infrastructure/observability/logger"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -115,11 +116,20 @@ func main() {
 	sagaProc := services.NewSagaBusProcessor(cfg, sagaOrch)
 	sagaProc.Start(ctx)
 
+	metrics := commw.NewPrometheusMetrics()
+	metrics.Register() // Регистрируем метрики в Prometheus
+
 	// Инициализация Echo
 	e := echo.New()
 	e.Use(commw.RequestIDMiddleware)
+
+	// Добавляем middleware для сбора метрик RED
+	e.Use(commw.PrometheusMetricsMiddleware(metrics))
+
+	// Отдельный эндпоинт для метрик Prometheus
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
 	e.Use(middleware.SetRequestContextWithTimeout(cfg.API.ContextTimeout))
-	// middleware.CORSConfig(e)
 
 	// Роутинг
 	e.GET("/api/dialog", dialogHandler.GetDialogs)
