@@ -69,6 +69,17 @@ func PrometheusMetricsMiddleware(metrics *PrometheusMetrics) echo.MiddlewareFunc
 				metrics.ServiceErrors.WithLabelValues(errorType).Inc()
 			}
 
+			// Добавляем обработку статусов 400-499 и 500+
+			if status >= 400 {
+				var errorType string
+				if status >= 400 && status < 500 {
+					errorType = "http_client"
+				} else if status >= 500 {
+					errorType = "http_server"
+				}
+				metrics.ServiceErrors.WithLabelValues(errorType).Inc()
+			}
+
 			return err
 		}
 	}

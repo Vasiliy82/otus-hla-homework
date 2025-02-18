@@ -227,10 +227,12 @@ services:
       POSTGRES_PASSWORD: "Passw0rd"
       POSTGRES_DB: "postgres"
     volumes:
-      - ./postgres-zabbix/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./postgres-zabbix/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./postgres-zabbix/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - postgres-zabbix-data:/var/lib/postgresql/data
     ports:
       - "5434:5432"
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]      
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U app_hw -d postgres"]
       interval: 1s
@@ -240,7 +242,7 @@ services:
       - app_net
 
   zabbix-server:
-    image: zabbix/zabbix-server-pgsql:alpine-6.4-latest
+    image: zabbix/zabbix-server-pgsql:alpine-7.2-latest
     container_name: zabbix-server
     environment:
       DB_SERVER_HOST: "postgres-zabbix"
@@ -256,7 +258,7 @@ services:
       - app_net
 
   zabbix-web:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-7.2-latest
     container_name: zabbix-web
     environment:
       DB_SERVER_HOST: "postgres-zabbix"
@@ -272,11 +274,24 @@ services:
       - app_net
 
   zabbix-agent:
-    image: zabbix/zabbix-agent:alpine-6.4-latest
+    image: zabbix/zabbix-agent:alpine-7.2-latest
     container_name: zabbix-agent
     environment:
       ZBX_SERVER_HOST: "zabbix-server"
+      ZBX_HOSTNAME: "docker-host"
     privileged: true
+    networks:
+      - app_net
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    ports:
+      - "9121:9121"  # Порт для Redis Exporter
+    environment:
+      REDIS_ADDR: "redis-counters:6379"  # Адрес Redis сервера
+    depends_on:
+      - redis-counters
     networks:
       - app_net
 
@@ -293,3 +308,4 @@ volumes:
 networks:
   app_net:
     driver: bridge
+

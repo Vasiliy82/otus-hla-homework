@@ -8,9 +8,9 @@ scrape_configs:
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['cadvisor:8080']
-  - job_name: 'backend'
+  - job_name: 'dialogs'
     static_configs:
-      - targets: ['backend:8080']      
+      - targets: ['dialogs:8080']      
   - job_name: 'kafka'
     static_configs:
       - targets: ['kafka:9102']
