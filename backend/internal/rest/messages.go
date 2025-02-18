@@ -195,5 +195,10 @@ func handleError(c echo.Context, err error) error {
 	}
 
 	// Если бизнес-ошибка не найдена, возвращаем общую ошибку сервиса
-	return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+	// return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+	err1 := c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+	if err1 != nil {
+		return err1
+	}
+	return err
 }

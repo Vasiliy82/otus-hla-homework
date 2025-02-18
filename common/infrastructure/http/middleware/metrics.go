@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -87,8 +89,10 @@ func PrometheusMetricsMiddleware(metrics *PrometheusMetrics) echo.MiddlewareFunc
 
 // classifyError - классифицирует ошибки для метрик
 func classifyError(err error) string {
-	// if errors.Is(err, domain.ErrDBConnection) {
-	// 	return "database"
+	var dbErr *pgconn.ConnectError
+	if errors.As(err, &dbErr) {
+		return "database"
+	}
 	// }
 	// if errors.Is(err, domain.ErrTimeout) {
 	// 	return "timeout"
